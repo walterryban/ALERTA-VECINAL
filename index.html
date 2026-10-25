@@ -1,108 +1,310 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alerta Vecinal — Manzana 08</title>
-    <!-- Importamos Tailwind CSS para que se vea moderno y estilizado de forma simple -->
-    <script src="https://tailwindcss.com"></script>
+    <title>Alerta Vecinal Pro - San Luis & Villa Mercedes</title>
+    
+    <!-- Librería oficial de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --primary-hover: #b71c1c;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 480px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header span {
+            font-size: 3rem;
+        }
+
+        .header h1 {
+            margin: 8px 0 4px;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .header p {
+            margin: 0;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #fafafa;
+            border: 1px solid #eeeeee;
+            border-radius: 12px;
+        }
+
+        .section h2 {
+            font-size: 1.1rem;
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #444;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #555;
+        }
+
+        input[type="text"], input[type="tel"], input[type="password"], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input {
+            margin-top: 2px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: #2e7d32;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1b5e20;
+        }
+
+        .alert-note {
+            font-size: 0.8rem;
+            color: #777;
+            text-align: center;
+            margin-top: 12px;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-900 antialiased">
+<body>
 
-    <!-- Encabezado / Navbar -->
-    <header class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <h1 class="font-bold text-lg">⚠️ ALERTA VECINAL</h1>
-            <span class="bg-green-500 text-xs px-2 py-1 rounded-full animate-pulse font-semibold">Red Activa</span>
+    <div class="container">
+        <!-- Encabezado -->
+        <div class="header">
+            <span>🚨</span>
+            <h1>Alerta Vecinal Pro</h1>
+            <p>San Luis & Villa Mercedes</p>
         </div>
-    </header>
 
-    <!-- Contenedor Principal (Estilo Móvil) -->
-    <main class="max-w-md mx-auto p-4 space-y-6 pb-24">
-        
-        <!-- Estado de la Manzana -->
-        <section class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 text-center">
-            <span class="text-sm text-gray-500 font-medium">Barrio Las Acacias • Manzana 08</span>
-            <h2 class="text-xl font-bold mt-1 text-gray-800">Tu manzana está protegida</h2>
-            <p class="text-xs text-gray-500 mt-2 px-4">Ante una emergencia, activá una alerta. Los vecinos conectados reciben tu ubicación de inmediato.</p>
+        <!-- Sección de Registro del Vecino -->
+        <div class="section" id="sec-registro">
+            <h2>Registro de Vecino</h2>
+            <form id="form-vecino">
+                <div class="form-group">
+                    <label>Nombre y Apellido *</label>
+                    <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono (WhatsApp) *</label>
+                    <input type="tel" id="telefono" required placeholder="Ej: 2664123456">
+                </div>
+                <div class="form-group">
+                    <label>Dirección *</label>
+                    <input type="text" id="direccion" required placeholder="Ej: Rawson 548">
+                </div>
+                <div class="form-group">
+                    <label>Manzana / Barrio *</label>
+                    <input type="text" id="manzana" required placeholder="Ej: Manzana 4">
+                </div>
+                <div class="form-group">
+                    <label>PIN de Seguridad (4 dígitos) *</label>
+                    <input type="password" id="pin" maxlength="6" required placeholder="****">
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terminos" required>
+                    <label for="terminos">Acepto el uso voluntario de la app. Entiendo que las fotos y datos son de uso exclusivo para la alerta y que en caso de emergencia real debo llamar prioritariamente al 911.</label>
+                </div>
+
+                <button type="submit" class="btn btn-success" style="margin-top: 15px;">Guardar Mis Datos</button>
+            </form>
+        </div>
+
+        <!-- Panel de Disparo de Alerta -->
+        <div class="section">
+            <h2>Panel de Emergencia</h2>
             
-            <!-- Estadísticas rápidas -->
-            <div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-100 text-center">
-                <div>
-                    <span class="block text-lg font-bold text-blue-600">27</span>
-                    <span class="text-[10px] text-gray-400 uppercase font-semibold">Activos</span>
-                </div>
-                <div>
-                    <span class="block text-lg font-bold text-blue-600">2 min</span>
-                    <span class="text-[10px] text-gray-400 uppercase font-semibold">Resp. Prom</span>
-                </div>
-                <div>
-                    <span class="block text-lg font-bold text-blue-600">30</span>
-                    <span class="text-[10px] text-gray-400 uppercase font-semibold">Miembros</span>
-                </div>
+            <div class="form-group">
+                <label>Tipo de Alerta</label>
+                <select id="tipo-alerta">
+                    <option value="🚨 EMERGENCIA / ROBO">🚨 Robo / Inseguridad</option>
+                    <option value="🔥 INCENDIO">🔥 Incendio</option>
+                    <option value="🚑 EMERGENCIA MÉDICA">🚑 Emergencia Médica</option>
+                    <option value="👁️ SOSPECHOSO EN LA ZONA">👁️ Actividad Sospechosa</option>
+                </select>
             </div>
-        </section>
 
-        <!-- BOTÓN DE ALERTA PRINCIPAL -->
-        <section class="text-center">
-            <button onclick="activarAlerta('General')" class="w-40 h-40 bg-red-600 hover:bg-red-700 text-white rounded-full font-black text-2xl shadow-xl shadow-red-200 transition-transform active:scale-95 border-8 border-red-100 uppercase tracking-wider mx-auto block flex flex-col justify-center items-center">
-                <span>¡ALERTA!</span>
-                <span class="text-[10px] font-normal normal-case tracking-normal opacity-80 mt-1">Tocar para activar</span>
-            </button>
-        </section>
+            <button id="btn-alerta" class="btn btn-primary">DISPARAR ALERTA</button>
 
-        <!-- SECCIÓN: ¿Qué está ocurriendo? -->
-        <section class="space-y-3">
-            <h3 class="font-bold text-gray-700 text-sm px-1">¿QUÉ ESTÁ OCURRIENDO?</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="activarAlerta('Robo')" class="p-3 bg-white border border-gray-200 rounded-xl text-left hover:bg-gray-50 active:scale-95 transition-all">
-                    <span class="text-xl">🚨</span>
-                    <h4 class="font-bold text-sm mt-1">Robo / Intruso</h4>
-                    <p class="text-[11px] text-gray-400 leading-tight">En curso o sospechoso</p>
-                </button>
-                <button onclick="activarAlerta('Incendio')" class="p-3 bg-white border border-gray-200 rounded-xl text-left hover:bg-gray-50 active:scale-95 transition-all">
-                    <span class="text-xl">🔥</span>
-                    <h4 class="font-bold text-sm mt-1">Incendio</h4>
-                    <p class="text-[11px] text-gray-400 leading-tight">Fuego o fuga de gas</p>
-                </button>
-                <button onclick="activarAlerta('Médica')" class="p-3 bg-white border border-gray-200 rounded-xl text-left hover:bg-gray-50 active:scale-95 transition-all">
-                    <span class="text-xl">🚑</span>
-                    <h4 class="font-bold text-sm mt-1">Emergencia</h4>
-                    <p class="text-[11px] text-gray-400 leading-tight">Asistencia médica / vial</p>
-                </button>
-                <button onclick="activarAlerta('Sospechoso')" class="p-3 bg-white border border-gray-200 rounded-xl text-left hover:bg-gray-50 active:scale-95 transition-all">
-                    <span class="text-xl">👀</span>
-                    <h4 class="font-bold text-sm mt-1">Sospechoso</h4>
-                    <p class="text-[11px] text-gray-400 leading-tight">Auto o persona extraña</p>
-                </button>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Menú Inferior de Navegación Fijo -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 shadow-lg">
-        <div class="max-w-md mx-auto flex justify-around text-center text-gray-500">
-            <a href="#" class="text-blue-600 flex flex-col items-center">
-                <span class="text-xl">🏠</span>
-                <span class="text-[10px] font-medium">Inicio</span>
-            </a>
-            <a href="#" class="hover:text-blue-600 flex flex-col items-center">
-                <span class="text-xl">🔔</span>
-                <span class="text-[10px] font-medium">Alertas</span>
-            </a>
-            <a href="#" class="hover:text-blue-600 flex flex-col items-center">
-                <span class="text-xl">👥</span>
-                <span class="text-[10px] font-medium">Vecinos</span>
-            </a>
+            <p class="alert-note">Al pulsar se registrará el evento en el sistema y se abrirá WhatsApp con los datos y la ubicación en Google Maps.</p>
         </div>
-    </nav>
+    </div>
 
-    <!-- Lógica de botones (JavaScript) -->
     <script>
-        function activarAlerta(tipo) {
-            alert('🚨 ALERTA ENVIADA: Se ha reportado una emergencia de tipo "' + tipo + '" en la Manzana 08. Los vecinos están siendo notificados.');
-            // Aquí en el futuro puedes conectar un sistema de notificaciones real o WhatsApp masivo
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
+        
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let vecinoActualId = localStorage.getItem('vecino_id') || null;
+
+        // Cargar datos previos si existen
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('vecino_nombre')) {
+                document.getElementById('nombre').value = localStorage.getItem('vecino_nombre') || '';
+                document.getElementById('telefono').value = localStorage.getItem('vecino_telefono') || '';
+                document.getElementById('direccion').value = localStorage.getItem('vecino_direccion') || '';
+                document.getElementById('manzana').value = localStorage.getItem('vecino_manzana') || '';
+            }
+        });
+
+        // Registrar o Actualizar Vecino en Supabase
+        document.getElementById('form-vecino').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const datosVecino = {
+                nombre: document.getElementById('nombre').value,
+                telefono: document.getElementById('telefono').value,
+                direccion: document.getElementById('direccion').value,
+                manzana: document.getElementById('manzana').value,
+                pin: document.getElementById('pin').value,
+                estado: 'activo',
+                terminos_aceptados: document.getElementById('terminos').checked,
+                fecha_aceptacion_terminos: new Date().toISOString()
+            };
+
+            const { data, error } = await db.from('vecinos').insert([datosVecino]).select();
+
+            if (error) {
+                alert('Error al guardar datos: ' + error.message);
+            } else {
+                vecinoActualId = data[0].id;
+                localStorage.setItem('vecino_id', vecinoActualId);
+                localStorage.setItem('vecino_nombre', datosVecino.nombre);
+                localStorage.setItem('vecino_telefono', datosVecino.telefono);
+                localStorage.setItem('vecino_direccion', datosVecino.direccion);
+                localStorage.setItem('vecino_manzana', datosVecino.manzana);
+
+                alert('¡Datos registrados correctamente!');
+            }
+        });
+
+        // Disparar Alerta y Enviar por WhatsApp
+        document.getElementById('btn-alerta').addEventListener('click', () => {
+            const tipoAlerta = document.getElementById('tipo-alerta').value;
+            const nombre = localStorage.getItem('vecino_nombre') || 'Vecino sin registrar';
+            const direccion = localStorage.getItem('vecino_direccion') || 'Sin dirección';
+            const manzana = localStorage.getItem('vecino_manzana') || 'Sin manzana';
+
+            if (!navigator.geolocation) {
+                procesarAlerta(tipoAlerta, nombre, direccion, manzana, null);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const mapUrl = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                    procesarAlerta(tipoAlerta, nombre, direccion, manzana, mapUrl);
+                },
+                (err) => {
+                    procesarAlerta(tipoAlerta, nombre, direccion, manzana, null);
+                }
+            );
+        });
+
+        async function procesarAlerta(tipo, nombre, direccion, manzana, mapa) {
+            // 1. Guardar en Supabase
+            if (vecinoActualId) {
+                await db.from('alertas').insert([{
+                    vecino_id: vecinoActualId,
+                    manzana: manzana,
+                    tipo_alerta: tipo
+                }]);
+            }
+
+            // 2. Formatear mensaje para WhatsApp
+            let mensaje = `*ALERTA VECINAL PRO*\n\n`;
+            mensaje += `*Tipo:* ${tipo}\n`;
+            mensaje += `*Vecino:* ${nombre}\n`;
+            mensaje += `*Dirección:* ${direccion}\n`;
+            mensaje += `*Manzana/Barrio:* ${manzana}\n`;
+            
+            if (mapa) {
+                mensaje += `*Ubicación en tiempo real:* ${mapa}\n`;
+            }
+
+            const urlWsp = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`;
+            window.open(urlWsp, '_blank');
         }
     </script>
 </body>
