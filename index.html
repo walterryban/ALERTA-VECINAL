@@ -1,36 +1,36 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alerta Vecinal Pro - San Luis & Villa Mercedes</title>
+    <title>Alerta Vecinal Pro</title>
     
-    <!-- Librería oficial de Supabase -->
+    <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
             --primary: #d32f2f;
-            --primary-hover: #b71c1c;
+            --primary-dark: #b71c1c;
+            --secondary: #25d366;
             --bg-color: #f4f6f9;
             --card-bg: #ffffff;
-            --text-color: #333333;
+            --text: #333333;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
+            color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 20px 10px;
             display: flex;
             justify-content: center;
         }
 
         .container {
-            max-width: 480px;
             width: 100%;
+            max-width: 480px;
             background: var(--card-bg);
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.1);
@@ -40,45 +40,38 @@
 
         .header {
             text-align: center;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 16px;
             margin-bottom: 20px;
         }
 
-        .header span {
-            font-size: 3rem;
-        }
-
         .header h1 {
-            margin: 8px 0 4px;
-            font-size: 1.8rem;
+            margin: 5px 0 0 0;
             color: var(--primary);
+            font-size: 1.6rem;
         }
 
         .header p {
             margin: 0;
             color: #666;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
-        .section {
-            margin-bottom: 20px;
-            padding: 16px;
-            background: #fafafa;
-            border: 1px solid #eeeeee;
-            border-radius: 12px;
-        }
-
-        .section h2 {
+        .section-title {
             font-size: 1.1rem;
-            margin-top: 0;
+            font-weight: bold;
             margin-bottom: 12px;
             color: #444;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
-        .form-group label {
+        label {
             display: block;
             font-size: 0.85rem;
             font-weight: 600;
@@ -86,37 +79,41 @@
             color: #555;
         }
 
-        input[type="text"], input[type="tel"], input[type="password"], select {
+        input, select {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid #ccc;
             border-radius: 8px;
             font-size: 0.95rem;
             box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
-        .checkbox-group {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 0.8rem;
-            color: #555;
-            margin-top: 10px;
+        input:focus, select:focus {
+            border-color: var(--primary);
         }
 
-        .checkbox-group input {
-            margin-top: 2px;
+        input[readonly] {
+            background-color: #e9ecef;
+            color: #495057;
+            font-weight: bold;
+            cursor: not-allowed;
         }
 
         .btn {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             border: none;
             border-radius: 8px;
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-primary {
@@ -125,186 +122,195 @@
         }
 
         .btn-primary:hover {
-            background-color: var(--primary-hover);
+            background-color: var(--primary-dark);
         }
 
         .btn-success {
-            background-color: #2e7d32;
+            background-color: var(--secondary);
             color: white;
+            margin-top: 10px;
         }
 
-        .btn-success:hover {
-            background-color: #1b5e20;
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 24px 0;
         }
 
-        .alert-note {
+        .badge-info {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            padding: 8px;
+            border-radius: 6px;
             font-size: 0.8rem;
-            color: #777;
-            text-align: center;
-            margin-top: 12px;
+            margin-top: 5px;
+            display: none;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- Encabezado -->
         <div class="header">
-            <span>🚨</span>
+            <span style="font-size: 2.5rem;">🚨</span>
             <h1>Alerta Vecinal Pro</h1>
             <p>San Luis & Villa Mercedes</p>
         </div>
 
-        <!-- Sección de Registro del Vecino -->
-        <div class="section" id="sec-registro">
-            <h2>Registro de Vecino</h2>
-            <form id="form-vecino">
-                <div class="form-group">
-                    <label>Nombre y Apellido *</label>
-                    <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
-                </div>
-                <div class="form-group">
-                    <label>Teléfono (WhatsApp) *</label>
-                    <input type="tel" id="telefono" required placeholder="Ej: 2664123456">
-                </div>
-                <div class="form-group">
-                    <label>Dirección *</label>
-                    <input type="text" id="direccion" required placeholder="Ej: Rawson 548">
-                </div>
-                <div class="form-group">
-                    <label>Manzana / Barrio *</label>
-                    <input type="text" id="manzana" required placeholder="Ej: Manzana 4">
-                </div>
-                <div class="form-group">
-                    <label>PIN de Seguridad (4 dígitos) *</label>
-                    <input type="password" id="pin" maxlength="6" required placeholder="****">
-                </div>
-
-                <div class="checkbox-group">
-                    <input type="checkbox" id="terminos" required>
-                    <label for="terminos">Acepto el uso voluntario de la app. Entiendo que las fotos y datos son de uso exclusivo para la alerta y que en caso de emergencia real debo llamar prioritariamente al 911.</label>
-                </div>
-
-                <button type="submit" class="btn btn-success" style="margin-top: 15px;">Guardar Mis Datos</button>
-            </form>
-        </div>
-
-        <!-- Panel de Disparo de Alerta -->
-        <div class="section">
-            <h2>Panel de Emergencia</h2>
-            
+        <!-- Formulario de Registro -->
+        <div class="section-title">📝 Registro de Vecino</div>
+        <form id="registro-form">
             <div class="form-group">
-                <label>Tipo de Alerta</label>
-                <select id="tipo-alerta">
-                    <option value="🚨 EMERGENCIA / ROBO">🚨 Robo / Inseguridad</option>
-                    <option value="🔥 INCENDIO">🔥 Incendio</option>
-                    <option value="🚑 EMERGENCIA MÉDICA">🚑 Emergencia Médica</option>
-                    <option value="👁️ SOSPECHOSO EN LA ZONA">👁️ Actividad Sospechosa</option>
-                </select>
+                <label for="nombre">Nombre y Apellido *</label>
+                <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
             </div>
 
-            <button id="btn-alerta" class="btn btn-primary">DISPARAR ALERTA</button>
+            <div class="form-group">
+                <label for="telefono">Teléfono (WhatsApp) *</label>
+                <input type="tel" id="telefono" placeholder="Ej: 2664123456" required>
+            </div>
 
-            <p class="alert-note">Al pulsar se registrará el evento en el sistema y se abrirá WhatsApp con los datos y la ubicación en Google Maps.</p>
+            <div class="form-group">
+                <label for="direccion">Dirección / Altura *</label>
+                <input type="text" id="direccion" placeholder="Ej: Av. Illia 540" required>
+            </div>
+
+            <div class="form-group">
+                <label for="manzana">Manzana / Sector / Cuadra *</label>
+                <input type="text" id="manzana" placeholder="Ej: MANZANA A" required>
+                <div id="badge-auto" class="badge-info">📌 Zona detectada automáticamente por QR</div>
+            </div>
+
+            <div class="form-group">
+                <label for="pin">PIN de Seguridad de la Zona *</label>
+                <input type="password" id="pin" maxlength="6" placeholder="Ingrese el PIN autorizado" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Registrarse y Activar App</button>
+        </form>
+
+        <div class="divider"></div>
+
+        <!-- Panel de Disparo de Emergencia -->
+        <div class="section-title">🚨 Botón de Alerta</div>
+        <div class="form-group">
+            <label for="tipo-alerta">Tipo de Emergencia</label>
+            <select id="tipo-alerta">
+                <option value="🚨 EMERGENCIA / ROBO">🚨 Robo / Inseguridad</option>
+                <option value="🔥 INCENDIO">🔥 Incendio</option>
+                <option value="🚑 EMERGENCIA MÉDICA">🚑 Emergencia Médica</option>
+                <option value="👁️ SOSPECHOSO EN LA ZONA">👁️ Actividad Sospechosa</option>
+            </select>
         </div>
+
+        <button type="button" class="btn btn-success" onclick="dispararAlerta()">
+            📢 Emitir Alerta de Emergencia
+        </button>
+        
+        <p style="font-size: 0.75rem; color: #777; text-align: center; margin-top: 10px;">
+            Al pulsar se registrará la alerta y abrirá la ubicación exacta por GPS.
+        </p>
     </div>
 
     <script>
-        // Configuración de Supabase
         const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
-        
+        const SUPABASE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeBL';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let vecinoActualId = localStorage.getItem('vecino_id') || null;
+        let vendedorAsignado = 'Directo';
 
-        // Cargar datos previos si existen
+        // Captura automática de Manzana y Vendedor desde el enlace QR
         window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('vecino_nombre')) {
-                document.getElementById('nombre').value = localStorage.getItem('vecino_nombre') || '';
-                document.getElementById('telefono').value = localStorage.getItem('vecino_telefono') || '';
-                document.getElementById('direccion').value = localStorage.getItem('vecino_direccion') || '';
-                document.getElementById('manzana').value = localStorage.getItem('vecino_manzana') || '';
+            const urlParams = new URLSearchParams(window.location.search);
+            const mzaParam = urlParams.get('mza');
+            const vendParam = urlParams.get('vend');
+
+            if (mzaParam) {
+                const inputManzana = document.getElementById('manzana');
+                inputManzana.value = decodeURIComponent(mzaParam).toUpperCase();
+                inputManzana.readOnly = true;
+                document.getElementById('badge-auto').style.display = 'block';
+            }
+
+            if (vendParam) {
+                vendedorAsignado = decodeURIComponent(vendParam).toUpperCase();
             }
         });
 
-        // Registrar o Actualizar Vecino en Supabase
-        document.getElementById('form-vecino').addEventListener('submit', async (e) => {
+        // Validar PIN contra la tabla 'manzanas' y guardar registro
+        document.getElementById('registro-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const datosVecino = {
-                nombre: document.getElementById('nombre').value,
-                telefono: document.getElementById('telefono').value,
-                direccion: document.getElementById('direccion').value,
-                manzana: document.getElementById('manzana').value,
-                pin: document.getElementById('pin').value,
-                estado: 'activo',
-                terminos_aceptados: document.getElementById('terminos').checked,
-                fecha_aceptacion_terminos: new Date().toISOString()
-            };
+            const nombre = document.getElementById('nombre').value;
+            const telefono = document.getElementById('telefono').value;
+            const direccion = document.getElementById('direccion').value;
+            const manzana = document.getElementById('manzana').value.toUpperCase();
+            const pinIngresado = document.getElementById('pin').value;
 
-            const { data, error } = await db.from('vecinos').insert([datosVecino]).select();
+            // 1. Verificar si el PIN coincide con la manzana en Supabase
+            const { data: mzaData, error: mzaError } = await db
+                .from('manzanas')
+                .select('pin_autorizado')
+                .eq('nombre_manzana', manzana)
+                .single();
 
-            if (error) {
-                alert('Error al guardar datos: ' + error.message);
-            } else {
-                vecinoActualId = data[0].id;
-                localStorage.setItem('vecino_id', vecinoActualId);
-                localStorage.setItem('vecino_nombre', datosVecino.nombre);
-                localStorage.setItem('vecino_telefono', datosVecino.telefono);
-                localStorage.setItem('vecino_direccion', datosVecino.direccion);
-                localStorage.setItem('vecino_manzana', datosVecino.manzana);
-
-                alert('¡Datos registrados correctamente!');
-            }
-        });
-
-        // Disparar Alerta y Enviar por WhatsApp
-        document.getElementById('btn-alerta').addEventListener('click', () => {
-            const tipoAlerta = document.getElementById('tipo-alerta').value;
-            const nombre = localStorage.getItem('vecino_nombre') || 'Vecino sin registrar';
-            const direccion = localStorage.getItem('vecino_direccion') || 'Sin dirección';
-            const manzana = localStorage.getItem('vecino_manzana') || 'Sin manzana';
-
-            if (!navigator.geolocation) {
-                procesarAlerta(tipoAlerta, nombre, direccion, manzana, null);
+            if (mzaError || !mzaData) {
+                alert('⚠️ La zona o manzana ingresada no está registrada en el sistema.');
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const mapUrl = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                    procesarAlerta(tipoAlerta, nombre, direccion, manzana, mapUrl);
-                },
-                (err) => {
-                    procesarAlerta(tipoAlerta, nombre, direccion, manzana, null);
-                }
-            );
+            if (mzaData.pin_autorizado !== pinIngresado) {
+                alert('❌ PIN de seguridad incorrecto. Verifique con su promotor o administrador.');
+                return;
+            }
+
+            // 2. Guardar el registro del vecino con estado ACTIVO
+            const { error: insertError } = await db.from('vecinos').insert([{
+                nombre: nombre,
+                telefono: telefono,
+                direccion: direccion,
+                manzana: manzana,
+                vendedor: vendedorAsignado,
+                pin_ingresado: pinIngresado,
+                estado: 'ACTIVO'
+            }]);
+
+            if (insertError) {
+                alert('Error al registrar: ' + insertError.message);
+            } else {
+                alert('✅ ¡Registro exitoso! Su aplicación de Alerta Vecinal Pro ya está activa.');
+            }
         });
 
-        async function procesarAlerta(tipo, nombre, direccion, manzana, mapa) {
-            // 1. Guardar en Supabase
-            if (vecinoActualId) {
-                await db.from('alertas').insert([{
-                    vecino_id: vecinoActualId,
-                    manzana: manzana,
-                    tipo_alerta: tipo
-                }]);
-            }
+        // Disparar Alerta con Geolocalización
+        async function dispararAlerta() {
+            const tipo = document.getElementById('tipo-alerta').value;
+            const manzana = document.getElementById('manzana').value || 'ZONA GENERAL';
+            const nombre = document.getElementById('nombre').value || 'Vecino';
 
-            // 2. Formatear mensaje para WhatsApp
-            let mensaje = `*ALERTA VECINAL PRO*\n\n`;
-            mensaje += `*Tipo:* ${tipo}\n`;
-            mensaje += `*Vecino:* ${nombre}\n`;
-            mensaje += `*Dirección:* ${direccion}\n`;
-            mensaje += `*Manzana/Barrio:* ${manzana}\n`;
-            
-            if (mapa) {
-                mensaje += `*Ubicación en tiempo real:* ${mapa}\n`;
-            }
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const mapUrl = `https://maps.google.com/?q=${lat},${lng}`;
 
-            const urlWsp = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`;
-            window.open(urlWsp, '_blank');
+                    // Guardar alerta en base de datos
+                    await db.from('alertas').insert([{
+                        tipo_alerta: tipo,
+                        manzana: manzana,
+                        ubicacion_url: mapUrl,
+                        nombre_vecino: nombre
+                    }]);
+
+                    // Redirigir a WhatsApp
+                    const mensaje = encodeURIComponent(`*${tipo}*\n\n👤 *Vecino:* ${nombre}\n📍 *Zona:* ${manzana}\n🗺️ *Ubicación GPS:* ${mapUrl}`);
+                    window.open(`https://wa.me/?text=${mensaje}`, '_blank');
+                }, () => {
+                    alert("Por favor habilite la ubicación GPS de su teléfono para enviar la alerta.");
+                });
+            } else {
+                alert("Su dispositivo no soporta geolocalización.");
+            }
         }
     </script>
 </body>
