@@ -259,20 +259,20 @@
         const SUPABASE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeBL';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function toggleMed() {
+       function toggleMed() {
             const content = document.getElementById('medContent');
             content.style.display = content.style.display === 'block' ? 'none' : 'block';
         }
 
-     function accesoAdmin() {
-    const pinAdmin = prompt("Ingrese PIN de Operador:");
-    // Acepta tanto el PIN numérico como tu código de operador
-    if (pinAdmin === "1234" || pinAdmin === "SL-8492") { 
-        window.location.href = "admin.html";
-    } else if (pinAdmin !== null) {
-        alert("PIN incorrecto.");
-    }
-     }
+        function accesoAdmin() {
+            const pinAdmin = prompt("Ingrese PIN de Operador:");
+            if (pinAdmin === "1234" || pinAdmin === "SL-8492") { 
+                window.location.href = "admin.html";
+            } else if (pinAdmin !== null) {
+                alert("PIN incorrecto.");
+            }
+        }
+
         async function enviarAlerta(e) {
             e.preventDefault();
 
@@ -286,58 +286,54 @@
             const alergias = document.getElementById('alergias').value;
             const contacto_ice = document.getElementById('contacto_ice').value;
 
-            // Simulación de PIN de Coacción Inverso (Ej: Si el PIN termina en 99 o es específico)
-            let tipoAlerta = "🚨 ALERTA GENERAL DE PÁNICO";
-            if (pin === "9999" || pin.startsWith("00")) {
-                tipoAlerta = "⚠️ ALERTA SILENCIOSA DE COACCIÓN (REHENES)";
-            }
+            // Evaluación del Protocolo de Coacción (PIN 9999)
+            const esCoaccion = (pin === "9999");
+            const tipoAlerta = esCoaccion ? "COACCION / REHENES" : "ALERTA PANICO";
 
-            // Obtener Geolocalización GPS real del dispositivo
-            if (navigator.geolocation) {
+            // Obtener ubicación GPS actual del dispositivo
+            if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
+                    const lng = position.coords.longitude;
+                    const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
 
-                    await guardarEnSupabase(nombre, telefono, direccion, manzana, tipoAlerta, mapsUrl, grupo_sanguineo, alergias, contacto_ice);
-                }, async (error) => {
-                    // Si el usuario deniega el GPS, enviamos igual con ubicación por defecto o texto
-                    const mapsUrl = `https://maps.google.com/?q=-33.3017,-66.3378`; // San Luis Centro aprox
-                    await guardarEnSupabase(nombre, telefono, direccion, manzana, tipoAlerta, mapsUrl, grupo_sanguineo, alergias, contacto_ice);
+                    const payload = {
+                        nombre: nombre,
+                        telefono: telefono,
+                        direccion: direccion,
+                        manzana: manzana,
+                        tipo_alerta: tipoAlerta,
+                        es_coaccion: esCoaccion,
+                        latitud: lat,
+                        longitud: lng,
+                        maps_link: mapsLink,
+                        grupo_sanguineo: grupo_sanguineo,
+                        alergias: alergias,
+                        contacto_ice: contacto_ice,
+                        fecha_hora: new Date().toISOString()
+                    };
+
+                    try {
+                        const { data, error } = await supabaseClient
+                            .from('alertas')
+                            .insert([payload]);
+
+                        if (error) throw error;
+
+                        if (esCoaccion) {
+                            alert("Error 503: Falla de conexión con el servidor. Intente nuevamente.");
+                        } else {
+                            alert("🚨 ¡Alerta enviada con éxito! El Centro de Monitoreo fue notificado.");
+                        }
+
+                    } catch (err) {
+                        console.error("Error al enviar alerta:", err);
+                        alert("Ocurrió un error al enviar la señal. Verifique su conexión.");
+                    }
+                }, (error) => {
+                    alert("Por favor habilite el GPS para enviar su ubicación exacta.");
                 }, { enableHighAccuracy: true });
             } else {
-                const mapsUrl = `https://maps.google.com/?q=-33.3017,-66.3378`;
-                await guardarEnSupabase(nombre, telefono, direccion, manzana, tipoAlerta, mapsUrl, grupo_sanguineo, alergias, contacto_ice);
+                alert("Su dispositivo no soporta geolocalización GPS.");
             }
         }
-
-        async function guardarEnSupabase(nombre, telefono, direccion, manzana, tipoAlerta, ubicacion_url, grupo_sanguineo, alergias, contacto_ice) {
-            const { error } = await db.from('alertas').insert([
-                {
-                    nombre_vecino: nombre,
-                    telefono: telefono,
-                    direccion: direccion,
-                    manzana: manzana,
-                    tipo_alerta: tipoAlerta,
-                    ubicacion_url: ubicacion_url,
-                    grupo_sanguineo: grupo_sanguineo || 'No especificado',
-                    alergias: alergias || 'Ninguna',
-                    contacto_ice: contacto_ice || 'No especificado'
-                }
-            ]);
-
-            if (error) {
-                alert("Error al emitir alerta. Verifique su conexión.");
-            } else {
-                if (tipoAlerta.includes("COACCIÓN")) {
-                    // Falsa pantalla de error de red para engañar a terceros en caso de coacción
-                    alert("⚠️ Error de red temporal (Código 503). Intentando reconectar...");
-                } else {
-                    alert("✅ ¡Alerta emitida con éxito! El centro de monitoreo ha recibido su posición GPS.");
-                }
-                document.getElementById('alertaForm').reset();
-            }
-        }
-    </script>
-</body>
-</html>
