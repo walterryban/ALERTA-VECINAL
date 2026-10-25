@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Credenciales | Alerta Vecinal Pro</title>
+    <!-- Librería para generar QRs vectoriales -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --bg-color: #09090b;
+            --card-bg: #121214;
+            --border: #27272a;
+            --text: #f4f4f5;
+            --text-muted: #a1a1aa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #18181b;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #b71c1c;
+        }
+
+        /* Credencial Carnet para Imprimir */
+        .credential-card {
+            background: #ffffff;
+            color: #09090b;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            display: none;
+        }
+
+        .credential-header {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #d32f2f;
+            margin-bottom: 4px;
+        }
+
+        .credential-sub {
+            font-size: 0.75rem;
+            color: #52525b;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .qr-box {
+            display: flex;
+            justify-content: center;
+            margin: 16px 0;
+        }
+
+        .promoter-info {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #18181b;
+        }
+
+        .promoter-zone {
+            font-size: 0.85rem;
+            color: #52525b;
+            margin-top: 4px;
+        }
+
+        .btn-print {
+            background: #27272a;
+            color: white;
+            margin-top: 14px;
+        }
+
+        .nav-links {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🆔 Emisor de Credenciales</h1>
+        <div class="subtitle">Alerta Vecinal Pro | Campo Comercial</div>
+
+        <div class="form-group">
+            <label>Nombre y Apellido del Promotor *</label>
+            <input type="text" id="nombrePromotor" placeholder="Ej: Carlos Gómez">
+        </div>
+
+        <div class="form-group">
+            <label>Manzana / Sector Asignado *</label>
+            <input type="text" id="zonaPromotor" placeholder="Ej: Manzana C - Barrio Norte">
+        </div>
+
+        <button class="btn" onclick="generarCredencial()">🖨️ Generar Credencial Digital</button>
+
+        <!-- Tarjeta Credencial Visual -->
+        <div id="credentialPreview" class="credential-card">
+            <div class="credential-header">🛡️ ALERTA VECINAL PRO</div>
+            <div class="credential-sub">Credencial Oficial Autorizada</div>
+            
+            <div class="qr-box" id="qrcode"></div>
+
+            <div class="promoter-info" id="viewNombre">---</div>
+            <div class="promoter-zone" id="viewZona">---</div>
+
+            <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+        </div>
+
+        <div class="nav-links">
+            <a href="admin.html">← Volver al Centro de Monitoreo</a>
+        </div>
+    </div>
+
+    <script>
+        function generarCredencial() {
+            const nombre = document.getElementById('nombrePromotor').value.trim();
+            const zona = document.getElementById('zonaPromotor').value.trim();
+
+            if (!nombre || !zona) {
+                alert("Por favor completa el nombre y la zona del promotor.");
+                return;
+            }
+
+            document.getElementById('viewNombre').innerText = nombre;
+            document.getElementById('viewZona').innerText = "Sector: " + zona;
+
+            // Limpiar QR anterior si existe
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = "";
+
+            // URL base de la app que el vecino escaneará
+            const appUrl = "https://appvecinaldeseguridad.vercel.app/";
+
+            // Generar nuevo código QR
+            new QRCode(qrContainer, {
+                text: appUrl,
+                width: 160,
+                height: 160,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Mostrar tarjeta
+            document.getElementById('credentialPreview').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
