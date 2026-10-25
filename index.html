@@ -264,15 +264,15 @@
             content.style.display = content.style.display === 'block' ? 'none' : 'block';
         }
 
-        function accesoAdmin() {
-            const pinAdmin = prompt("Ingrese PIN de Operador:");
-            if (pinAdmin === "1234") { // Puedes cambiar tu PIN de operador aquí
-                window.location.href = "admin.html";
-            } else if (pinAdmin !== null) {
-                alert("PIN incorrecto.");
-            }
-        }
-
+     function accesoAdmin() {
+    const pinAdmin = prompt("Ingrese PIN de Operador:");
+    // Acepta tanto el PIN numérico como tu código de operador
+    if (pinAdmin === "1234" || pinAdmin === "SL-8492") { 
+        window.location.href = "admin.html";
+    } else if (pinAdmin !== null) {
+        alert("PIN incorrecto.");
+    }
+     }
         async function enviarAlerta(e) {
             e.preventDefault();
 
