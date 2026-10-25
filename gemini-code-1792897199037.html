@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Monitoreo | Alerta Vecinal Pro</title>
+    
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --bg-color: #09090b;
+            --card-bg: #121214;
+            --border: #27272a;
+            --text: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --danger-bg: rgba(239, 68, 68, 0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #22c55e;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 1; }
+            70% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(0.95); opacity: 0; }
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .alert-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+            animation: slide-in 0.3s ease-out;
+        }
+
+        .alert-card.coaccion {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #1f1f23, #2b1111);
+            animation: flash-red 1s infinite alternate;
+        }
+
+        @keyframes flash-red {
+            from { border-color: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.2); }
+            to { border-color: #f87171; box-shadow: 0 0 25px rgba(239,68,68,0.6); }
+        }
+
+        @keyframes slide-in {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .alert-type {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ef4444;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .alert-info {
+            font-size: 0.9rem;
+            margin: 6px 0;
+            color: #d4d4d8;
+        }
+
+        .alert-info strong {
+            color: var(--text);
+        }
+
+        .med-box {
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #38bdf8;
+        }
+
+        .btn-map {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 14px;
+            box-sizing: border-box;
+            transition: background 0.2s;
+        }
+
+        .btn-map:hover {
+            background: #b71c1c;
+        }
+
+        .no-alerts {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 60px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px dashed var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🛡️ Alerta Vecinal Pro <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">| Centro de Monitoreo</span></h1>
+        <div class="status-badge">
+            <div class="pulse"></div>
+            SISTEMA EN VIVO (CONECTADO)
+        </div>
+    </header>
+
+    <div id="alertas-grid" class="grid-container">
+        <div class="no-alerts">📡 Monitoreo activo. Esperando señales de emergencia en San Luis y Villa Mercedes...</div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeBL';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function cargarAlertasRecientes() {
+            const { data, error } = await db
+                .from('alertas')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
+
+            if (!error && data) {
+                renderizarAlertas(data);
+            }
+        }
+
+        function renderizarAlertas(alertas) {
+            const grid = document.getElementById('alertas-grid');
+            if (alertas.length === 0) {
+                grid.innerHTML = `<div class="no-alerts">📡 Monitoreo activo. Esperando señales de emergencia...</div>`;
+                return;
+            }
+
+            grid.innerHTML = alertas.map(alerta => {
+                const esCoaccion = alerta.tipo_alerta.includes('COACCIÓN');
+                const fecha = new Date(alerta.created_at).toLocaleTimeString();
+                
+                return `
+                    <div class="alert-card ${esCoaccion ? 'coaccion' : ''}">
+                        <div class="alert-type">
+                            <span>${alerta.tipo_alerta}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${fecha}</span>
+                        </div>
+                        <div class="alert-info">👤 <strong>Vecino:</strong> ${alerta.nombre_vecino || 'Desconocido'}</div>
+                        <div class="alert-info">📍 <strong>Zona / Manzana:</strong> ${alerta.manzana}</div>
+                        
+                        <a href="${alerta.ubicacion_url}" target="_blank" class="btn-map">🗺️ ABRIR GPS EN GOOGLE MAPS</a>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Escucha en tiempo real vía WebSockets de Supabase
+        db.channel('public:alertas')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'alertas' }, payload => {
+                // Reproduce un bip suave en la computadora del operador
+                reproducirAlarmaAudio();
+                cargarAlertasRecientes();
+            })
+            .subscribe();
+
+        function reproducirAlarmaAudio() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, ctx.currentTime);
+                osc.frequency.setValueAtTime(600, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
+        }
+
+        // Carga inicial al abrir la página
+        cargarAlertasRecientes();
+    </script>
+</body>
+</html>
