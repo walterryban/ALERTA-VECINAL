@@ -1,27 +1,31 @@
-<!DOCTYPE html>
+
+    <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alerta Vecinal Pro | San Luis & Villa Mercedes</title>
+    <title>Alerta Vecinal Pro | San Luis y Villa Mercedes</title>
     
-    <!-- Configuración PWA e Iconos -->
-    <link rel="manifest" href="manifest.json">
+    <!-- PWA / Meta Tags de Grado Comercial -->
     <meta name="theme-color" content="#d32f2f">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2561/2561380.png">
-    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Alerta Pro">
+
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
             --primary: #d32f2f;
-            --primary-dark: #b71c1c;
-            --bg-color: #121214;
-            --card-bg: #1f1f23;
+            --primary-hover: #b71c1c;
+            --bg-color: #09090b;
+            --card-bg: #121214;
+            --border: #27272a;
             --text: #f4f4f5;
             --text-muted: #a1a1aa;
             --success: #22c55e;
+            --coaction-bg: #1f1f23;
         }
 
         body {
@@ -31,78 +35,65 @@
             margin: 0;
             padding: 16px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
         .container {
             width: 100%;
             max-width: 480px;
             background: var(--card-bg);
+            border: 1px solid var(--border);
             border-radius: 20px;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
             padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             box-sizing: border-box;
-            border: 1px solid #27272a;
         }
 
-        .header {
+        h1 {
+            font-size: 1.4rem;
             text-align: center;
-            border-bottom: 1px solid #27272a;
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-        }
-
-        .header h1 {
-            margin: 8px 0 0 0;
+            margin-bottom: 4px;
             color: var(--primary);
-            font-size: 1.5rem;
-            letter-spacing: 0.5px;
         }
 
-        /* Radar de Zona Segura */
-        .radar-box {
+        .subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .status-radar {
             background: rgba(34, 197, 94, 0.1);
             border: 1px solid rgba(34, 197, 94, 0.3);
-            border-radius: 12px;
-            padding: 10px 14px;
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .radar-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
             color: var(--success);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
         }
 
-        .pulse-dot {
-            width: 10px;
-            height: 10px;
+        .pulse {
+            width: 8px;
+            height: 8px;
             background-color: var(--success);
             border-radius: 50%;
             box-shadow: 0 0 8px var(--success);
-            animation: pulse-ring 1.5s infinite;
+            animation: pulse 1.5s infinite;
         }
 
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-        }
-
-        .section-title {
-            font-size: 1rem;
-            font-weight: bold;
-            margin-bottom: 12px;
-            color: #e4e4e7;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 1; }
+            70% { transform: scale(1.6); opacity: 0; }
+            100% { transform: scale(0.95); opacity: 0; }
         }
 
         .form-group {
@@ -112,235 +103,154 @@
         label {
             display: block;
             font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 6px;
             color: var(--text-muted);
+            margin-bottom: 6px;
         }
 
-        input, select {
+        input {
             width: 100%;
             padding: 12px;
-            background-color: #18181b;
-            border: 1px solid #3f3f46;
-            color: white;
+            background: #18181b;
+            border: 1px solid var(--border);
             border-radius: 10px;
+            color: var(--text);
             font-size: 0.95rem;
             box-sizing: border-box;
             outline: none;
             transition: border-color 0.2s;
         }
 
-        input:focus, select:focus {
+        input:focus {
             border-color: var(--primary);
         }
 
-        input[readonly] {
-            background-color: #27272a;
-            color: #d4d4d8;
-            cursor: not-allowed;
+        .accordion-btn {
+            background: transparent;
+            border: none;
+            color: #38bdf8;
+            font-size: 0.85rem;
+            padding: 0;
+            margin: 10px 0 14px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .btn {
+        .accordion-content {
+            display: none;
+            background: rgba(14, 165, 233, 0.05);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 14px;
+        }
+
+        .btn-panic {
             width: 100%;
-            padding: 14px;
+            background: var(--primary);
+            color: white;
             border: none;
+            padding: 16px;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(211, 47, 47, 0.4);
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 10px;
         }
 
-        .btn:active {
+        .btn-panic:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-panic:active {
             transform: scale(0.98);
         }
 
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-emergency {
-            background: linear-gradient(135deg, #ef4444, #991b1b);
-            color: white;
-            font-size: 1.1rem;
-            letter-spacing: 0.5px;
-            margin-top: 12px;
-            border: 2px solid #f87171;
-            animation: pulse-border 2s infinite;
-        }
-
-        @keyframes pulse-border {
-            0% { border-color: rgba(248, 113, 113, 0.4); }
-            50% { border-color: rgba(248, 113, 113, 1); }
-            100% { border-color: rgba(248, 113, 113, 0.4); }
-        }
-
-        .badge-info {
-            background-color: rgba(14, 165, 233, 0.15);
-            color: #38bdf8;
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            margin-top: 6px;
-            display: none;
-            border: 1px solid rgba(14, 165, 233, 0.3);
-        }
-
-        /* Ficha Médica SOS */
-        details {
-            background: #18181b;
-            border: 1px solid #3f3f46;
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-top: 12px;
-        }
-
-        summary {
-            font-weight: bold;
-            font-size: 0.85rem;
-            cursor: pointer;
-            color: #38bdf8;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 16px;
-            width: 85%;
-            max-width: 360px;
+        .admin-link-container {
+            margin-top: 24px;
             text-align: center;
-            border: 1px solid #3f3f46;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
         }
 
-        .divider {
-            height: 1px;
-            background: #27272a;
-            margin: 20px 0;
+        .admin-link {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .admin-link:hover {
+            color: var(--text);
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="header">
-            <span style="font-size: 2.5rem;">🛡️</span>
-            <h1>Alerta Vecinal Pro</h1>
-            <p>Sistema Táctico de Seguridad Inteligente</p>
+        <h1>🛡️ Alerta Vecinal Pro</h1>
+        <div class="subtitle">Sistema Táctico de Seguridad Inteligente</div>
+
+        <div class="status-radar">
+            <div class="pulse"></div>
+            ZONA MONITOREADA EN TIEMPO REAL (GPS Activo)
         </div>
 
-        <!-- Radar de Estado de la Zona -->
-        <div class="radar-box">
-            <div class="radar-status">
-                <div class="pulse-dot"></div>
-                <span id="txt-radar-zona">ZONA MONITOREADA EN TIEMPO REAL</span>
-            </div>
-            <span style="font-size:0.75rem; color:var(--text-muted);">GPS Activo 📡</span>
-        </div>
-
-        <!-- Formulario de Registro -->
-        <div class="section-title">📝 Registro de Vecino</div>
-        <form id="registro-form">
+        <form id="alertaForm" onsubmit="enviarAlerta(event)">
             <div class="form-group">
-                <label for="nombre">Nombre y Apellido *</label>
-                <input type="text" id="nombre" placeholder="Ej: Carlos Gómez" required>
+                <label>Nombre y Apellido *</label>
+                <input type="text" id="nombre" required placeholder="Ej: Carlos Gómez">
             </div>
 
             <div class="form-group">
-                <label for="telefono">Teléfono (WhatsApp) *</label>
-                <input type="tel" id="telefono" placeholder="Ej: 2664123456" required>
+                <label>Teléfono (WhatsApp) *</label>
+                <input type="tel" id="telefono" required placeholder="Ej: 2664123456">
             </div>
 
             <div class="form-group">
-                <label for="direccion">Dirección / Altura *</label>
-                <input type="text" id="direccion" placeholder="Ej: San Martín 820" required>
+                <label>Dirección / Altura *</label>
+                <input type="text" id="direccion" required placeholder="Ej: San Martín 820">
             </div>
 
             <div class="form-group">
-                <label for="manzana">Manzana / Sector / Cuadra *</label>
-                <input type="text" id="manzana" placeholder="Ej: MANZANA A" required>
-                <div id="badge-auto" class="badge-info">📌 Zona detectada automáticamente por QR</div>
+                <label>Manzana / Sector / Cuadrante *</label>
+                <input type="text" id="manzana" required placeholder="Ej: MANZANA A">
             </div>
 
             <div class="form-group">
-                <label for="pin">PIN de Seguridad de la Zona *</label>
-                <input type="password" id="pin" maxlength="6" placeholder="PIN autorizado" required>
+                <label>PIN de Seguridad o Coacción *</label>
+                <input type="password" id="pin" required placeholder="PIN autorizado">
             </div>
 
-            <!-- Ficha Médica SOS (Opcional) -->
-            <details>
-                <summary>🚑 Ficha Médica SOS (Configuración Opcional)</summary>
-                <div style="margin-top: 10px;">
-                    <div class="form-group">
-                        <label for="sangre">Grupo Sanguíneo y Factor</label>
-                        <input type="text" id="sangre" placeholder="Ej: 0+ / A-">
-                    </div>
-                    <div class="form-group">
-                        <label for="alergias">Alergias o Condición Médica</label>
-                        <input type="text" id="alergias" placeholder="Ej: Diabetes / Alergia a Penicilina">
-                    </div>
-                    <div class="form-group">
-                        <label for="contacto-ice">Familiar de Contacto URGENTE</label>
-                        <input type="tel" id="contacto-ice" placeholder="Ej: 2664998877 (Esposa/Hijo)">
-                    </div>
+            <button type="button" class="accordion-btn" onclick="toggleMed()">
+                🚑 Ficha Médica SOS (Configuración Opcional)
+            </button>
+
+            <div id="medContent" class="accordion-content">
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label>Grupo Sanguíneo</label>
+                    <input type="text" id="grupo_sanguineo" placeholder="Ej: 0+">
                 </div>
-            </details>
-
-            <div style="margin-top: 16px;">
-                <button type="submit" class="btn btn-primary">Activar Terminal Segura</button>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label>Alergias / Medicamentos</label>
+                    <input type="text" id="alergias" placeholder="Ej: Alérgico a la penicilina">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Teléfono de Contacto ICE (Emergencia)</label>
+                    <input type="tel" id="contacto_ice" placeholder="Ej: Familiar directo">
+                </div>
             </div>
+
+            <button type="submit" class="btn-panic">🚨 Activar Terminal Segura</button>
         </form>
 
-        <div class="divider"></div>
-
-        <!-- Panel de Alarma Táctica -->
-        <div class="section-title">🚨 Consola de Emergencia</div>
-        <div class="form-group">
-            <label for="tipo-alerta">Motivo de Emergencia</label>
-            <select id="tipo-alerta">
-                <option value="🚨 ROBO / INSEGURIDAD">🚨 Robo / Inseguridad</option>
-                <option value="🔥 INCENDIO">🔥 Incendio</option>
-                <option value="🚑 EMERGENCIA MÉDICA SOS">🚑 Emergencia Médica</option>
-                <option value="👁️ SOSPECHOSO EN LA ZONA">👁️ Actividad Sospechosa</option>
-            </select>
-        </div>
-
-        <button type="button" class="btn btn-emergency" onclick="dispararAlerta()">
-            📢 DISPARAR ALERTA CON GPS & SIRENA
-        </button>
-
-        <div style="margin-top: 12px;">
-            <button type="button" class="btn" style="background:#27272a; color:#fff; font-size:0.85rem;" onclick="mostrarCredencial()">
-                🆔 Ver Credencial de Promotor Verificado
-            </button>
-        </div>
-        
-        <p style="font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
-            Red de Protección Vecinal San Luis & Villa Mercedes.
-        </p>
-    </div>
-
-    <!-- Modal Credencial Promotor -->
-    <div id="modal-credencial" class="modal">
-        <div class="modal-content">
-            <h3 style="color: var(--primary); margin-top:0;">🛡️ Promotor Verificado</h3>
-            <p id="info-promotor" style="font-size: 0.9rem; color: #d4d4d8;">Cargando credencial...</p>
-            <button class="btn btn-primary" style="margin-top:16px;" onclick="cerrarModal()">Cerrar</button>
+        <div class="admin-link-container">
+            <button class="admin-link" onclick="accesoAdmin()">🔒 Acceso Centro de Monitoreo</button>
         </div>
     </div>
 
@@ -349,169 +259,84 @@
         const SUPABASE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeBL';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let vendedorAsignado = 'Directo';
+        function toggleMed() {
+            const content = document.getElementById('medContent');
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const mzaParam = urlParams.get('mza');
-            const vendParam = urlParams.get('vend');
-
-            if (mzaParam) {
-                const mzaLimpia = decodeURIComponent(mzaParam).toUpperCase();
-                const inputManzana = document.getElementById('manzana');
-                inputManzana.value = mzaLimpia;
-                inputManzana.readOnly = true;
-                document.getElementById('badge-auto').style.display = 'block';
-                document.getElementById('txt-radar-zona').innerText = `RED ACTIVA: ${mzaLimpia}`;
+        function accesoAdmin() {
+            const pinAdmin = prompt("Ingrese PIN de Operador:");
+            if (pinAdmin === "1234") { // Puedes cambiar tu PIN de operador aquí
+                window.location.href = "admin.html";
+            } else if (pinAdmin !== null) {
+                alert("PIN incorrecto.");
             }
+        }
 
-            if (vendParam) {
-                vendedorAsignado = decodeURIComponent(vendParam).toUpperCase();
-            }
-        });
-
-        // Registro de Vecino
-        document.getElementById('registro-form').addEventListener('submit', async (e) => {
+        async function enviarAlerta(e) {
             e.preventDefault();
+
             const nombre = document.getElementById('nombre').value;
             const telefono = document.getElementById('telefono').value;
             const direccion = document.getElementById('direccion').value;
-            const manzana = document.getElementById('manzana').value.toUpperCase();
-            const pinIngresado = document.getElementById('pin').value;
-
-            // Datos Médicos ICE
-            const sangre = document.getElementById('sangre').value || 'No especificado';
-            const alergias = document.getElementById('alergias').value || 'Ninguna';
-            const contactoIce = document.getElementById('contacto-ice').value || 'Sin registrar';
-
-            const { data: mzaData, error: mzaError } = await db
-                .from('manzanas')
-                .select('pin_autorizado')
-                .eq('nombre_manzana', manzana)
-                .single();
-
-            if (mzaError || !mzaData) {
-                alert('❌ Zona no registrada en el sistema.');
-                return;
-            }
-
-            // Detección de PIN Inverso (Lógica de Coacción)
-            const pinInverso = mzaData.pin_autorizado.split('').reverse().join('');
-
-            if (pinIngresado !== mzaData.pin_autorizado && pinIngresado !== pinInverso) {
-                alert('❌ PIN de seguridad incorrecto.');
-                return;
-            }
-
-            const { error: insertError } = await db.from('vecinos').insert([{
-                nombre, telefono, direccion, manzana, vendedor: vendedorAsignado, pin_ingresado: pinIngresado, estado: 'ACTIVO'
-            }]);
-
-            if (insertError) {
-                alert('Error al registrar: ' + insertError.message);
-            } else {
-                alert('✅ ¡Terminal vinculada con éxito a Alerta Vecinal Pro!');
-            }
-        });
-
-        // Reproductor de Sirena Sonora por Audio Web
-        function reproducirSirena() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(900, audioCtx.currentTime + 0.3);
-                osc.frequency.linearRampToValueAtTime(400, audioCtx.currentTime + 0.6);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.6);
-            } catch(e) { console.log("Audio simulado"); }
-        }
-
-        // Disparo de Alerta Inteligente (Soporta PIN Normal y PIN de Coacción Inverso)
-        async function dispararAlerta() {
-            const tipo = document.getElementById('tipo-alerta').value;
-            const manzana = document.getElementById('manzana').value || 'ZONA GENERAL';
-            const nombre = document.getElementById('nombre').value || 'Vecino';
-            const pinIngresado = document.getElementById('pin').value;
-
-            // Ficha Médica
-            const sangre = document.getElementById('sangre').value;
+            const manzana = document.getElementById('manzana').value;
+            const pin = document.getElementById('pin').value;
+            
+            const grupo_sanguineo = document.getElementById('grupo_sanguineo').value;
             const alergias = document.getElementById('alergias').value;
-            const contactoIce = document.getElementById('contacto-ice').value;
+            const contacto_ice = document.getElementById('contacto_ice').value;
 
-            // Consulta PIN oficial de Supabase
-            const { data: mzaData } = await db
-                .from('manzanas')
-                .select('pin_autorizado')
-                .eq('nombre_manzana', manzana)
-                .single();
-
-            const pinOficial = mzaData ? mzaData.pin_autorizado : '';
-            const pinCoaccion = pinOficial.split('').reverse().join('');
-
-            // MODO SILENCIOSO DE COACCIÓN ACTIVADO
-            if (pinIngresado && pinIngresado === pinCoaccion) {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(async (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        const mapUrl = `https://maps.google.com/?q=${lat},${lng}`;
-
-                        // Guarda alerta roja de coacción en Supabase en silencio
-                        await db.from('alertas').insert([{
-                            tipo_alerta: '🚨 COACCIÓN / REHÉN (SILENCIOSO)',
-                            manzana,
-                            ubicacion_url: mapUrl,
-                            nombre_vecino: nombre
-                        }]);
-
-                        // PANTALLA ENGAÑO: Finge fallo de red para despistar al delincuente
-                        alert("⚠️ Error de conexión (0x8004): No se pudo establecer enlace con la central. Intente nuevamente en unos minutos.");
-                    });
-                }
-                return; // Corta la ejecución para no sonar sirena ni abrir WhatsApp
+            // Simulación de PIN de Coacción Inverso (Ej: Si el PIN termina en 99 o es específico)
+            let tipoAlerta = "🚨 ALERTA GENERAL DE PÁNICO";
+            if (pin === "9999" || pin.startsWith("00")) {
+                tipoAlerta = "⚠️ ALERTA SILENCIOSA DE COACCIÓN (REHENES)";
             }
 
-            // DISPARO NORMAL
-            reproducirSirena();
-
-            if ("geolocation" in navigator) {
+            // Obtener Geolocalización GPS real del dispositivo
+            if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const mapUrl = `https://maps.google.com/?q=${lat},${lng}`;
+                    const lon = position.coords.longitude;
+                    const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
 
-                    await db.from('alertas').insert([{
-                        tipo_alerta: tipo, manzana, ubicacion_url: mapUrl, nombre_vecino: nombre
-                    }]);
-
-                    let textoMedica = '';
-                    if (tipo.includes('MÉDICA') && (sangre || alergias || contactoIce)) {
-                        textoMedica = `\n\n🩸 *Ficha SOS:* Grupo: ${sangre || 'N/D'} | Alergias: ${alergias || 'N/D'}\n📞 *Contacto ICE:* ${contactoIce || 'N/D'}`;
-                    }
-
-                    const mensaje = encodeURIComponent(`*${tipo}*\n\n👤 *Vecino:* ${nombre}\n📍 *Zona:* ${manzana}\n🗺️ *GPS:* ${mapUrl}${textoMedica}`);
-                    window.open(`https://wa.me/?text=${mensaje}`, '_blank');
-                }, () => {
-                    alert("Habilite el GPS para enviar su ubicación exacta.");
-                });
+                    await guardarEnSupabase(nombre, telefono, direccion, manzana, tipoAlerta, mapsUrl, grupo_sanguineo, alergias, contacto_ice);
+                }, async (error) => {
+                    // Si el usuario deniega el GPS, enviamos igual con ubicación por defecto o texto
+                    const mapsUrl = `https://maps.google.com/?q=-33.3017,-66.3378`; // San Luis Centro aprox
+                    await guardarEnSupabase(nombre, telefono, direccion, manzana, tipoAlerta, mapsUrl, grupo_sanguineo, alergias, contacto_ice);
+                }, { enableHighAccuracy: true });
             } else {
-                alert("Geolocalización no soportada.");
+                const mapsUrl = `https://maps.google.com/?q=-33.3017,-66.3378`;
+                await guardarEnSupabase(nombre, telefono, direccion, manzana, tipoAlerta, mapsUrl, grupo_sanguineo, alergias, contacto_ice);
             }
         }
 
-        function mostrarCredencial() {
-            document.getElementById('info-promotor').innerHTML = `Código Registrado: <strong>${vendedorAsignado}</strong><br>Estado: <span style="color:#22c55e;">Verificado Oficialmente ✅</span>`;
-            document.getElementById('modal-credencial').style.display = 'flex';
-        }
+        async function guardarEnSupabase(nombre, telefono, direccion, manzana, tipoAlerta, ubicacion_url, grupo_sanguineo, alergias, contacto_ice) {
+            const { error } = await db.from('alertas').insert([
+                {
+                    nombre_vecino: nombre,
+                    telefono: telefono,
+                    direccion: direccion,
+                    manzana: manzana,
+                    tipo_alerta: tipoAlerta,
+                    ubicacion_url: ubicacion_url,
+                    grupo_sanguineo: grupo_sanguineo || 'No especificado',
+                    alergias: alergias || 'Ninguna',
+                    contacto_ice: contacto_ice || 'No especificado'
+                }
+            ]);
 
-        function cerrarModal() {
-            document.getElementById('modal-credencial').style.display = 'none';
+            if (error) {
+                alert("Error al emitir alerta. Verifique su conexión.");
+            } else {
+                if (tipoAlerta.includes("COACCIÓN")) {
+                    // Falsa pantalla de error de red para engañar a terceros en caso de coacción
+                    alert("⚠️ Error de red temporal (Código 503). Intentando reconectar...");
+                } else {
+                    alert("✅ ¡Alerta emitida con éxito! El centro de monitoreo ha recibido su posición GPS.");
+                }
+                document.getElementById('alertaForm').reset();
+            }
         }
     </script>
 </body>
