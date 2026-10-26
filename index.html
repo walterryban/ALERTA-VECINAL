@@ -210,26 +210,16 @@
             }
         }
 
-        // Función auxiliar para obtener posición con Promesa
         function obtenerUbicacionGPS() {
             return new Promise((resolve) => {
                 if (!("geolocation" in navigator)) {
                     resolve(null);
                     return;
                 }
-
                 navigator.geolocation.getCurrentPosition(
                     (pos) => resolve(pos.coords),
-                    (err) => {
-                        console.warn("GPS Falló o demoró, reintentando con menor precisión:", err);
-                        // Reintento rápido con menor precisión (red celular / wifi)
-                        navigator.geolocation.getCurrentPosition(
-                            (pos2) => resolve(pos2.coords),
-                            () => resolve(null),
-                            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
-                        );
-                    },
-                    { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+                    () => resolve(null),
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
                 );
             });
         }
@@ -254,12 +244,11 @@
             const esCoaccion = (pin === "9999");
             const tipoAlerta = esCoaccion ? "COACCION / REHENES" : "ALERTA PANICO";
 
-            // Intentamos obtener GPS sin congelar la app
             const coords = await obtenerUbicacionGPS();
 
             let lat = null;
             let lng = null;
-            let mapsLink = "Sin GPS preciso (Dirección ingresada: " + direccion + ")";
+            let mapsLink = "Sin GPS preciso (Dirección: " + direccion + ")";
 
             if (coords) {
                 lat = coords.latitude;
@@ -296,7 +285,7 @@
                     alert("🚨 ¡Alerta enviada con éxito! El Centro de Monitoreo fue notificado.");
                 }
 
-            </div> catch (err) {
+            } catch (err) {
                 console.error("Error al enviar alerta a Supabase:", err);
                 alert("Error al guardar en Supabase. Verifique conexión a internet.");
             } finally {
