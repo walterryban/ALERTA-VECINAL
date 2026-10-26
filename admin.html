@@ -285,7 +285,7 @@
         // GENERADOR DE QR
         let qrCodeInstance = null;
 
-        function generarQRManzana() {
+       function generarQRManzana() {
             const mzaVal = document.getElementById('mzaInput').value.trim();
             if (!mzaVal) {
                 alert("Por favor escribe el nombre o número de la manzana.");
@@ -296,7 +296,10 @@
             const fullUrl = `${baseUrl}?mza=${encodeURIComponent(mzaVal)}`;
 
             document.getElementById('qrTitle').innerText = `🚨 ALERTA VECINAL - ${mzaVal.toUpperCase()}`;
-            document.getElementById('qrUrlText').innerText = fullUrl;
+            
+            // AHORA ES UN ENLACE CLICKEABLE REAL QUE ABRE EN NUEVA PESTAÑA
+            const urlTextContainer = document.getElementById('qrUrlText');
+            urlTextContainer.innerHTML = `<a href="${fullUrl}" target="_blank" style="color: #0284c7; font-weight: bold; text-decoration: underline;">🔗 Abrir enlace de prueba: ${fullUrl}</a>`;
 
             const qrDiv = document.getElementById("qrcode");
             qrDiv.innerHTML = "";
@@ -312,7 +315,6 @@
 
             document.getElementById('qrContainer').style.display = "block";
         }
-
         function imprimirQR() {
             const printContent = document.getElementById('qrContainer').innerHTML;
             const printWindow = window.open('', '', 'height=600,width=600');
