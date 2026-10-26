@@ -9,8 +9,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Alerta Pro">
-    <!-- Librería de Supabase -->
+    
+    <!-- Librería oficial de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         :root {
             --primary: #d32f2f;
@@ -181,10 +183,18 @@
     </div>
 
     <script>
-        // Configuración de Supabase
-        const SUPABASE_URL = 'https://tu-proyecto.supabase.co'; // Reemplaza con tu URL si difiere
-        const SUPABASE_ANON_KEY = 'tu-clave-anon'; // Reemplaza con tu Key si difiere
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ==========================================
+        // CONFIGURACIÓN DE SUPABASE (REVISA TUS DATOS)
+        // ==========================================
+        const SUPABASE_URL = 'https://TU_SUPABASE_URL.supabase.co';
+        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+        
+        let supabaseClient;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (err) {
+            console.error("Error al inicializar Supabase:", err);
+        }
 
         function toggleMed() {
             const content = document.getElementById('medContent');
@@ -200,8 +210,9 @@
             }
         }
 
-async function enviarAlerta(e) {
+        async function enviarAlerta(e) {
             e.preventDefault();
+            alert("✅ Formulario interceptado correctamente. Obteniendo GPS...");
 
             const nombre = document.getElementById('nombre').value;
             const telefono = document.getElementById('telefono').value;
@@ -216,20 +227,10 @@ async function enviarAlerta(e) {
             const esCoaccion = (pin === "9999");
             const tipoAlerta = esCoaccion ? "COACCION / REHENES" : "ALERTA PANICO";
 
-            // Validar si el navegador soporta geolocalización
             if (!("geolocation" in navigator)) {
                 alert("Su dispositivo no soporta geolocalización GPS.");
                 return;
             }
-
-            alert("📍 Obteniendo ubicación GPS, espere un segundo...");
-
-            // Opciones de GPS con tiempo de espera para evitar bloqueos
-            const gpsOptions = {
-                enableHighAccuracy: true,
-                timeout: 10000, // Espera máximo 10 segundos
-                maximumAge: 0
-            };
 
             navigator.geolocation.getCurrentPosition(async (position) => {
                 const lat = position.coords.latitude;
@@ -266,12 +267,14 @@ async function enviarAlerta(e) {
                     }
 
                 } catch (err) {
-                    console.error("Error al enviar alerta:", err);
-                    alert("Ocurrió un error al enviar la señal a Supabase. Verifique su conexión.");
+                    console.error("Error al enviar alerta a Supabase:", err);
+                    alert("Error al guardar en Supabase. Verifique las credenciales de la base de datos.");
                 }
-
             }, (error) => {
                 console.error("Error de GPS:", error);
-                alert("No se pudo obtener la ubicación GPS. Asegúrese de tener el GPS activado y los permisos concedidos.");
-            }, gpsOptions);
+                alert("No se pudo obtener la ubicación GPS. Por favor verifique los permisos de ubicación.");
+            }, { enableHighAccuracy: true, timeout: 10000 });
         }
+    </script>
+</body>
+</html>
