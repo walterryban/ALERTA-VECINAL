@@ -183,11 +183,12 @@
     </div>
 
     <script>
+     
+// ==========================================
+        // CONFIGURACIÓN OFICIAL DE SUPABASE
         // ==========================================
-        // CONFIGURACIÓN DE SUPABASE (REVISA TUS DATOS)
-        // ==========================================
-        const SUPABASE_URL = 'https://TU_SUPABASE_URL.supabase.co';
-        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+        const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
         
         let supabaseClient;
         try {
@@ -195,7 +196,6 @@
         } catch (err) {
             console.error("Error al inicializar Supabase:", err);
         }
-
         function toggleMed() {
             const content = document.getElementById('medContent');
             content.style.display = content.style.display === 'block' ? 'none' : 'block';
