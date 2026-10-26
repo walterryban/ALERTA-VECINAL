@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Monitoreo | Alerta Vecinal Pro</title>
+    <title>Centro de Monitoreo Pro | Alerta Vecinal</title>
     
     <!-- Librería para generar QRs dinámicos -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -15,38 +15,108 @@
             --bg: #09090b;
             --card-bg: #121215;
             --text: #ffffff;
+            --text-muted: #a1a1aa;
             --border: #27272a;
-            --primary: #38bdf8;
+            --primary: #ef4444;
+            --accent: #38bdf8;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
         }
         h1, h2 {
+            margin: 0;
             color: #ffffff;
         }
+        h1 { font-size: 1.4rem; }
+        h2 { font-size: 1.1rem; margin-bottom: 12px; }
+
+        .btn-refresh {
+            background: #27272a;
+            color: var(--text);
+            border: 1px solid #3f3f46;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-refresh:hover { background: #3f3f46; }
+
         .section-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 24px;
-            max-width: 600px;
         }
+
+        /* ESTILOS DE LA TABLA DE ALERTAS EN VIVO */
+        .table-responsive {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: #18181b;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .badge-alerta {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--primary);
+            color: #fca5a5;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .btn-map {
+            background: #0284c7;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .btn-map:hover { background: #0369a1; }
+
+        /* GENERADOR DE QR */
         .form-group {
             margin-bottom: 14px;
         }
         label {
             display: block;
             font-size: 0.9rem;
-            color: #a1a1aa;
+            color: var(--text-muted);
             margin-bottom: 6px;
         }
         input {
             width: 100%;
+            max-width: 400px;
             padding: 12px;
             background: #18181b;
             border: 1px solid var(--border);
@@ -56,7 +126,7 @@
             box-sizing: border-box;
         }
         .btn-gen {
-            background: var(--primary);
+            background: var(--accent);
             color: #000000;
             font-weight: bold;
             border: none;
@@ -64,8 +134,6 @@
             border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
-            width: 100%;
-            margin-top: 10px;
         }
         .qr-output {
             margin-top: 20px;
@@ -75,6 +143,7 @@
             padding: 20px;
             border-radius: 12px;
             color: #000;
+            max-width: 350px;
         }
         #qrcode {
             display: flex;
@@ -89,40 +158,131 @@
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
         }
     </style>
 </head>
 <body>
 
-    <h1>🔒 Centro de Monitoreo & Gestión de Manzanas</h1>
+    <header>
+        <h1>🚨 Centro de Monitoreo Pro</h1>
+        <button class="btn-refresh" onclick="cargarAlertas()">🔄 Actualizar Alertas</button>
+    </header>
 
-    <!-- HERRAMIENTA 1: GENERADOR DE QR POR MANZANA QUE ABONÓ -->
+    <!-- SECCIÓN 1: MONITOREO DE ALERTAS EN VIVO -->
     <div class="section-card">
-        <h2>🏷️ Generador Automático de QR por Manzana</h2>
-        <p style="color: #a1a1aa; font-size: 0.9rem;">
-            Ingresa el nombre de la manzana que contrató el servicio único para generar su cartel QR oficial.
+        <h2>📡 Alertas Recientes de Vecinos</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha / Hora</th>
+                        <th>Vecino / Tel</th>
+                        <th>Manzana / Dir</th>
+                        <th>Tipo de Evento</th>
+                        <th>Ficha Médica</th>
+                        <th>Ubicación GPS</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaAlertas">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted);">Cargando alertas desde Supabase...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 2: GENERADOR DE QR POR MANZANA -->
+    <div class="section-card">
+        <h2>🏷️ Generador Automático de QR por Manzana (Pago Único)</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Ingresa la manzana que abonó la instalación para generar su código QR y entregar el cartel.
         </p>
 
         <div class="form-group">
             <label for="mzaInput">Nombre / Número de Manzana / Cuadra:</label>
-            <input type="text" id="mzaInput" placeholder="Ej: Manzana 12 o Cuadra España 400">
+            <input type="text" id="mzaInput" placeholder="Ej: Manzana 12">
         </div>
 
         <button class="btn-gen" onclick="generarQRManzana()">📱 Generar Código QR de Acceso</button>
 
-        <!-- RESULTADO DEL QR -->
         <div id="qrContainer" class="qr-output">
             <h3 id="qrTitle" style="margin: 0; color: #000;"></h3>
             <div id="qrcode"></div>
-            <p id="qrUrlText" style="font-size: 0.8rem; color: #555; word-break: break-all;"></p>
-            <p><strong>PIN de Activación para el Vecino:</strong> <span style="background: #e0f2fe; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #0369a1;">3030</span></p>
-            <button class="btn-print" onclick="imprimirQR()">🖨️ Imprimir / Guardar Cartel QR</button>
+            <p id="qrUrlText" style="font-size: 0.75rem; color: #555; word-break: break-all;"></p>
+            <p><strong>PIN de Acceso Vecino:</strong> <span style="background: #e0f2fe; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #0369a1;">3030</span></p>
+            <button class="btn-print" onclick="imprimirQR()">🖨️ Imprimir Cartel QR</button>
         </div>
     </div>
 
     <script>
+        const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
+        
+        let supabaseClient;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (err) {
+            console.error("Error Supabase:", err);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarAlertas();
+            // Actualizar automáticamente cada 30 segundos
+            setInterval(cargarAlertas, 30000);
+        });
+
+        // CARGAR ALERTAS DESDE SUPABASE
+        async function cargarAlertas() {
+            if (!supabaseClient) return;
+
+            const tbody = document.getElementById('tablaAlertas');
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('alertas')
+                    .select('*')
+                    .order('fecha_hora', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No hay alertas registradas recientemente.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = "";
+                data.forEach(alerta => {
+                    const fechaFormateada = alerta.fecha_hora ? new Date(alerta.fecha_hora).toLocaleString() : "Reciente";
+                    
+                    const fichaMedica = `
+                        🩸 <b>Sangre:</b> ${alerta.grupo_sanguineo || 'No especif.'}<br>
+                        ⚠️ <b>Alergias:</b> ${alerta.alergias || 'Ninguna'}<br>
+                        📞 <b>ICE:</b> ${alerta.contacto_ice || 'No cargado'}
+                    `;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="white-space: nowrap; color: var(--text-muted);">${fechaFormateada}</td>
+                        <td><strong>${alerta.nombre || 'Anónimo'}</strong><br><span style="font-size:0.8rem; color:var(--text-muted);">${alerta.telefono || ''}</span></td>
+                        <td><strong>${alerta.manzana || 'General'}</strong><br><span style="font-size:0.8rem; color:var(--text-muted);">${alerta.direccion || ''}</span></td>
+                        <td><span class="badge-alerta">${alerta.tipo_alerta || 'SOS'}</span></td>
+                        <td style="font-size: 0.8rem;">${fichaMedica}</td>
+                        <td>
+                            ${alerta.maps_link ? `<a class="btn-map" href="${alerta.maps_link}" target="_blank">🗺️ Ver Mapa</a>` : 'Sin GPS'}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (err) {
+                console.error("Error al cargar alertas:", err);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444;">Error al conectar con la base de datos.</td></tr>`;
+            }
+        }
+
+        // GENERADOR DE QR
         let qrCodeInstance = null;
 
         function generarQRManzana() {
@@ -132,18 +292,15 @@
                 return;
             }
 
-            // URL base dinámica del proyecto desplegado
             const baseUrl = window.location.origin + window.location.pathname.replace("admin.html", "index.html");
             const fullUrl = `${baseUrl}?mza=${encodeURIComponent(mzaVal)}`;
 
             document.getElementById('qrTitle').innerText = `🚨 ALERTA VECINAL - ${mzaVal.toUpperCase()}`;
             document.getElementById('qrUrlText').innerText = fullUrl;
 
-            // Limpiar QR anterior si existe
             const qrDiv = document.getElementById("qrcode");
             qrDiv.innerHTML = "";
 
-            // Generar nuevo QR
             qrCodeInstance = new QRCode(qrDiv, {
                 text: fullUrl,
                 width: 220,
