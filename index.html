@@ -1,36 +1,28 @@
-
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alerta Vecinal Pro | San Luis y Villa Mercedes</title>
     <link rel="manifest" href="manifest.json">
-    <!-- PWA / Meta Tags de Grado Comercial -->
     <meta name="theme-color" content="#d32f2f">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Alerta Pro">
-
-    <!-- Supabase JS CDN -->
+    <!-- Librería de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
         :root {
             --primary: #d32f2f;
-            --primary-hover: #b71c1c;
-            --bg-color: #09090b;
-            --card-bg: #121214;
-            --border: #27272a;
+            --bg: #09090b;
+            --card-bg: #121215;
             --text: #f4f4f5;
             --text-muted: #a1a1aa;
-            --success: #22c55e;
-            --coaction-bg: #1f1f23;
+            --border: #27272a;
         }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
             color: var(--text);
             margin: 0;
             padding: 16px;
@@ -40,73 +32,30 @@
             min-height: 100vh;
             box-sizing: border-box;
         }
-
         .container {
             width: 100%;
-            max-width: 480px;
+            max-width: 420px;
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            box-sizing: border-box;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-
         h1 {
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             text-align: center;
-            margin-bottom: 4px;
-            color: var(--primary);
-        }
-
-        .subtitle {
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
             margin-bottom: 20px;
+            color: #fff;
         }
-
-        .status-radar {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            color: var(--success);
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        .pulse {
-            width: 8px;
-            height: 8px;
-            background-color: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--success);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(0.95); opacity: 1; }
-            70% { transform: scale(1.6); opacity: 0; }
-            100% { transform: scale(0.95); opacity: 0; }
-        }
-
         .form-group {
             margin-bottom: 14px;
         }
-
         label {
             display: block;
             font-size: 0.8rem;
             color: var(--text-muted);
             margin-bottom: 6px;
         }
-
         input {
             width: 100%;
             padding: 12px;
@@ -119,11 +68,9 @@
             outline: none;
             transition: border-color 0.2s;
         }
-
         input:focus {
             border-color: var(--primary);
         }
-
         .accordion-btn {
             background: transparent;
             border: none;
@@ -136,7 +83,6 @@
             align-items: center;
             gap: 6px;
         }
-
         .accordion-content {
             display: none;
             background: rgba(14, 165, 233, 0.05);
@@ -145,121 +91,102 @@
             padding: 12px;
             margin-bottom: 14px;
         }
-
-        .btn-panic {
+        .btn-alerta {
             width: 100%;
+            padding: 14px;
             background: var(--primary);
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 1.1rem;
+            border-radius: 10px;
             font-weight: bold;
+            font-size: 1rem;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(211, 47, 47, 0.4);
-            transition: background 0.2s, transform 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin-top: 10px;
         }
-
-        .btn-panic:hover {
-            background: var(--primary-hover);
-        }
-
-        .btn-panic:active {
+        .btn-alerta:active {
+            opacity: 0.9;
             transform: scale(0.98);
         }
-
-        .admin-link-container {
-            margin-top: 24px;
-            text-align: center;
-            border-top: 1px solid var(--border);
-            padding-top: 14px;
-        }
-
         .admin-link {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            cursor: pointer;
-            text-decoration: underline;
+            text-align: center;
+            margin-top: 20px;
         }
-
-        .admin-link:hover {
+        .admin-link a {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+        .admin-link a:hover {
             color: var(--text);
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h1>🛡️ Alerta Vecinal Pro</h1>
-        <div class="subtitle">Sistema Táctico de Seguridad Inteligente</div>
-
-        <div class="status-radar">
-            <div class="pulse"></div>
-            ZONA MONITOREADA EN TIEMPO REAL (GPS Activo)
-        </div>
-
+        <h1>🚨 Alerta Vecinal Pro</h1>
+        
         <form id="alertaForm" onsubmit="enviarAlerta(event)">
             <div class="form-group">
-                <label>Nombre y Apellido *</label>
-                <input type="text" id="nombre" required placeholder="Ej: Carlos Gómez">
+                <label>Nombre y Apellido</label>
+                <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
             </div>
 
             <div class="form-group">
-                <label>Teléfono (WhatsApp) *</label>
-                <input type="tel" id="telefono" required placeholder="Ej: 2664123456">
+                <label>Teléfono / Celular</label>
+                <input type="tel" id="telefono" required placeholder="Ej: 2664...">
             </div>
 
             <div class="form-group">
-                <label>Dirección / Altura *</label>
-                <input type="text" id="direccion" required placeholder="Ej: San Martín 820">
+                <label>Dirección / Calle</label>
+                <input type="text" id="direccion" required placeholder="Ej: Av. España">
             </div>
 
             <div class="form-group">
-                <label>Manzana / Sector / Cuadrante *</label>
-                <input type="text" id="manzana" required placeholder="Ej: MANZANA A">
+                <label>Manzana / Casa / Lote</label>
+                <input type="text" id="manzana" required placeholder="Ej: Mza 3 Casa 12">
             </div>
 
             <div class="form-group">
-                <label>PIN de Seguridad o Coacción *</label>
-                <input type="password" id="pin" required placeholder="PIN autorizado">
+                <label>PIN de Seguridad / Coacción</label>
+                <input type="password" id="pin" required placeholder="PIN (ej: 1234)">
             </div>
 
             <button type="button" class="accordion-btn" onclick="toggleMed()">
-                🚑 Ficha Médica SOS (Configuración Opcional)
+                <span>➕ Agregar Ficha Médica SOS (Opcional)</span>
             </button>
 
             <div id="medContent" class="accordion-content">
-                <div class="form-group" style="margin-bottom: 8px;">
+                <div class="form-group">
                     <label>Grupo Sanguíneo</label>
-                    <input type="text" id="grupo_sanguineo" placeholder="Ej: 0+">
+                    <input type="text" id="grupo_sanguineo" placeholder="Ej: O+">
                 </div>
-                <div class="form-group" style="margin-bottom: 8px;">
-                    <label>Alergias / Medicamentos</label>
-                    <input type="text" id="alergias" placeholder="Ej: Alérgico a la penicilina">
+                <div class="form-group">
+                    <label>Alergias / Padecimientos</label>
+                    <input type="text" id="alergias" placeholder="Ej: Penicilina, Asma">
                 </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>Teléfono de Contacto ICE (Emergencia)</label>
-                    <input type="tel" id="contacto_ice" placeholder="Ej: Familiar directo">
+                <div class="form-group">
+                    <label>Contacto ICE (Emergencia)</label>
+                    <input type="text" id="contacto_ice" placeholder="Nombre y Teléfono">
                 </div>
             </div>
 
-            <button type="submit" class="btn-panic">🚨 Activar Terminal Segura</button>
+            <button type="submit" class="btn-alerta">🚨 Activar Terminal Segura</button>
         </form>
 
-        <div class="admin-link-container">
-            <button class="admin-link" onclick="accesoAdmin()">🔒 Acceso Centro de Monitoreo</button>
+        <div class="admin-link">
+            <a href="#" onclick="accesoAdmin()">🔒 Acceso Centro de Monitoreo</a>
         </div>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeBL';
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Inicialización de Supabase (Asegúrate de tener tus credenciales correctas)
+        const SUPABASE_URL = 'https://TU_SUPABASE_URL.supabase.co';
+        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-       function toggleMed() {
+        function toggleMed() {
             const content = document.getElementById('medContent');
             content.style.display = content.style.display === 'block' ? 'none' : 'block';
         }
@@ -286,11 +213,9 @@
             const alergias = document.getElementById('alergias').value;
             const contacto_ice = document.getElementById('contacto_ice').value;
 
-            // Evaluación del Protocolo de Coacción (PIN 9999)
             const esCoaccion = (pin === "9999");
             const tipoAlerta = esCoaccion ? "COACCION / REHENES" : "ALERTA PANICO";
 
-            // Obtener ubicación GPS actual del dispositivo
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const lat = position.coords.latitude;
@@ -337,3 +262,6 @@
                 alert("Su dispositivo no soporta geolocalización GPS.");
             }
         }
+    </script>
+</body>
+</html>
