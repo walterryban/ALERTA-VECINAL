@@ -174,7 +174,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-alerta">🚨 Activar Terminal Segura</button>
+            <button type="submit" id="submitBtn" class="btn-alerta">🚨 Activar Terminal Segura</button>
         </form>
 
         <div class="admin-link">
@@ -183,8 +183,7 @@
     </div>
 
     <script>
-     
-// ==========================================
+        // ==========================================
         // CONFIGURACIÓN OFICIAL DE SUPABASE
         // ==========================================
         const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
@@ -196,6 +195,7 @@
         } catch (err) {
             console.error("Error al inicializar Supabase:", err);
         }
+
         function toggleMed() {
             const content = document.getElementById('medContent');
             content.style.display = content.style.display === 'block' ? 'none' : 'block';
@@ -210,9 +210,36 @@
             }
         }
 
+        // Función auxiliar para obtener posición con Promesa
+        function obtenerUbicacionGPS() {
+            return new Promise((resolve) => {
+                if (!("geolocation" in navigator)) {
+                    resolve(null);
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve(pos.coords),
+                    (err) => {
+                        console.warn("GPS Falló o demoró, reintentando con menor precisión:", err);
+                        // Reintento rápido con menor precisión (red celular / wifi)
+                        navigator.geolocation.getCurrentPosition(
+                            (pos2) => resolve(pos2.coords),
+                            () => resolve(null),
+                            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+                        );
+                    },
+                    { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+                );
+            });
+        }
+
         async function enviarAlerta(e) {
             e.preventDefault();
-            alert("✅ Formulario interceptado correctamente. Obteniendo GPS...");
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "⏳ ENVIANDO ALERTA...";
 
             const nombre = document.getElementById('nombre').value;
             const telefono = document.getElementById('telefono').value;
@@ -227,53 +254,55 @@
             const esCoaccion = (pin === "9999");
             const tipoAlerta = esCoaccion ? "COACCION / REHENES" : "ALERTA PANICO";
 
-            if (!("geolocation" in navigator)) {
-                alert("Su dispositivo no soporta geolocalización GPS.");
-                return;
+            // Intentamos obtener GPS sin congelar la app
+            const coords = await obtenerUbicacionGPS();
+
+            let lat = null;
+            let lng = null;
+            let mapsLink = "Sin GPS preciso (Dirección ingresada: " + direccion + ")";
+
+            if (coords) {
+                lat = coords.latitude;
+                lng = coords.longitude;
+                mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
             }
 
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+            const payload = {
+                nombre: nombre,
+                telefono: telefono,
+                direccion: direccion,
+                manzana: manzana,
+                tipo_alerta: tipoAlerta,
+                es_coaccion: esCoaccion,
+                latitud: lat,
+                longitud: lng,
+                maps_link: mapsLink,
+                grupo_sanguineo: grupo_sanguineo,
+                alergias: alergias,
+                contacto_ice: contacto_ice,
+                fecha_hora: new Date().toISOString()
+            };
 
-                const payload = {
-                    nombre: nombre,
-                    telefono: telefono,
-                    direccion: direccion,
-                    manzana: manzana,
-                    tipo_alerta: tipoAlerta,
-                    es_coaccion: esCoaccion,
-                    latitud: lat,
-                    longitud: lng,
-                    maps_link: mapsLink,
-                    grupo_sanguineo: grupo_sanguineo,
-                    alergias: alergias,
-                    contacto_ice: contacto_ice,
-                    fecha_hora: new Date().toISOString()
-                };
+            try {
+                const { data, error } = await supabaseClient
+                    .from('alertas')
+                    .insert([payload]);
 
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('alertas')
-                        .insert([payload]);
+                if (error) throw error;
 
-                    if (error) throw error;
-
-                    if (esCoaccion) {
-                        alert("Error 503: Falla de conexión con el servidor. Intente nuevamente.");
-                    } else {
-                        alert("🚨 ¡Alerta enviada con éxito! El Centro de Monitoreo fue notificado.");
-                    }
-
-                } catch (err) {
-                    console.error("Error al enviar alerta a Supabase:", err);
-                    alert("Error al guardar en Supabase. Verifique las credenciales de la base de datos.");
+                if (esCoaccion) {
+                    alert("Error 503: Falla de conexión con el servidor. Intente nuevamente.");
+                } else {
+                    alert("🚨 ¡Alerta enviada con éxito! El Centro de Monitoreo fue notificado.");
                 }
-            }, (error) => {
-                console.error("Error de GPS:", error);
-                alert("No se pudo obtener la ubicación GPS. Por favor verifique los permisos de ubicación.");
-            }, { enableHighAccuracy: true, timeout: 10000 });
+
+            </div> catch (err) {
+                console.error("Error al enviar alerta a Supabase:", err);
+                alert("Error al guardar en Supabase. Verifique conexión a internet.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🚨 Activar Terminal Segura";
+            }
         }
     </script>
 </body>
