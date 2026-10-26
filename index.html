@@ -19,9 +19,9 @@
             --primary-dark: #b71c1c;
             --bg: #09090b;
             --card-bg: #121215;
-            --text: #f4f4f5;
-            --text-muted: #a1a1aa;
-            --border: #27272a;
+            --text: #ffffff;
+            --text-muted: #d4d4d8;
+            --border: #3f3f46;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -34,157 +34,185 @@
             align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
+            font-size: 1.15rem; /* Tamaño base accesible */
         }
         .container {
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             box-sizing: border-box;
         }
         h1 {
-            font-size: 1.25rem;
+            font-size: 1.6rem;
             text-align: center;
-            margin-bottom: 20px;
-            color: #fff;
+            margin-bottom: 22px;
+            color: #ffffff;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 18px;
         }
         label {
             display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
+            font-size: 1.1rem;
+            color: #f4f4f5;
+            font-weight: bold;
+            margin-bottom: 8px;
         }
-        input {
+        input, select {
             width: 100%;
-            padding: 12px;
+            padding: 16px;
             background: #18181b;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text);
-            font-size: 0.95rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1.15rem;
+            font-weight: 600;
             box-sizing: border-box;
             outline: none;
             transition: border-color 0.2s;
         }
-        input:focus {
-            border-color: var(--primary);
+        input:focus, select:focus {
+            border-color: #ef4444;
         }
         .accordion-btn {
-            background: transparent;
-            border: none;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid #38bdf8;
             color: #38bdf8;
-            font-size: 0.85rem;
-            padding: 0;
-            margin: 10px 0 14px 0;
+            font-size: 1.05rem;
+            font-weight: bold;
+            padding: 14px;
+            border-radius: 10px;
+            margin: 14px 0;
             cursor: pointer;
+            width: 100%;
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 8px;
         }
         .accordion-content {
             display: none;
             background: rgba(14, 165, 233, 0.05);
-            border: 1px solid rgba(14, 165, 233, 0.2);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 14px;
+            border: 2px solid rgba(14, 165, 233, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
         }
         .btn-alerta {
             width: 100%;
-            padding: 14px;
+            padding: 18px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 1rem;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 1.25rem;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-top: 10px;
+            margin-top: 12px;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
         }
         .btn-alerta:active {
             opacity: 0.9;
             transform: scale(0.98);
         }
 
-        /* ESTILOS DE LA PANTALLA PRINCIPAL DE VECINO (DASHBOARD) */
+        /* ESTILOS ACCESIBLES DEL DASHBOARD PRINCIPAL */
         #userDashboard {
             display: none;
             text-align: center;
         }
         .user-card {
             background: #18181b;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 20px;
+            border: 2px solid #38bdf8;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 22px;
             text-align: left;
-            font-size: 0.85rem;
+            font-size: 1.1rem;
+            line-height: 1.5;
         }
         .user-card strong {
             color: #38bdf8;
+            font-size: 1.2rem;
         }
+
+        /* SELECTOR DE EVENTOS DIFERENCIADOS */
+        .categoria-selector {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        .categoria-selector select {
+            background-color: #27272a;
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 2px solid #ef4444;
+            height: 58px;
+        }
+
+        /* BOTÓN GIGANTE SOS CON ALTA VISIBILIDAD */
         .btn-panic-giant {
-            width: 180px;
-            height: 180px;
+            width: 210px;
+            height: 210px;
             border-radius: 50%;
             background: radial-gradient(circle, #ef4444 0%, #b71c1c 100%);
             color: white;
-            border: 4px solid #f87171;
-            font-size: 1.3rem;
-            font-weight: bold;
+            border: 6px solid #fca5a5;
+            font-size: 1.5rem;
+            font-weight: 900;
             cursor: pointer;
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
-            margin: 10px auto 20px auto;
+            box-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+            margin: 15px auto 25px auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             transition: transform 0.1s, box-shadow 0.1s;
         }
         .btn-panic-giant:active {
             transform: scale(0.95);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.9);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 1);
         }
         .btn-coaccion-discreet {
             background: #27272a;
-            color: var(--text-muted);
-            border: 1px solid #3f3f46;
-            padding: 10px;
-            border-radius: 8px;
+            color: #e4e4e7;
+            border: 2px solid #52525b;
+            padding: 14px;
+            border-radius: 12px;
             width: 100%;
-            font-size: 0.8rem;
+            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         .btn-edit-data {
             background: transparent;
             color: #38bdf8;
             border: none;
-            font-size: 0.8rem;
+            font-size: 1.05rem;
+            font-weight: bold;
             cursor: pointer;
             text-decoration: underline;
+            padding: 10px;
         }
 
         .admin-link {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 25px;
         }
         .admin-link a {
             color: var(--text-muted);
-            font-size: 0.8rem;
+            font-size: 0.95rem;
             text-decoration: none;
-        }
-        .admin-link a:hover {
-            color: var(--text);
         }
     </style>
 </head>
@@ -192,26 +220,26 @@
     <div class="container">
         <h1>🚨 Alerta Vecinal Pro</h1>
         
-        <!-- VISTA 1: FORMULARIO DE REGISTRO INICIAL -->
+        <!-- VISTA 1: FORMULARIO DE REGISTRO INICIAL (ACCESIBLE) -->
         <div id="registerForm">
             <form id="alertaForm" onsubmit="guardarRegistro(event)">
                 <div class="form-group">
-                    <label>Nombre y Apellido</label>
+                    <label for="nombre">Nombre y Apellido</label>
                     <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
                 </div>
 
                 <div class="form-group">
-                    <label>Teléfono / Celular</label>
-                    <input type="tel" id="telefono" required placeholder="Ej: 2664...">
+                    <label for="telefono">Teléfono / Celular</label>
+                    <input type="tel" id="telefono" required placeholder="Ej: 2664123456">
                 </div>
 
                 <div class="form-group">
-                    <label>Dirección / Calle</label>
-                    <input type="text" id="direccion" required placeholder="Ej: Av. España">
+                    <label for="direccion">Dirección / Calle</label>
+                    <input type="text" id="direccion" required placeholder="Ej: Av. España 1234">
                 </div>
 
                 <div class="form-group">
-                    <label>Manzana / Casa / Lote</label>
+                    <label for="manzana">Manzana / Casa / Lote</label>
                     <input type="text" id="manzana" required placeholder="Ej: Mza 3 Casa 12">
                 </div>
 
@@ -221,15 +249,15 @@
 
                 <div id="medContent" class="accordion-content">
                     <div class="form-group">
-                        <label>Grupo Sanguíneo</label>
+                        <label for="grupo_sanguineo">Grupo Sanguíneo</label>
                         <input type="text" id="grupo_sanguineo" placeholder="Ej: O+">
                     </div>
                     <div class="form-group">
-                        <label>Alergias / Padecimientos</label>
+                        <label for="alergias">Alergias / Padecimientos</label>
                         <input type="text" id="alergias" placeholder="Ej: Penicilina, Asma">
                     </div>
                     <div class="form-group">
-                        <label>Contacto ICE (Emergencia)</label>
+                        <label for="contacto_ice">Contacto ICE (Emergencia)</label>
                         <input type="text" id="contacto_ice" placeholder="Nombre y Teléfono">
                     </div>
                 </div>
@@ -238,14 +266,26 @@
             </form>
         </div>
 
-        <!-- VISTA 2: DASHBOARD PRINCIPAL DEL VECINO -->
+        <!-- VISTA 2: DASHBOARD PRINCIPAL (ALERTAS DIFERENCIADAS Y ALTA VISIBILIDAD) -->
         <div id="userDashboard">
             <div class="user-card" id="userInfoCard">
-                <!-- Se llena dinámicamente con JS -->
+                <!-- Datos del vecino -->
             </div>
 
-            <button class="btn-panic-giant" onclick="enviarAlertaDirecta(false)">
-                <span style="font-size: 2.5rem;">🚨</span>
+            <!-- TIPO DE EMERGENCIA DIFERENCIADA -->
+            <div class="categoria-selector">
+                <label for="tipoEmergencia">Seleccione Tipo de Evento:</label>
+                <select id="tipoEmergencia">
+                    <option value="🚨 ROBO / INSEGURIDAD">🚨 ROBO / INSEGURIDAD</option>
+                    <option value="👁️ ACTIVIDAD SOSPECHOSA">👁️ ACTIVIDAD SOSPECHOSA</option>
+                    <option value="🚑 SALUD / EMERGENCIA MEDICA">🚑 SALUD / EMERGENCIA MÉDICA</option>
+                    <option value="🔥 INCENDIO / BOMBEROS">🔥 INCENDIO / BOMBEROS</option>
+                </select>
+            </div>
+
+            <!-- BOTÓN GIGANTE CON SONIDO Y VIBRACIÓN -->
+            <button class="btn-panic-giant" id="btnSos" onclick="enviarAlertaDirecta(false)">
+                <span style="font-size: 3rem;">🚨</span>
                 <span>DISPARAR SOS</span>
             </button>
 
@@ -263,9 +303,7 @@
     </div>
 
     <script>
-        // ==========================================
-        // CONFIGURACIÓN OFICIAL DE SUPABASE
-        // ==========================================
+        // CONFIGURACIÓN SUPABASE
         const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
         
@@ -276,7 +314,6 @@
             console.error("Error al inicializar Supabase:", err);
         }
 
-        // Comprobar al cargar si el usuario ya registró sus datos en el teléfono
         document.addEventListener("DOMContentLoaded", () => {
             comprobarUsuarioRegistrado();
         });
@@ -326,7 +363,7 @@
             };
 
             localStorage.setItem("alerta_vecinal_user", JSON.stringify(user));
-            alert("✅ Datos guardados correctamente en esta terminal.");
+            alert("✅ Datos guardados correctamente.");
             comprobarUsuarioRegistrado();
         }
 
@@ -345,6 +382,35 @@
                 }
                 localStorage.removeItem("alerta_vecinal_user");
                 comprobarUsuarioRegistrado();
+            }
+        }
+
+        // GENERADOR DE SONIDO DE SIRENA CON WEB AUDIO API (NO REQUIERE ARCHIVOS EXTERNOS)
+        function reproducirSonidoAlarma() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.3);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.6);
+
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            } catch (e) {
+                console.log("Audio API no soportado o bloqueado");
+            }
+
+            // VIBRACIÓN DEL TELÉFONO
+            if ("vibrate" in navigator) {
+                navigator.vibrate([300, 100, 300, 100, 500]);
             }
         }
 
@@ -379,10 +445,22 @@
                 return;
             }
 
-            const user = JSON.parse(userData);
-            const tipoAlerta = esCoaccion ? "COACCION / REHENES" : "ALERTA PANICO";
+            // Reproducir sonido y vibración
+            if (!esCoaccion) {
+                reproducirSonidoAlarma();
+            }
 
-            // Obtener GPS
+            const user = JSON.parse(userData);
+            
+            // Tipo de alerta según selector o coacción
+            let tipoAlerta = document.getElementById('tipoEmergencia').value;
+            if (esCoaccion) {
+                tipoAlerta = "⚠️ COACCION / REHENES";
+            }
+
+            const btn = document.getElementById('btnSos');
+            if(btn) btn.innerText = "⏳ ENVIANDO...";
+
             const coords = await obtenerUbicacionGPS();
             let lat = null;
             let lng = null;
@@ -420,13 +498,15 @@
                 if (esCoaccion) {
                     alert("Error 503: Falla de conexión con el servidor. Intente nuevamente.");
                 } else {
-                    alert("🚨 ¡ALERTA ENVIADA CON ÉXITO!\nEl Centro de Monitoreo ha sido notificado.");
+                    alert(`🚨 ¡ALERTA DE ${tipoAlerta} ENVIADA CON ÉXITO!\nEl Centro de Monitoreo ha sido notificado.`);
                 }
 
             } catch (err) {
                 console.error("Error al enviar alerta a Supabase:", err);
                 const detalle = err.message || err.error_description || JSON.stringify(err);
                 alert("⚠️ Error al enviar alerta: " + detalle);
+            } finally {
+                if(btn) btn.innerHTML = '<span style="font-size: 3rem;">🚨</span><span>DISPARAR SOS</span>';
             }
         }
     </script>
