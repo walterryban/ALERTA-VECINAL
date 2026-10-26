@@ -287,7 +287,8 @@
 
             } catch (err) {
                 console.error("Error al enviar alerta a Supabase:", err);
-                alert("Error al guardar en Supabase. Verifique conexión a internet.");
+                const detalle = err.message || err.error_description || JSON.stringify(err);
+                alert("⚠️ Error de Supabase: " + detalle);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "🚨 Activar Terminal Segura";
