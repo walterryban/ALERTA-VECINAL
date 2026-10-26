@@ -19,6 +19,7 @@
             --border: #27272a;
             --primary: #ef4444;
             --accent: #38bdf8;
+            --success: #22c55e;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -54,26 +55,37 @@
         }
         .btn-refresh:hover { background: #3f3f46; }
 
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 900px) {
+            .grid-layout {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         .section-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
-        /* ESTILOS DE LA TABLA DE ALERTAS EN VIVO */
+        /* ESTILOS DE TABLAS */
         .table-responsive {
             overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             text-align: left;
         }
         th, td {
-            padding: 12px;
+            padding: 10px 12px;
             border-bottom: 1px solid var(--border);
         }
         th {
@@ -88,41 +100,42 @@
             padding: 4px 8px;
             border-radius: 6px;
             font-weight: bold;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             white-space: nowrap;
+        }
+        .badge-mza {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
         .btn-map {
             background: #0284c7;
             color: white;
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 6px;
             text-decoration: none;
             font-weight: bold;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             display: inline-block;
             white-space: nowrap;
         }
         .btn-map:hover { background: #0369a1; }
 
-        /* GENERADOR DE QR */
-        .form-group {
-            margin-bottom: 14px;
-        }
-        label {
-            display: block;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-        input {
+        /* FORMULARIOS Y FILTROS */
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+        input, select {
             width: 100%;
-            max-width: 400px;
-            padding: 12px;
+            padding: 10px;
             background: #18181b;
             border: 1px solid var(--border);
             border-radius: 8px;
             color: white;
-            font-size: 1rem;
+            font-size: 0.95rem;
             box-sizing: border-box;
         }
         .btn-gen {
@@ -130,55 +143,96 @@
             color: #000000;
             font-weight: bold;
             border: none;
-            padding: 12px 20px;
+            padding: 10px 18px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            width: 100%;
         }
         .qr-output {
-            margin-top: 20px;
+            margin-top: 15px;
             display: none;
             text-align: center;
             background: #ffffff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             color: #000;
-            max-width: 350px;
         }
-        #qrcode {
-            display: flex;
-            justify-content: center;
-            margin: 15px 0;
-        }
-        .btn-print {
-            background: #22c55e;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        #qrcode { display: flex; justify-content: center; margin: 12px 0; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>🚨 Centro de Monitoreo Pro</h1>
-        <button class="btn-refresh" onclick="cargarAlertas()">🔄 Actualizar Alertas</button>
+        <button class="btn-refresh" onclick="cargarTodo()">🔄 Actualizar Panel</button>
     </header>
 
-    <!-- SECCIÓN 1: MONITOREO DE ALERTAS EN VIVO -->
+    <!-- SECCIÓN DE RESUMEN Y GESTIÓN DE MANZANAS -->
+    <div class="grid-layout">
+        
+        <!-- COLUMNA 1: MANZANAS ACTIVAS -->
+        <div class="section-card">
+            <h2>🏘️ Manzanas Registradas en el Sistema</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">
+                Resumen de manzanas activas y actividad acumulada.
+            </p>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Manzana / Cuadra</th>
+                            <th>Alertas Totales</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaManzanas">
+                        <tr>
+                            <td colspan="2" style="text-align: center; color: var(--text-muted);">Cargando manzanas...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COLUMNA 2: GENERADOR DE QR -->
+        <div class="section-card">
+            <h2>🏷️ Dar de Alta Nueva Manzana</h2>
+            <div class="form-group">
+                <label for="mzaInput">Nombre / Número de Manzana:</label>
+                <input type="text" id="mzaInput" placeholder="Ej: Manzana 14">
+            </div>
+            <button class="btn-gen" onclick="generarQRManzana()">📱 Generar QR y Enlace</button>
+
+            <div id="qrContainer" class="qr-output">
+                <h3 id="qrTitle" style="margin: 0; color: #000; font-size: 1rem;"></h3>
+                <div id="qrcode"></div>
+                <div id="qrUrlText" style="margin-bottom: 10px;"></div>
+                <p style="margin: 5px 0;"><strong>PIN Vecino:</strong> <span style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #0369a1;">3030</span></p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SECCIÓN: ALERTAS EN VIVO CON FILTRO -->
     <div class="section-card">
-        <h2>📡 Alertas Recientes de Vecinos</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+            <h2>📡 Alertas Recientes de Vecinos</h2>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label for="filtroManzana" style="margin: 0; white-space: nowrap;">Filtrar por Manzana:</label>
+                <select id="filtroManzana" onchange="filtrarTablaAlertas()" style="width: auto; padding: 6px 10px;">
+                    <option value="TODAS">Ver Todas</option>
+                </select>
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
                         <th>Fecha / Hora</th>
+                        <th>Manzana</th>
                         <th>Vecino / Tel</th>
-                        <th>Manzana / Dir</th>
-                        <th>Tipo de Evento</th>
+                        <th>Tipo Evento</th>
                         <th>Ficha Médica</th>
                         <th>Ubicación GPS</th>
                     </tr>
@@ -192,34 +246,13 @@
         </div>
     </div>
 
-    <!-- SECCIÓN 2: GENERADOR DE QR POR MANZANA -->
-    <div class="section-card">
-        <h2>🏷️ Generador Automático de QR por Manzana (Pago Único)</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">
-            Ingresa la manzana que abonó la instalación para generar su código QR y entregar el cartel.
-        </p>
-
-        <div class="form-group">
-            <label for="mzaInput">Nombre / Número de Manzana / Cuadra:</label>
-            <input type="text" id="mzaInput" placeholder="Ej: Manzana 12">
-        </div>
-
-        <button class="btn-gen" onclick="generarQRManzana()">📱 Generar Código QR de Acceso</button>
-
-        <div id="qrContainer" class="qr-output">
-            <h3 id="qrTitle" style="margin: 0; color: #000;"></h3>
-            <div id="qrcode"></div>
-            <p id="qrUrlText" style="font-size: 0.75rem; color: #555; word-break: break-all;"></p>
-            <p><strong>PIN de Acceso Vecino:</strong> <span style="background: #e0f2fe; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #0369a1;">3030</span></p>
-            <button class="btn-print" onclick="imprimirQR()">🖨️ Imprimir Cartel QR</button>
-        </div>
-    </div>
-
     <script>
         const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
         
         let supabaseClient;
+        let listaAlertasGlobal = [];
+
         try {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } catch (err) {
@@ -227,65 +260,127 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            cargarAlertas();
-            // Actualizar automáticamente cada 30 segundos
-            setInterval(cargarAlertas, 30000);
+            cargarTodo();
+            setInterval(cargarTodo, 30000);
         });
 
-        // CARGAR ALERTAS DESDE SUPABASE
+        function cargarTodo() {
+            cargarAlertas();
+        }
+
+        // CARGAR ALERTAS Y PROCESAR RESUMEN DE MANZANAS
         async function cargarAlertas() {
             if (!supabaseClient) return;
 
-            const tbody = document.getElementById('tablaAlertas');
-            
             try {
                 const { data, error } = await supabaseClient
                     .from('alertas')
                     .select('*')
                     .order('fecha_hora', { ascending: false })
-                    .limit(50);
+                    .limit(100);
 
                 if (error) throw error;
 
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No hay alertas registradas recientemente.</td></tr>`;
-                    return;
-                }
-
-                tbody.innerHTML = "";
-                data.forEach(alerta => {
-                    const fechaFormateada = alerta.fecha_hora ? new Date(alerta.fecha_hora).toLocaleString() : "Reciente";
-                    
-                    const fichaMedica = `
-                        🩸 <b>Sangre:</b> ${alerta.grupo_sanguineo || 'No especif.'}<br>
-                        ⚠️ <b>Alergias:</b> ${alerta.alergias || 'Ninguna'}<br>
-                        📞 <b>ICE:</b> ${alerta.contacto_ice || 'No cargado'}
-                    `;
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="white-space: nowrap; color: var(--text-muted);">${fechaFormateada}</td>
-                        <td><strong>${alerta.nombre || 'Anónimo'}</strong><br><span style="font-size:0.8rem; color:var(--text-muted);">${alerta.telefono || ''}</span></td>
-                        <td><strong>${alerta.manzana || 'General'}</strong><br><span style="font-size:0.8rem; color:var(--text-muted);">${alerta.direccion || ''}</span></td>
-                        <td><span class="badge-alerta">${alerta.tipo_alerta || 'SOS'}</span></td>
-                        <td style="font-size: 0.8rem;">${fichaMedica}</td>
-                        <td>
-                            ${alerta.maps_link ? `<a class="btn-map" href="${alerta.maps_link}" target="_blank">🗺️ Ver Mapa</a>` : 'Sin GPS'}
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                listaAlertasGlobal = data || [];
+                
+                procesarManzanas(listaAlertasGlobal);
+                renderizarAlertas(listaAlertasGlobal);
 
             } catch (err) {
                 console.error("Error al cargar alertas:", err);
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444;">Error al conectar con la base de datos.</td></tr>`;
+                document.getElementById('tablaAlertas').innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444;">Error al conectar con la base de datos.</td></tr>`;
             }
+        }
+
+        // PROCESAR TABLA DE MANZANAS ACTIVAS Y DESPLEGABLE
+        function procesarManzanas(alertas) {
+            const conteoManzanas = {};
+            const selectFiltro = document.getElementById('filtroManzana');
+            const valorSeleccionado = selectFiltro.value;
+
+            alertas.forEach(a => {
+                const mza = a.manzana ? a.manzana.trim() : 'Sin Manzana';
+                conteoManzanas[mza] = (conteoManzanas[mza] || 0) + 1;
+            });
+
+            // Actualizar Tabla de Manzanas
+            const tbodyMza = document.getElementById('tablaManzanas');
+            tbodyMza.innerHTML = "";
+
+            const nombresManzanas = Object.keys(conteoManzanas);
+            if (nombresManzanas.length === 0) {
+                tbodyMza.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Sin manzanas registradas aún.</td></tr>`;
+            } else {
+                nombresManzanas.forEach(mza => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="badge-mza">${mza}</span></td>
+                        <td><strong>${conteoManzanas[mza]} alerta(s)</strong></td>
+                    `;
+                    tbodyMza.appendChild(tr);
+                });
+            }
+
+            // Actualizar el filtro desplegable
+            selectFiltro.innerHTML = `<option value="TODAS">Ver Todas</option>`;
+            nombresManzanas.forEach(mza => {
+                const opt = document.createElement('option');
+                opt.value = mza;
+                opt.textContent = mza;
+                selectFiltro.appendChild(opt);
+            });
+            selectFiltro.value = valorSeleccionado;
+        }
+
+        // FILTRAR ALERTAS
+        function filtrarTablaAlertas() {
+            const filtro = document.getElementById('filtroManzana').value;
+            if (filtro === "TODAS") {
+                renderizarAlertas(listaAlertasGlobal);
+            } else {
+                const filtradas = listaAlertasGlobal.filter(a => (a.manzana || '').trim() === filtro);
+                renderizarAlertas(filtradas);
+            }
+        }
+
+        // RENDERIZAR TABLA DE ALERTAS
+        function renderizarAlertas(alertas) {
+            const tbody = document.getElementById('tablaAlertas');
+
+            if (!alertas || alertas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No hay alertas registradas para esta selección.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            alertas.forEach(alerta => {
+                const fechaFormateada = alerta.fecha_hora ? new Date(alerta.fecha_hora).toLocaleString() : "Reciente";
+                
+                const fichaMedica = `
+                    🩸 <b>Sangre:</b> ${alerta.grupo_sanguineo || 'N/E'}<br>
+                    ⚠️ <b>Alergias:</b> ${alerta.alergias || 'Ninguna'}<br>
+                    📞 <b>ICE:</b> ${alerta.contacto_ice || 'No cargado'}
+                `;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="white-space: nowrap; color: var(--text-muted);">${fechaFormateada}</td>
+                    <td><span class="badge-mza">${alerta.manzana || 'General'}</span></td>
+                    <td><strong>${alerta.nombre || 'Anónimo'}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${alerta.telefono || ''}</span></td>
+                    <td><span class="badge-alerta">${alerta.tipo_alerta || 'SOS'}</span></td>
+                    <td style="font-size: 0.78rem;">${fichaMedica}</td>
+                    <td>
+                        ${alerta.maps_link ? `<a class="btn-map" href="${alerta.maps_link}" target="_blank">🗺️ Ver Mapa</a>` : 'Sin GPS'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         // GENERADOR DE QR
         let qrCodeInstance = null;
 
-       function generarQRManzana() {
+        function generarQRManzana() {
             const mzaVal = document.getElementById('mzaInput').value.trim();
             if (!mzaVal) {
                 alert("Por favor escribe el nombre o número de la manzana.");
@@ -297,34 +392,22 @@
 
             document.getElementById('qrTitle').innerText = `🚨 ALERTA VECINAL - ${mzaVal.toUpperCase()}`;
             
-            // AHORA ES UN ENLACE CLICKEABLE REAL QUE ABRE EN NUEVA PESTAÑA
             const urlTextContainer = document.getElementById('qrUrlText');
-            urlTextContainer.innerHTML = `<a href="${fullUrl}" target="_blank" style="color: #0284c7; font-weight: bold; text-decoration: underline;">🔗 Abrir enlace de prueba: ${fullUrl}</a>`;
+            urlTextContainer.innerHTML = `<a href="${fullUrl}" target="_blank" style="color: #0284c7; font-weight: bold; font-size:0.8rem; text-decoration: underline;">🔗 Abrir enlace de prueba</a>`;
 
             const qrDiv = document.getElementById("qrcode");
             qrDiv.innerHTML = "";
 
             qrCodeInstance = new QRCode(qrDiv, {
                 text: fullUrl,
-                width: 220,
-                height: 220,
+                width: 180,
+                height: 180,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
 
             document.getElementById('qrContainer').style.display = "block";
-        }
-        function imprimirQR() {
-            const printContent = document.getElementById('qrContainer').innerHTML;
-            const printWindow = window.open('', '', 'height=600,width=600');
-            printWindow.document.write('<html><head><title>Cartel QR Manzana</title>');
-            printWindow.document.write('<style>body{font-family:sans-serif; text-align:center; padding:30px;} #qrcode{display:flex; justify-content:center; margin:20px 0;}</style>');
-            printWindow.document.write('</head><body>');
-            printWindow.document.write(printContent);
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.print();
         }
     </script>
 </body>
