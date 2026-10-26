@@ -16,6 +16,7 @@
     <style>
         :root {
             --primary: #d32f2f;
+            --primary-dark: #b71c1c;
             --bg: #09090b;
             --card-bg: #121215;
             --text: #f4f4f5;
@@ -42,6 +43,7 @@
             border-radius: 16px;
             padding: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-sizing: border-box;
         }
         h1 {
             font-size: 1.25rem;
@@ -111,6 +113,67 @@
             opacity: 0.9;
             transform: scale(0.98);
         }
+
+        /* ESTILOS DE LA PANTALLA PRINCIPAL DE VECINO (DASHBOARD) */
+        #userDashboard {
+            display: none;
+            text-align: center;
+        }
+        .user-card {
+            background: #18181b;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        .user-card strong {
+            color: #38bdf8;
+        }
+        .btn-panic-giant {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ef4444 0%, #b71c1c 100%);
+            color: white;
+            border: 4px solid #f87171;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+            margin: 10px auto 20px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-panic-giant:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.9);
+        }
+        .btn-coaccion-discreet {
+            background: #27272a;
+            color: var(--text-muted);
+            border: 1px solid #3f3f46;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+        .btn-edit-data {
+            background: transparent;
+            color: #38bdf8;
+            border: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
         .admin-link {
             text-align: center;
             margin-top: 20px;
@@ -129,53 +192,70 @@
     <div class="container">
         <h1>🚨 Alerta Vecinal Pro</h1>
         
-        <form id="alertaForm" onsubmit="enviarAlerta(event)">
-            <div class="form-group">
-                <label>Nombre y Apellido</label>
-                <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
+        <!-- VISTA 1: FORMULARIO DE REGISTRO INICIAL -->
+        <div id="registerForm">
+            <form id="alertaForm" onsubmit="guardarRegistro(event)">
+                <div class="form-group">
+                    <label>Nombre y Apellido</label>
+                    <input type="text" id="nombre" required placeholder="Ej: Juan Pérez">
+                </div>
+
+                <div class="form-group">
+                    <label>Teléfono / Celular</label>
+                    <input type="tel" id="telefono" required placeholder="Ej: 2664...">
+                </div>
+
+                <div class="form-group">
+                    <label>Dirección / Calle</label>
+                    <input type="text" id="direccion" required placeholder="Ej: Av. España">
+                </div>
+
+                <div class="form-group">
+                    <label>Manzana / Casa / Lote</label>
+                    <input type="text" id="manzana" required placeholder="Ej: Mza 3 Casa 12">
+                </div>
+
+                <button type="button" class="accordion-btn" onclick="toggleMed()">
+                    <span>➕ Agregar Ficha Médica SOS (Opcional)</span>
+                </button>
+
+                <div id="medContent" class="accordion-content">
+                    <div class="form-group">
+                        <label>Grupo Sanguíneo</label>
+                        <input type="text" id="grupo_sanguineo" placeholder="Ej: O+">
+                    </div>
+                    <div class="form-group">
+                        <label>Alergias / Padecimientos</label>
+                        <input type="text" id="alergias" placeholder="Ej: Penicilina, Asma">
+                    </div>
+                    <div class="form-group">
+                        <label>Contacto ICE (Emergencia)</label>
+                        <input type="text" id="contacto_ice" placeholder="Nombre y Teléfono">
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-alerta">🚨 Guardar y Activar Terminal</button>
+            </form>
+        </div>
+
+        <!-- VISTA 2: DASHBOARD PRINCIPAL DEL VECINO -->
+        <div id="userDashboard">
+            <div class="user-card" id="userInfoCard">
+                <!-- Se llena dinámicamente con JS -->
             </div>
 
-            <div class="form-group">
-                <label>Teléfono / Celular</label>
-                <input type="tel" id="telefono" required placeholder="Ej: 2664...">
-            </div>
-
-            <div class="form-group">
-                <label>Dirección / Calle</label>
-                <input type="text" id="direccion" required placeholder="Ej: Av. España">
-            </div>
-
-            <div class="form-group">
-                <label>Manzana / Casa / Lote</label>
-                <input type="text" id="manzana" required placeholder="Ej: Mza 3 Casa 12">
-            </div>
-
-            <div class="form-group">
-                <label>PIN de Seguridad / Coacción</label>
-                <input type="password" id="pin" required placeholder="PIN (ej: 1234)">
-            </div>
-
-            <button type="button" class="accordion-btn" onclick="toggleMed()">
-                <span>➕ Agregar Ficha Médica SOS (Opcional)</span>
+            <button class="btn-panic-giant" onclick="enviarAlertaDirecta(false)">
+                <span style="font-size: 2.5rem;">🚨</span>
+                <span>DISPARAR SOS</span>
             </button>
 
-            <div id="medContent" class="accordion-content">
-                <div class="form-group">
-                    <label>Grupo Sanguíneo</label>
-                    <input type="text" id="grupo_sanguineo" placeholder="Ej: O+">
-                </div>
-                <div class="form-group">
-                    <label>Alergias / Padecimientos</label>
-                    <input type="text" id="alergias" placeholder="Ej: Penicilina, Asma">
-                </div>
-                <div class="form-group">
-                    <label>Contacto ICE (Emergencia)</label>
-                    <input type="text" id="contacto_ice" placeholder="Nombre y Teléfono">
-                </div>
-            </div>
+            <button class="btn-coaccion-discreet" onclick="preguntarPinCoaccion()">
+                ⚠️ Reportar Situación Silenciosa / PIN
+            </button>
 
-            <button type="submit" id="submitBtn" class="btn-alerta">🚨 Activar Terminal Segura</button>
-        </form>
+            <br>
+            <button class="btn-edit-data" onclick="editarDatos()">✏️ Editar mis datos guardados</button>
+        </div>
 
         <div class="admin-link">
             <a href="#" onclick="accesoAdmin()">🔒 Acceso Centro de Monitoreo</a>
@@ -196,6 +276,11 @@
             console.error("Error al inicializar Supabase:", err);
         }
 
+        // Comprobar al cargar si el usuario ya registró sus datos en el teléfono
+        document.addEventListener("DOMContentLoaded", () => {
+            comprobarUsuarioRegistrado();
+        });
+
         function toggleMed() {
             const content = document.getElementById('medContent');
             content.style.display = content.style.display === 'block' ? 'none' : 'block';
@@ -207,6 +292,59 @@
                 window.location.href = "admin.html";
             } else if (pinAdmin !== null) {
                 alert("PIN incorrecto.");
+            }
+        }
+
+        function comprobarUsuarioRegistrado() {
+            const userData = localStorage.getItem("alerta_vecinal_user");
+            if (userData) {
+                const user = JSON.parse(userData);
+                document.getElementById("registerForm").style.display = "none";
+                document.getElementById("userDashboard").style.display = "block";
+                
+                document.getElementById("userInfoCard").innerHTML = `
+                    👤 <strong>${user.nombre}</strong><br>
+                    📍 ${user.direccion} (${user.manzana})<br>
+                    📞 ${user.telefono}
+                `;
+            } else {
+                document.getElementById("registerForm").style.display = "block";
+                document.getElementById("userDashboard").style.display = "none";
+            }
+        }
+
+        function guardarRegistro(e) {
+            e.preventDefault();
+            const user = {
+                nombre: document.getElementById('nombre').value,
+                telefono: document.getElementById('telefono').value,
+                direccion: document.getElementById('direccion').value,
+                manzana: document.getElementById('manzana').value,
+                grupo_sanguineo: document.getElementById('grupo_sanguineo').value,
+                alergias: document.getElementById('alergias').value,
+                contacto_ice: document.getElementById('contacto_ice').value
+            };
+
+            localStorage.setItem("alerta_vecinal_user", JSON.stringify(user));
+            alert("✅ Datos guardados correctamente en esta terminal.");
+            comprobarUsuarioRegistrado();
+        }
+
+        function editarDatos() {
+            if (confirm("¿Desea modificar sus datos de registro?")) {
+                const userData = localStorage.getItem("alerta_vecinal_user");
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    document.getElementById('nombre').value = user.nombre || "";
+                    document.getElementById('telefono').value = user.telefono || "";
+                    document.getElementById('direccion').value = user.direccion || "";
+                    document.getElementById('manzana').value = user.manzana || "";
+                    document.getElementById('grupo_sanguineo').value = user.grupo_sanguineo || "";
+                    document.getElementById('alergias').value = user.alergias || "";
+                    document.getElementById('contacto_ice').value = user.contacto_ice || "";
+                }
+                localStorage.removeItem("alerta_vecinal_user");
+                comprobarUsuarioRegistrado();
             }
         }
 
@@ -224,31 +362,31 @@
             });
         }
 
-        async function enviarAlerta(e) {
-            e.preventDefault();
+        function preguntarPinCoaccion() {
+            const pin = prompt("Ingrese PIN de Coacción / Emergencia Silenciosa:");
+            if (pin === "9999") {
+                enviarAlertaDirecta(true);
+            } else if (pin !== null) {
+                alert("PIN no reconocido.");
+            }
+        }
 
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "⏳ ENVIANDO ALERTA...";
+        async function enviarAlertaDirecta(esCoaccion) {
+            const userData = localStorage.getItem("alerta_vecinal_user");
+            if (!userData) {
+                alert("Error: No se encontraron datos de usuario. Por favor regístrese.");
+                comprobarUsuarioRegistrado();
+                return;
+            }
 
-            const nombre = document.getElementById('nombre').value;
-            const telefono = document.getElementById('telefono').value;
-            const direccion = document.getElementById('direccion').value;
-            const manzana = document.getElementById('manzana').value;
-            const pin = document.getElementById('pin').value;
-            
-            const grupo_sanguineo = document.getElementById('grupo_sanguineo').value;
-            const alergias = document.getElementById('alergias').value;
-            const contacto_ice = document.getElementById('contacto_ice').value;
-
-            const esCoaccion = (pin === "9999");
+            const user = JSON.parse(userData);
             const tipoAlerta = esCoaccion ? "COACCION / REHENES" : "ALERTA PANICO";
 
+            // Obtener GPS
             const coords = await obtenerUbicacionGPS();
-
             let lat = null;
             let lng = null;
-            let mapsLink = "Sin GPS preciso (Dirección: " + direccion + ")";
+            let mapsLink = "Sin GPS preciso (Dirección: " + user.direccion + ")";
 
             if (coords) {
                 lat = coords.latitude;
@@ -257,18 +395,18 @@
             }
 
             const payload = {
-                nombre: nombre,
-                telefono: telefono,
-                direccion: direccion,
-                manzana: manzana,
+                nombre: user.nombre,
+                telefono: user.telefono,
+                direccion: user.direccion,
+                manzana: user.manzana,
                 tipo_alerta: tipoAlerta,
                 es_coaccion: esCoaccion,
                 latitud: lat,
                 longitud: lng,
                 maps_link: mapsLink,
-                grupo_sanguineo: grupo_sanguineo,
-                alergias: alergias,
-                contacto_ice: contacto_ice,
+                grupo_sanguineo: user.grupo_sanguineo,
+                alergias: user.alergias,
+                contacto_ice: user.contacto_ice,
                 fecha_hora: new Date().toISOString()
             };
 
@@ -282,16 +420,13 @@
                 if (esCoaccion) {
                     alert("Error 503: Falla de conexión con el servidor. Intente nuevamente.");
                 } else {
-                    alert("🚨 ¡Alerta enviada con éxito! El Centro de Monitoreo fue notificado.");
+                    alert("🚨 ¡ALERTA ENVIADA CON ÉXITO!\nEl Centro de Monitoreo ha sido notificado.");
                 }
 
             } catch (err) {
                 console.error("Error al enviar alerta a Supabase:", err);
                 const detalle = err.message || err.error_description || JSON.stringify(err);
-                alert("⚠️ Error de Supabase: " + detalle);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "🚨 Activar Terminal Segura";
+                alert("⚠️ Error al enviar alerta: " + detalle);
             }
         }
     </script>
