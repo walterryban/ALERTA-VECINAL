@@ -200,7 +200,7 @@
             }
         }
 
-        async function enviarAlerta(e) {
+async function enviarAlerta(e) {
             e.preventDefault();
 
             const nombre = document.getElementById('nombre').value;
@@ -216,52 +216,62 @@
             const esCoaccion = (pin === "9999");
             const tipoAlerta = esCoaccion ? "COACCION / REHENES" : "ALERTA PANICO";
 
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(async (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
-
-                    const payload = {
-                        nombre: nombre,
-                        telefono: telefono,
-                        direccion: direccion,
-                        manzana: manzana,
-                        tipo_alerta: tipoAlerta,
-                        es_coaccion: esCoaccion,
-                        latitud: lat,
-                        longitud: lng,
-                        maps_link: mapsLink,
-                        grupo_sanguineo: grupo_sanguineo,
-                        alergias: alergias,
-                        contacto_ice: contacto_ice,
-                        fecha_hora: new Date().toISOString()
-                    };
-
-                    try {
-                        const { data, error } = await supabaseClient
-                            .from('alertas')
-                            .insert([payload]);
-
-                        if (error) throw error;
-
-                        if (esCoaccion) {
-                            alert("Error 503: Falla de conexión con el servidor. Intente nuevamente.");
-                        } else {
-                            alert("🚨 ¡Alerta enviada con éxito! El Centro de Monitoreo fue notificado.");
-                        }
-
-                    } catch (err) {
-                        console.error("Error al enviar alerta:", err);
-                        alert("Ocurrió un error al enviar la señal. Verifique su conexión.");
-                    }
-                }, (error) => {
-                    alert("Por favor habilite el GPS para enviar su ubicación exacta.");
-                }, { enableHighAccuracy: true });
-            } else {
+            // Validar si el navegador soporta geolocalización
+            if (!("geolocation" in navigator)) {
                 alert("Su dispositivo no soporta geolocalización GPS.");
+                return;
             }
+
+            alert("📍 Obteniendo ubicación GPS, espere un segundo...");
+
+            // Opciones de GPS con tiempo de espera para evitar bloqueos
+            const gpsOptions = {
+                enableHighAccuracy: true,
+                timeout: 10000, // Espera máximo 10 segundos
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+
+                const payload = {
+                    nombre: nombre,
+                    telefono: telefono,
+                    direccion: direccion,
+                    manzana: manzana,
+                    tipo_alerta: tipoAlerta,
+                    es_coaccion: esCoaccion,
+                    latitud: lat,
+                    longitud: lng,
+                    maps_link: mapsLink,
+                    grupo_sanguineo: grupo_sanguineo,
+                    alergias: alergias,
+                    contacto_ice: contacto_ice,
+                    fecha_hora: new Date().toISOString()
+                };
+
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('alertas')
+                        .insert([payload]);
+
+                    if (error) throw error;
+
+                    if (esCoaccion) {
+                        alert("Error 503: Falla de conexión con el servidor. Intente nuevamente.");
+                    } else {
+                        alert("🚨 ¡Alerta enviada con éxito! El Centro de Monitoreo fue notificado.");
+                    }
+
+                } catch (err) {
+                    console.error("Error al enviar alerta:", err);
+                    alert("Ocurrió un error al enviar la señal a Supabase. Verifique su conexión.");
+                }
+
+            }, (error) => {
+                console.error("Error de GPS:", error);
+                alert("No se pudo obtener la ubicación GPS. Asegúrese de tener el GPS activado y los permisos concedidos.");
+            }, gpsOptions);
         }
-    </script>
-</body>
-</html>
