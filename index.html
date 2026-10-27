@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Alerta Vecinal Pro — Terminal Ciudadana</title>
+  <!-- ÚNICA carga de la librería de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -134,7 +135,7 @@
 </div>
 
 <script>
-  // Configuración Supabase
+  // Configuración Supabase única
   const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -231,12 +232,14 @@
   }
 
   // Eventos táctiles y de mouse para el botón SOS
-  btnSOS.addEventListener('mousedown', startPress);
-  btnSOS.addEventListener('mouseup', cancelPress);
-  btnSOS.addEventListener('mouseleave', cancelPress);
+  if (btnSOS) {
+    btnSOS.addEventListener('mousedown', startPress);
+    btnSOS.addEventListener('mouseup', cancelPress);
+    btnSOS.addEventListener('mouseleave', cancelPress);
 
-  btnSOS.addEventListener('touchstart', startPress);
-  btnSOS.addEventListener('touchend', cancelPress);
+    btnSOS.addEventListener('touchstart', startPress);
+    btnSOS.addEventListener('touchend', cancelPress);
+  }
 
   // 3. Envío real de la alerta a Supabase
   async function enviarAlertaInmediata() {
