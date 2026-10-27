@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Cartelería y Credenciales — Alerta Vecinal Pro</title>
+  <!-- Librería QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    
+    .no-print {
+      background: var(--card); border: 1px solid #334155; padding: 24px; border-radius: 12px; margin-bottom: 24px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    label { font-size: 0.8rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
+    input { background: #0f172a; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; font-size: 0.95rem; }
+    
+    .btn { background: var(--accent); color: #000; font-weight: bold; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%; margin-top: 8px; }
+    .btn-print { background: #22c55e; color: #000; margin-top: 12px; }
+
+    /* Plantilla Imprimible */
+    .print-card {
+      background: white; color: #000; border: 4px solid #d90429; border-radius: 16px; padding: 32px;
+      text-align: center; max-width: 500px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .print-header { border-bottom: 3px solid #d90429; padding-bottom: 16px; margin-bottom: 20px; }
+    .print-header h1 { color: #d90429; font-size: 1.8rem; font-weight: 900; letter-spacing: 1px; }
+    .print-header p { font-size: 0.9rem; color: #4b5563; font-weight: 600; }
+    
+    .qr-container { display: flex; justify-content: center; margin: 20px 0; }
+    .mza-badge { background: #1e293b; color: #fff; font-size: 1.4rem; font-weight: bold; padding: 8px 16px; border-radius: 8px; display: inline-block; margin-bottom: 12px; }
+    .pin-box { background: #fef2f2; border: 2px dashed #ef4444; padding: 12px; border-radius: 8px; margin-top: 16px; }
+    .pin-box p { font-size: 0.85rem; color: #991b1b; font-weight: 600; }
+    .pin-box h2 { font-size: 1.8rem; color: #b91c1c; font-weight: 900; letter-spacing: 2px; }
+
+    /* Ajustes para Impresión PDF / Papel */
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; padding: 0; }
+      .print-card { border: 4px solid #000; box-shadow: none; width: 100%; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- Formulario de Configuración (No sale en la impresión) -->
+  <div class="no-print">
+    <h2 style="color:var(--accent); margin-bottom:12px;">Generador de Cartelería y QR de Manzana</h2>
+    
+    <div class="form-group">
+      <label>URL Principal de la PWA (Vercel)</label>
+      <input type="text" id="urlBase" value="https://appvecinaldeseguridad.vercel.app/" placeholder="https://tu-app.vercel.app/" />
+    </div>
+
+    <div class="form-group">
+      <label>Nombre de la Manzana / Barrio</label>
+      <input type="text" id="inputNombreMza" value="Manzana 12" placeholder="Ej: Manzana 12 - Barrio Sur" />
+    </div>
+
+    <div class="form-group">
+      <label>PIN Asignado a la Manzana</label>
+      <input type="text" id="inputPinMza" value="3030" placeholder="Ej: 3030" />
+    </div>
+
+    <button class="btn" onclick="generarCartel()">Generar Cartel de Manzana</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir Cartel / Guardar PDF</button>
+  </div>
+
+  <!-- Vista Previa del Cartel Imprimible -->
+  <div class="print-card">
+    <div class="print-header">
+      <h1>🚨 ALERTA VECINAL PRO</h1>
+      <p>SISTEMA DE SEGURIDAD CIUDADANA Y EMERGENCIAS</p>
+    </div>
+
+    <div class="mza-badge" id="displayMza">MANZANA 12</div>
+
+    <p style="font-size: 0.9rem; font-weight: 600; color: #374151;">
+      Escanee este código QR con la cámara de su celular para ingresar a la red de protección vecinal:
+    </p>
+
+    <div class="qr-container" id="qrcode"></div>
+
+    <div class="pin-box">
+      <p>CÓDIGO DE ACCESO (PIN DE MANZANA)</p>
+      <h2 id="displayPin">3030</h2>
+    </div>
+
+    <div style="margin-top:20px; font-size:0.75rem; color:#6b7280; text-align:center;">
+      <p>Rastreo Urbano GPS — Monitoreo 24/7 | San Luis / Villa Mercedes</p>
+      <p style="margin-top:2px;">Protegido bajo la Ley de Protección de Datos Personales N° 25.326</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let qrCodeInstance = null;
+
+  function generarCartel() {
+    const urlBase = document.getElementById('urlBase').value.trim();
+    const mza = document.getElementById('inputNombreMza').value.trim();
+    const pin = document.getElementById('inputPinMza').value.trim();
+
+    if (!urlBase || !mza || !pin) {
+      alert("Por favor completa la URL, la manzana y el PIN.");
+      return;
+    }
+
+    // Construcción de la URL con el parámetro ?mza=
+    const urlConParametro = `${urlBase.endsWith('/') ? urlBase : urlBase + '/'}?mza=${encodeURIComponent(mza)}`;
+
+    // Actualizar Textos
+    document.getElementById('displayMza').innerText = mza.toUpperCase();
+    document.getElementById('displayPin').innerText = pin;
+
+    // Generar el código QR dinámico
+    const qrContainer = document.getElementById('qrcode');
+    qrContainer.innerHTML = '';
+
+    qrCodeInstance = new QRCode(qrContainer, {
+      text: urlConParametro,
+      width: 200,
+      height: 200,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+  }
+
+  // Generar al cargar por primera vez
+  window.addEventListener('DOMContentLoaded', () => {
+    generarCartel();
+  });
+</script>
+</body>
+</html>
