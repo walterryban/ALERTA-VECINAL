@@ -174,21 +174,27 @@ async function validarYGuardar() {
     btnSOS.addEventListener('touchcancel', cancelPress);
   }
 
-  async function enviarAlertaInmediata() {
+    async function enviarAlertaInmediata() {
     if (enviando) return;
     enviando = true;
     const tipoAlerta = document.getElementById('selectTipoAlerta').value;
+    
     try {
       const { error } = await supabaseClient.from('alertas').insert([{
         manzana: vecinoActual.manzana,
         tipo_alerta: tipoAlerta,
         vecino_nombre: vecinoActual.nombre,
         vecino_telefono: vecinoActual.telefono,
-        ficha_medica: vecinoActual.fichaMedica || null,
-        estado: 'PENDIENTE'
+        ficha_medica: vecinoActual.fichaMedica || null
+        // 👈 Acá borramos la línea de 'estado' para que no tire error
       }]);
-      if (error) alert("Error crítico al enviar alerta: " + error.message);
-      else alert("🚨 ¡ALERTA ENVIADA AL CENTRO DE MONITOREO! Ayuda en camino.");
+
+      if (error) {
+        // Si vuelve a fallar, este mensaje nos dirá exactamente qué columna falta
+        alert("Error crítico al enviar alerta: " + error.message);
+      } else {
+        alert("🚨 ¡ALERTA ENVIADA AL CENTRO DE MONITOREO! Ayuda en camino.");
+      }
     } finally {
       sosProgress.style.height = '0%';
       setTimeout(() => { enviando = false; }, 5000);
