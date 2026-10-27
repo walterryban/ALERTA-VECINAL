@@ -7,16 +7,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #090d16;
-      --card: #111827;
-      --accent: #38bdf8;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --text: #f3f4f6;
+      --bg: #090d16; --card: #111827; --accent: #38bdf8;
+      --danger: #ef4444; --warning: #f59e0b; --text: #f3f4f6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; }
-    
     .container { max-width: 1200px; margin: 0 auto; }
     
     #login-overlay {
@@ -117,38 +112,30 @@
   </div>
 </div>
 
-<!-- Cargar librería de Supabase si no está en el <head> -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-  // Configuración Supabase
   const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
   
-  // CORRECCIÓN 1: Usar window.supabase para evitar conflicto de nombre
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // CORRECCIÓN CLAVE: Evitar el error de inicialización de 'supabase'
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   window.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
       mostrarDashboard();
     }
   });
 
   async function iniciarSesion() {
-    // CORRECCIÓN 2: Captura compatible con ambos nombres de ID
-    const emailElem = document.getElementById('loginEmail') || document.getElementById('email');
-    const passElem = document.getElementById('loginPassword') || document.getElementById('password');
-
-    const email = emailElem ? emailElem.value.trim() : '';
-    const password = passElem ? passElem.value.trim() : '';
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
 
     if (!email || !password) {
       alert("Ingrese correo y contraseña.");
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
     if (error) {
       alert("Acceso denegado: " + error.message);
@@ -158,35 +145,36 @@
   }
 
   async function cerrarSesion() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     location.reload();
   }
 
   function mostrarDashboard() {
-    const loginOverlay = document.getElementById('login-overlay') || document.getElementById('login-screen');
-    const appDashboard = document.getElementById('app-dashboard') || document.getElementById('admin-panel');
-
-    if (loginOverlay) loginOverlay.style.display = 'none';
-    if (appDashboard) appDashboard.style.display = 'block';
-
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-dashboard').style.display = 'block';
     cargarAlertas();
     escucharAlertasEnTiempoReal();
   }
 
   async function cargarAlertas() {
-    const { data, error } = await supabase
+    // Ordenamos por fecha (si created_at falla, no rompe la app)
+    const { data, error } = await supabaseClient
       .from('alertas')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      renderizarTabla(data);
+    if (error) {
+      console.error("Error al cargar alertas:", error);
+      // Si la tabla está vacía o falla, mostramos mensaje
+      document.getElementById('tablaAlertasBody').innerHTML = `<tr><td colspan="7" style="text-align:center; color:#ef4444;">Error al cargar datos: ${error.message}</td></tr>`;
+      return;
     }
+    
+    if (data) renderizarTabla(data);
   }
 
   function renderizarTabla(alertas) {
     const tbody = document.getElementById('tablaAlertasBody');
-    if (!tbody) return;
     tbody.innerHTML = '';
 
     if (alertas.length === 0) {
@@ -199,10 +187,11 @@
       const tr = document.createElement('tr');
       if (isCoaccion) tr.className = 'coaccion-row';
 
-      const fecha = new Date(a.created_at || Date.now()).toLocaleString('es-AR');
+      // Formateo de fecha
+      const fechaStr = a.created_at ? new Date(a.created_at).toLocaleString('es-AR') : 'Sin fecha';
 
       tr.innerHTML = `
-        <td>${fecha}</td>
+        <td>${fechaStr}</td>
         <td><strong>${a.manzana || 'N/A'}</strong></td>
         <td>
           <span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">
@@ -232,18 +221,20 @@
   }
 
   function escucharAlertasEnTiempoReal() {
-    supabase
+    supabaseClient
       .channel('schema-db-changes')
-      .on('postgres_changes', { event: 'INSERT', table: 'alertas' }, payload => {
+      .on('postgres_changes', { event: 'INSERT', table: 'alertas', schema: 'public' }, payload => {
         cargarAlertas();
+        // Sonido de alerta (requiere interacción previa del usuario, como el login)
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        audio.play().catch(() => {});
+        audio.play().catch(() => console.log("Audio bloqueado por el navegador hasta que haya interacción."));
       })
       .subscribe();
   }
 
   async function cambiarEstado(id, nuevoEstado) {
-    await supabase.from('alertas').update({ estado: nuevoEstado }).eq('id', id);
+    const { error } = await supabaseClient.from('alertas').update({ estado: nuevoEstado }).eq('id', id);
+    if (error) alert("Error al cambiar estado: " + error.message);
     cargarAlertas();
   }
 </script>
