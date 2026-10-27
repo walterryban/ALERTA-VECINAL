@@ -117,11 +117,16 @@
   </div>
 </div>
 
+<!-- Cargar librería de Supabase si no está en el <head> -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  // Configuración Supabase con tus credenciales reales
+  // Configuración Supabase
   const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // CORRECCIÓN 1: Usar window.supabase para evitar conflicto de nombre
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -131,8 +136,12 @@
   });
 
   async function iniciarSesion() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
+    // CORRECCIÓN 2: Captura compatible con ambos nombres de ID
+    const emailElem = document.getElementById('loginEmail') || document.getElementById('email');
+    const passElem = document.getElementById('loginPassword') || document.getElementById('password');
+
+    const email = emailElem ? emailElem.value.trim() : '';
+    const password = passElem ? passElem.value.trim() : '';
 
     if (!email || !password) {
       alert("Ingrese correo y contraseña.");
@@ -154,8 +163,12 @@
   }
 
   function mostrarDashboard() {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('app-dashboard').style.display = 'block';
+    const loginOverlay = document.getElementById('login-overlay') || document.getElementById('login-screen');
+    const appDashboard = document.getElementById('app-dashboard') || document.getElementById('admin-panel');
+
+    if (loginOverlay) loginOverlay.style.display = 'none';
+    if (appDashboard) appDashboard.style.display = 'block';
+
     cargarAlertas();
     escucharAlertasEnTiempoReal();
   }
@@ -173,6 +186,7 @@
 
   function renderizarTabla(alertas) {
     const tbody = document.getElementById('tablaAlertasBody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     if (alertas.length === 0) {
@@ -186,13 +200,13 @@
       if (isCoaccion) tr.className = 'coaccion-row';
 
       const fecha = new Date(a.created_at || Date.now()).toLocaleString('es-AR');
-      
+
       tr.innerHTML = `
         <td>${fecha}</td>
         <td><strong>${a.manzana || 'N/A'}</strong></td>
         <td>
           <span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">
-            ${a.tipo_alerta}
+            ${a.tipo_alerta || 'SOS'}
           </span>
         </td>
         <td>
