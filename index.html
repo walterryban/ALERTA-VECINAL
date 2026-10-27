@@ -170,18 +170,17 @@
       alert("Debes aceptar los Términos y Condiciones conforme a la Ley 25.326 para continuar.");
       return;
     }
-
-    const { data, error } = await supabase
+const { data, error } = await supabase
       .from('manzanas')
-      .select('pin')
+      .select('pin_autorizado')
       .eq('nombre_manzana', mza)
       .single();
 
-    if (error || !data || data.pin !== pin) {
+    if (error || !data || data.pin_autorizado !== pin) {
       alert("PIN de Manzana incorrecto o manzana no registrada.");
       return;
     }
-
+    
     localStorage.setItem('vecino_validado', 'true');
     localStorage.setItem('vecino_manzana', mza);
     localStorage.setItem('vecino_nombre', nombre);
