@@ -180,17 +180,14 @@ async function validarYGuardar() {
     const tipoAlerta = document.getElementById('selectTipoAlerta').value;
     
     try {
+      // Guardamos SOLO lo que existe en tu tabla: manzana y tipo_alerta
+      // (El 'id' y 'vecino_id' se generan solos)
       const { error } = await supabaseClient.from('alertas').insert([{
         manzana: vecinoActual.manzana,
-        tipo_alerta: tipoAlerta,
-        vecino_nombre: vecinoActual.nombre,
-        vecino_telefono: vecinoActual.telefono,
-        ficha_medica: vecinoActual.fichaMedica || null
-        // 👈 Acá borramos la línea de 'estado' para que no tire error
+        tipo_alerta: tipoAlerta
       }]);
 
       if (error) {
-        // Si vuelve a fallar, este mensaje nos dirá exactamente qué columna falta
         alert("Error crítico al enviar alerta: " + error.message);
       } else {
         alert("🚨 ¡ALERTA ENVIADA AL CENTRO DE MONITOREO! Ayuda en camino.");
