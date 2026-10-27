@@ -1,271 +1,75 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Alerta Vecinal Pro — Terminal Ciudadana</title>
-  <!-- ÚNICA carga de la librería de Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root {
-      --primary: #d90429;
-      --bg: #0f172a;
-      --card: #1e293b;
-      --text: #f8fafc;
-      --accent: #38bdf8;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 16px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-    .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
-    header { text-align: center; margin-bottom: 8px; }
-    header h1 { font-size: 1.5rem; color: #ef4444; font-weight: 800; letter-spacing: 0.5px; }
-    header p { font-size: 0.85rem; color: #94a3b8; }
-    
-    .card { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid #334155; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-    label { font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; }
-    input, select { background: #0f172a; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; font-size: 0.95rem; }
-    
-    /* Botón SOS con Medidor de Presión */
-    .sos-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 16px 0; position: relative; }
-    .sos-btn {
-      width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, #ef4444 0%, #991b1b 100%);
-      border: 4px solid #fca5a5; color: white; font-weight: 900; font-size: 1.8rem; display: flex;
-      flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
-      user-select: none; -webkit-user-select: none; box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
-      transition: transform 0.1s ease; position: relative; overflow: hidden;
-    }
-    .sos-btn:active { transform: scale(0.96); }
-    .sos-progress {
-      position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
-      background: rgba(255, 255, 255, 0.4); transition: height 0.05s linear; pointer-events: none;
-    }
-    .sos-hint { font-size: 0.75rem; color: #94a3b8; margin-top: 8px; text-align: center; }
+// Configuración Supabase única
+const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    /* Consentimiento Ley 25.326 */
-    .legal-box { display: flex; align-items: flex-start; gap: 8px; font-size: 0.75rem; color: #94a3b8; margin-top: 8px; }
-    .legal-box input { margin-top: 2px; }
+let vecinoActual = { manzana: '', nombre: '', telefono: '', fichaMedica: '' };
+let enviando = false;
 
-    .status-badge { background: #1e293b; color: #22c55e; border: 1px solid #166534; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-    .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-  </style>
-</head>
-<body>
+async function validarYGuardar() {
+  const manzana = document.getElementById('inputManzana').value.trim();
+  const pin = document.getElementById('inputPinManzana').value.trim();
+  const nombre = document.getElementById('inputNombre').value.trim();
+  const telefono = document.getElementById('inputTelefono').value.trim();
+  const fichaMedica = document.getElementById('inputFichaMedica').value.trim();
+  const aceptaLey = document.getElementById('checkLey25326').checked;
 
-<div class="container">
-  <header>
-    <h1>ALERTA VECINAL PRO</h1>
-    <p>Rastreo Urbano GPS — Sistema Ciudadano</p>
-    <div style="margin-top: 8px;">
-      <span class="status-badge"><span class="dot"></span> PWA Activa & Georreferenciada</span>
-    </div>
-  </header>
-
-  <!-- Formulario de Validación de Manzana y Registro -->
-  <div class="card" id="section-registro">
-    <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--accent);">1. Validación de Vecino y Manzana</h3>
-    
-    <div class="form-group">
-      <label>Manzana / Zona</label>
-      <input type="text" id="inputManzana" placeholder="Ej: Manzana 12" />
-    </div>
-
-    <div class="form-group">
-      <label>Código PIN de Manzana</label>
-      <input type="password" id="inputPinManzana" placeholder="Ingrese PIN de su manzana" />
-    </div>
-
-    <div class="form-group">
-      <label>Nombre y Apellido</label>
-      <input type="text" id="inputNombre" placeholder="Tu nombre completo" />
-    </div>
-
-    <div class="form-group">
-      <label>Teléfono (Solo visible para Monitoreo)</label>
-      <input type="tel" id="inputTelefono" placeholder="266 4000000" />
-    </div>
-
-    <div class="form-group">
-      <label>Ficha Médica / Alergias (Opcional)</label>
-      <input type="text" id="inputFichaMedica" placeholder="Ej: O+, Diabético, Alérgico a Penicilina" />
-    </div>
-
-    <!-- Checkbox Ley 25.326 -->
-    <div class="legal-box">
-      <input type="checkbox" id="checkLey25326" />
-      <label for="checkLey25326" style="text-transform: none; font-weight: normal; color: #94a3b8;">
-        Acepto el tratamiento de mis datos personales y de salud de acuerdo a la <strong>Ley Nacional 25.326</strong>, autorizando su uso exclusivo para la gestión de emergencias por el Centro de Monitoreo.
-      </label>
-    </div>
-
-    <button onclick="validarYGuardar()" style="width:100%; margin-top:14px; background:var(--accent); color:#000; font-weight:bold; border:none; padding:12px; border-radius:8px; cursor:pointer;">
-      Validar Acceso a Manzana
-    </button>
-  </div>
-
-  <!-- Panel Botón SOS (Oculto hasta validar) -->
-  <div class="card" id="section-sos" style="display:none; text-align:center;">
-    <h3 style="font-size: 1rem; color: #ef4444; margin-bottom: 8px;">DISPARADOR DE EMERGENCIA</h3>
-    <p style="font-size:0.8rem; color:#94a3b8;">Selecciona la categoría y mantén presionado el botón</p>
-
-    <div class="form-group" style="margin-top:12px;">
-      <select id="selectTipoAlerta">
-        <option value="ROBO / INSEGURIDAD">🚨 ROBO / INSEGURIDAD</option>
-        <option value="ACTIVIDAD SOSPECHOSA">👁️ ACTIVIDAD SOSPECHOSA</option>
-        <option value="EMERGENCIA MÉDICA">🚑 EMERGENCIA MÉDICA</option>
-        <option value="INCENDIO">🔥 INCENDIO</option>
-        <option value="COACCIÓN / SECUESTRO">⚠️ COACCIÓN / SECUESTRO</option>
-      </select>
-    </div>
-
-    <div class="sos-wrapper">
-      <div class="sos-btn" id="btnSOS">
-        <span>S.O.S</span>
-        <span style="font-size:0.7rem; font-weight:normal; margin-top:4px;">MANTENER 3s</span>
-        <div class="sos-progress" id="sosProgress"></div>
-      </div>
-      <p class="sos-hint">Mantén presionado durante 3 segundos para evitar disparos accidentales.</p>
-    </div>
-    
-    <button onclick="cerrarSesionVecino()" style="background:transparent; border:1px solid #475569; color:#94a3b8; padding:8px 12px; border-radius:6px; font-size:0.8rem; cursor:pointer; margin-top:8px;">
-      Cambiar de Datos / Salir
-    </button>
-  </div>
-</div>
-
-<script>
-  // Configuración Supabase única
-  const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // Variables globales del vecino validado
-  let vecinoActual = {
-    manzana: '',
-    nombre: '',
-    telefono: '',
-    fichaMedica: ''
-  };
-
-  // 1. Validar Manzana contra la base de datos de Supabase
-  async function validarYGuardar() {
-    const manzana = document.getElementById('inputManzana').value.trim();
-    const pin = document.getElementById('inputPinManzana').value.trim();
-    const nombre = document.getElementById('inputNombre').value.trim();
-    const telefono = document.getElementById('inputTelefono').value.trim();
-    const fichaMedica = document.getElementById('inputFichaMedica').value.trim();
-    const aceptaLey = document.getElementById('checkLey25326').checked;
-
-    if (!manzana || !pin || !nombre || !telefono) {
-      alert("Por favor complete Manzana, PIN, Nombre y Teléfono.");
-      return;
-    }
-
-    if (!aceptaLey) {
-      alert("Debe aceptar los términos de la Ley 25.326 para continuar.");
-      return;
-    }
-
-    // Consultar la tabla 'manzanas' en Supabase para verificar el PIN
-    const { data, error } = await supabase
-      .from('manzanas')
-      .select('*')
-      .eq('manzana', manzana)
-      .eq('pin', pin)
-      .single();
-
-    if (error || !data) {
-      alert("Acceso denegado: La Manzana o el PIN son incorrectos.");
-      return;
-    }
-
-    // Guardar datos en memoria de la sesión
-    vecinoActual = { manzana, nombre, telefono, fichaMedica };
-
-    // Ocultar sección de registro y mostrar el botón SOS
-    document.getElementById('section-registro').style.display = 'none';
-    document.getElementById('section-sos').style.display = 'block';
-    
-    alert("¡Acceso validado con éxito para " + manzana + "!");
+  if (!manzana || !pin || !nombre || !telefono) {
+    alert("Por favor complete Manzana, PIN, Nombre y Teléfono.");
+    return;
+  }
+  if (!aceptaLey) {
+    alert("Debe aceptar los términos de la Ley 25.326 para continuar.");
+    return;
   }
 
-  function cerrarSesionVecino() {
-    document.getElementById('section-sos').style.display = 'none';
-    document.getElementById('section-registro').style.display = 'block';
-    document.getElementById('inputPinManzana').value = '';
+  const { data, error } = await supabaseClient
+    .from('manzanas')
+    .select('*')
+    .eq('manzana', manzana)
+    .eq('pin', pin)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Supabase error:", error);
+    alert("Error de conexión. Intente nuevamente.");
+    return;
+  }
+  if (!data) {
+    alert("Acceso denegado: La Manzana o el PIN son incorrectos.");
+    return;
   }
 
-  // 2. Lógica del Botón SOS (Mantener presionado 3 segundos)
-  const btnSOS = document.getElementById('btnSOS');
-  const sosProgress = document.getElementById('sosProgress');
-  
-  let pressTimer;
-  let progressInterval;
-  const holdDuration = 3000; // 3 segundos
-  let startTime;
+  vecinoActual = { manzana, nombre, telefono, fichaMedica };
+  document.getElementById('section-registro').style.display = 'none';
+  document.getElementById('section-sos').style.display = 'block';
+  alert("¡Acceso validado con éxito para " + manzana + "!");
+}
 
-  function startPress(e) {
-    e.preventDefault();
-    startTime = Date.now();
-    sosProgress.style.height = '0%';
-    
-    // Animación de la barra de progreso
-    progressInterval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const percent = Math.min((elapsed / holdDuration) * 100, 100);
-      sosProgress.style.height = percent + '%';
-    }, 50);
+async function enviarAlertaInmediata() {
+  if (enviando) return;
+  enviando = true;
+  const tipoAlerta = document.getElementById('selectTipoAlerta').value;
 
-    // Temporizador para disparar la alerta al cumplir los 3 segundos
-    pressTimer = setTimeout(() => {
-      clearInterval(progressInterval);
-      sosProgress.style.height = '100%';
-      enviarAlertaInmediata();
-    }, holdDuration);
-  }
-
-  function cancelPress() {
-    clearTimeout(pressTimer);
-    clearInterval(progressInterval);
-    sosProgress.style.height = '0%';
-  }
-
-  // Eventos táctiles y de mouse para el botón SOS
-  if (btnSOS) {
-    btnSOS.addEventListener('mousedown', startPress);
-    btnSOS.addEventListener('mouseup', cancelPress);
-    btnSOS.addEventListener('mouseleave', cancelPress);
-
-    btnSOS.addEventListener('touchstart', startPress);
-    btnSOS.addEventListener('touchend', cancelPress);
-  }
-
-  // 3. Envío real de la alerta a Supabase
-  async function enviarAlertaInmediata() {
-    const tipoAlerta = document.getElementById('selectTipoAlerta').value;
-
-    const { error } = await supabase
+  try {
+    const { error } = await supabaseClient
       .from('alertas')
-      .insert([
-        { 
-          manzana: vecinoActual.manzana, 
-          tipo_alerta: tipoAlerta, 
-          vecino_nombre: vecinoActual.nombre, 
-          vecino_telefono: vecinoActual.telefono,
-          ficha_medica: vecinoActual.fichaMedica,
-          estado: 'PENDIENTE'
-        }
-      ]);
+      .insert([{
+        manzana: vecinoActual.manzana,
+        tipo_alerta: tipoAlerta,
+        vecino_nombre: vecinoActual.nombre,
+        vecino_telefono: vecinoActual.telefono,
+        ficha_medica: vecinoActual.fichaMedica || null,
+        estado: 'PENDIENTE'
+      }]);
 
     if (error) {
       alert("Error crítico al enviar alerta: " + error.message);
     } else {
       alert("🚨 ¡ALERTA ENVIADA AL CENTRO DE MONITOREO! Ayuda en camino.");
     }
-    
+  } finally {
     sosProgress.style.height = '0%';
+    setTimeout(() => { enviando = false; }, 5000);
   }
-</script>
-</body>
-</html>
+}
