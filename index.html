@@ -109,9 +109,11 @@
     if (!aceptaLey) { alert("Debe aceptar los términos de la Ley 25.326 para continuar."); return; }
 
     const { data, error } = await supabaseClient
-      .from('manzanas').select('*')
-      .eq('manzana', manzana).eq('pin', pin)
-      .maybeSingle();
+  .from('manzanas')
+  .select('*')
+  .eq('nombre_manzana', manzana) // ✅ CORREGIDO
+  .eq('pin_autorizado', pin)     // ✅ CORREGIDO
+  .maybeSingle();
 
     if (error) { console.error("Supabase error:", error); alert("Error de conexión. Intente nuevamente."); return; }
     if (!data) { alert("Acceso denegado: La Manzana o el PIN son incorrectos."); return; }
