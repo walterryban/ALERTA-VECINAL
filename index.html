@@ -97,7 +97,7 @@
   let pressTimer, progressInterval, startTime;
   const holdDuration = 3000;
 
-  async function validarYGuardar() {
+async function validarYGuardar() {
     const manzana = document.getElementById('inputManzana').value.trim();
     const pin = document.getElementById('inputPinManzana').value.trim();
     const nombre = document.getElementById('inputNombre').value.trim();
@@ -105,24 +105,38 @@
     const fichaMedica = document.getElementById('inputFichaMedica').value.trim();
     const aceptaLey = document.getElementById('checkLey25326').checked;
 
-    if (!manzana || !pin || !nombre || !telefono) { alert("Por favor complete Manzana, PIN, Nombre y Teléfono."); return; }
-    if (!aceptaLey) { alert("Debe aceptar los términos de la Ley 25.326 para continuar."); return; }
+    if (!manzana || !pin || !nombre || !telefono) {
+      alert("Por favor complete Manzana, PIN, Nombre y Teléfono.");
+      return;
+    }
+    if (!aceptaLey) {
+      alert("Debe aceptar los términos de la Ley 25.326 para continuar.");
+      return;
+    }
 
+    // 🔥 LA MAGIA ESTÁ ACÁ: Buscamos ignorando mayúsculas y espacios
     const { data, error } = await supabaseClient
-  .from('manzanas')
-  .select('*')
-  .eq('nombre_manzana', manzana) // ✅ CORREGIDO
-  .eq('pin_autorizado', pin)     // ✅ CORREGIDO
-  .maybeSingle();
+      .from('manzanas')
+      .select('*')
+      .ilike('nombre_manzana', `%${manzana}%`) // % busca coincidencias parciales (ej: si la DB dice "MANZANA A " y escribís "MANZANA A", lo encuentra)
+      .eq('pin_autorizado', pin)
+      .maybeSingle();
 
-    if (error) { console.error("Supabase error:", error); alert("Error de conexión. Intente nuevamente."); return; }
-    if (!data) { alert("Acceso denegado: La Manzana o el PIN son incorrectos."); return; }
+    if (error) {
+      console.error("Supabase error:", error);
+      alert("Error de conexión. Intente nuevamente.");
+      return;
+    }
+    if (!data) {
+      alert("Acceso denegado: La Manzana o el PIN son incorrectos.");
+      return;
+    }
 
     vecinoActual = { manzana, nombre, telefono, fichaMedica };
     document.getElementById('section-registro').style.display = 'none';
     document.getElementById('section-sos').style.display = 'block';
     alert("¡Acceso validado con éxito para " + manzana + "!");
-  }
+} 
 
   function cerrarSesionVecino() {
     document.getElementById('section-sos').style.display = 'none';
