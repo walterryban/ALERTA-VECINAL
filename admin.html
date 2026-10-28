@@ -2,85 +2,81 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Alerta Vecinal Pro — Terminal Ciudadana</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alerta Vecinal Pro — Consola COM</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --primary:#d90429; --bg:#0f172a; --card:#1e293b; --text:#f8fafc; --accent:#38bdf8; }
+    :root { --bg:#0f172a; --card:#1e293b; --text:#f8fafc; --accent:#38bdf8; --danger:#ef4444; }
     * { box-sizing:border-box; margin:0; padding:0; font-family:system-ui,-apple-system,sans-serif; }
-    body { background-color:var(--bg); color:var(--text); padding:16px; display:flex; flex-direction:column; align-items:center; min-height:100vh; }
-    .container { width:100%; max-width:480px; display:flex; flex-direction:column; gap:16px; }
-    header { text-align:center; margin-bottom:8px; }
-    header h1 { font-size:1.5rem; color:#ef4444; font-weight:800; letter-spacing:0.5px; }
-    header p { font-size:0.85rem; color:#94a3b8; }
-    .card { background:var(--card); border-radius:12px; padding:16px; border:1px solid #334155; }
-    .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
-    label { font-size:0.8rem; font-weight:600; color:#cbd5e1; text-transform:uppercase; }
-    input, select { background:#0f172a; border:1px solid #475569; color:#fff; padding:10px; border-radius:8px; font-size:0.95rem; outline: none; }
-    input:focus, select:focus { border-color: var(--accent); }
-    .sos-wrapper { display:flex; flex-direction:column; align-items:center; justify-content:center; margin:16px 0; position:relative; }
-    .sos-btn { width:180px; height:180px; border-radius:50%; background:radial-gradient(circle,#ef4444 0%,#991b1b 100%); border:4px solid #fca5a5; color:white; font-weight:900; font-size:1.8rem; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; box-shadow:0 0 25px rgba(239,68,68,0.5); transition:transform 0.1s ease; position:relative; overflow:hidden; touch-action:none; }
-    .sos-btn:active { transform:scale(0.96); }
-    .sos-progress { position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(255,255,255,0.4); transition:height 0.05s linear; pointer-events:none; }
-    .sos-hint { font-size:0.75rem; color:#94a3b8; margin-top:8px; text-align:center; }
-    .legal-box { display:flex; align-items:flex-start; gap:8px; font-size:0.75rem; color:#94a3b8; margin-top:8px; }
-    .legal-box input { margin-top:2px; }
-    .status-badge { background:#1e293b; color:#22c55e; border:1px solid #166534; padding:6px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:6px; }
-    .dot { width:8px; height:8px; background:#22c55e; border-radius:50%; animation:pulse 1.5s infinite; }
-    @keyframes pulse { 0%{opacity:1;} 50%{opacity:0.3;} 100%{opacity:1;} }
+    body { background-color:var(--bg); color:var(--text); padding:20px; min-height:100vh; transition: background 0.2s ease; }
+    
+    /* EFECTO ESTROBOSCÓPICO ROJO FUERTE */
+    body.alerta-activa {
+      animation: estroboscopio 0.4s infinite alternate;
+    }
+    @keyframes estroboscopio {
+      0% { background-color: #0f172a; }
+      100% { background-color: #991b1b; }
+    }
+
+    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #334155; padding-bottom:15px; }
+    header h1 { font-size:1.4rem; color:var(--danger); font-weight:800; display:flex; align-items:center; gap:8px; }
+    header p { font-size:0.8rem; color:#94a3b8; }
+    
+    .btn-audio { background:#22c55e; color:#000; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:bold; }
+    
+    .table-container { background:var(--card); border-radius:12px; border:1px solid #334155; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; text-align:left; font-size:0.9rem; }
+    th { background:#090d16; color:#94a3b8; padding:12px 16px; font-weight:600; text-transform:uppercase; font-size:0.75rem; }
+    td { padding:14px 16px; border-top:1px solid #334155; color:#e2e8f0; }
+
+    .badge-alerta { background:#7f1d1d; color:#fca5a5; padding:4px 10px; border-radius:20px; font-weight:700; font-size:0.75rem; border:1px solid #dc2626; }
+    .badge-estado { background:#166534; color:#bbf7d0; padding:4px 10px; border-radius:20px; font-weight:600; font-size:0.75rem; }
+
+    /* POP-UP GIGANTE */
+    #modalEmergencia { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.88); display:none; justify-content:center; align-items:center; z-index:9999; }
+    .modal-content { background:#1e293b; border:4px solid var(--danger); border-radius:16px; padding:30px; width:90%; max-width:550px; text-align:center; box-shadow:0 0 50px rgba(239,68,68,0.8); }
+    .modal-content h2 { color:var(--danger); font-size:2rem; margin-bottom:15px; font-weight:900; }
+    .modal-data { font-size:1.1rem; margin:10px 0; text-align:left; background:#0f172a; padding:16px; border-radius:8px; border:1px solid #334155; line-height:1.6; }
+    .btn-cerrar-modal { background:var(--danger); color:white; border:none; padding:14px 24px; font-size:1rem; font-weight:bold; border-radius:8px; cursor:pointer; margin-top:15px; width:100%; }
   </style>
 </head>
 <body>
-<div class="container">
+
+<div class="container" style="max-width:1200px; margin:0 auto;">
   <header>
-    <h1>ALERTA VECINAL PRO</h1>
-    <p>Rastreo Urbano GPS — Terminal Ciudadana</p>
-    <div style="margin-top:8px;">
-      <span class="status-badge"><span class="dot"></span> PWA Activa & Georreferenciada</span>
+    <div>
+      <h1>🚨 Alerta Vecinal Pro — Consola COM</h1>
+      <p>Centro de Operaciones y Monitoreo Municipal | San Luis / Villa Mercedes</p>
     </div>
+    <button class="btn-audio" id="btnHabilitarAudio" onclick="activarAudioSistema()">🔊 Habilitar Audio / Sirena</button>
   </header>
 
-  <div class="card" id="section-registro">
-    <h3 style="font-size:1rem; margin-bottom:12px; color:var(--accent);">1. Validación de Vecino y Manzana</h3>
-    <div class="form-group"><label>Manzana / Zona</label><input type="text" id="inputManzana" placeholder="Ej: MANZANA A" /></div>
-    <div class="form-group"><label>Código PIN de Manzana</label><input type="password" id="inputPinManzana" placeholder="Ingrese PIN de su manzana" /></div>
-    <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="inputNombre" placeholder="Tu nombre completo" /></div>
-    <div class="form-group"><label>Teléfono (Solo visible para Monitoreo)</label><input type="tel" id="inputTelefono" placeholder="266 4000000" /></div>
-    <div class="form-group"><label>Ficha Médica / Alergias (Opcional)</label><input type="text" id="inputFichaMedica" placeholder="Ej: O+, Diabético, Alérgico a Penicilina" /></div>
-    <div class="legal-box">
-      <input type="checkbox" id="checkLey25326" checked />
-      <label for="checkLey25326" style="text-transform:none; font-weight:normal; color:#94a3b8;">
-        Acepto el tratamiento de mis datos de acuerdo a la <strong>Ley 25.326</strong> para gestión exclusiva de emergencias.
-      </label>
-    </div>
-    <button onclick="validarYGuardar()" style="width:100%; margin-top:14px; background:var(--accent); color:#000; font-weight:bold; border:none; padding:12px; border-radius:8px; cursor:pointer;">
-      Validar Acceso a Manzana
-    </button>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha / Hora</th>
+          <th>Manzana</th>
+          <th>Tipo Alerta</th>
+          <th>Vecino / Teléfono</th>
+          <th>Ficha Médica</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tablaAlertasBody">
+        <tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">Cargando registros...</td></tr>
+      </tbody>
+    </table>
   </div>
+</div>
 
-  <div class="card" id="section-sos" style="display:none; text-align:center;">
-    <h3 style="font-size:1rem; color:#ef4444; margin-bottom:8px;">DISPARADOR DE EMERGENCIA</h3>
-    <p style="font-size:0.8rem; color:#94a3b8;" id="infoVecinoLogueado">Listo para disparar alerta</p>
-    <div class="form-group" style="margin-top:12px;">
-      <select id="selectTipoAlerta">
-        <option value="ROBO / INSEGURIDAD">🚨 ROBO / INSEGURIDAD</option>
-        <option value="ACTIVIDAD SOSPECHOSA">👁️ ACTIVIDAD SOSPECHOSA</option>
-        <option value="EMERGENCIA MÉDICA">🚑 EMERGENCIA MÉDICA</option>
-        <option value="INCENDIO">🔥 INCENDIO</option>
-        <option value="COACCIÓN / SECUESTRO">⚠️ COACCIÓN / SECUESTRO</option>
-      </select>
-    </div>
-    <div class="sos-wrapper">
-      <div class="sos-btn" id="btnSOS">
-        <span>S.O.S</span>
-        <span style="font-size:0.7rem; font-weight:normal; margin-top:4px;">MANTENER 3s</span>
-        <div class="sos-progress" id="sosProgress"></div>
-      </div>
-      <p class="sos-hint">Mantén presionado durante 3 segundos para enviar la alerta real.</p>
-    </div>
-    <button onclick="cerrarSesionVecino()" style="background:transparent; border:1px solid #475569; color:#94a3b8; padding:8px 12px; border-radius:6px; font-size:0.8rem; cursor:pointer; margin-top:8px;">
-      Cambiar de Datos / Salir
-    </button>
+<!-- Pop-up Modal Flotante -->
+<div id="modalEmergencia">
+  <div class="modal-content">
+    <h2>🚨 ¡ALERTA DE EMERGENCIA!</h2>
+    <div class="modal-data" id="modalTextoDetalle">Cargando datos...</div>
+    <button class="btn-cerrar-modal" onclick="cerrarModalAlerta()">SILENCIAR SIRENA Y ATENDER</button>
   </div>
 </div>
 
@@ -89,12 +85,22 @@
   const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  let audioContext = null;
+
   window.addEventListener('DOMContentLoaded', () => {
     cargarAlertas();
     escucharAlertasEnTiempoReal();
   });
 
-  // Cargar histórico inicial
+  function activarAudioSistema() {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioContext.state === 'suspended') audioContext.resume();
+    const btn = document.getElementById('btnHabilitarAudio');
+    btn.innerText = "✅ Sirena Activa";
+    btn.style.background = "#334155";
+    btn.style.color = "#22c55e";
+  }
+
   async function cargarAlertas() {
     const { data, error } = await supabaseClient
       .from('alertas')
@@ -102,35 +108,36 @@
       .order('created_at', { ascending: false })
       .limit(30);
 
-    if (error) {
-      console.error("Error al cargar alertas:", error.message);
-      return;
-    }
+    if (error) return;
 
     const tbody = document.getElementById('tablaAlertasBody');
     tbody.innerHTML = '';
 
     if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">No hay alertas registradas.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">Sin alertas.</td></tr>`;
       return;
     }
 
     data.forEach(alerta => {
       const fecha = new Date(alerta.created_at).toLocaleString('es-AR');
+      
+      const nombreFinal = alerta.vecino_nombre || alerta.nombre || 'Vecino Registrado';
+      const telefonoFinal = alerta.vecino_telefono || alerta.telefono || 'Sin teléfono';
+      const fichaFinal = alerta.ficha_medica || 'Sin registros';
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${fecha}</td>
-        <td><strong>${alerta.manzana || 'N/A'}</strong></td>
+        <td><strong>${alerta.manzana || 'MANZANA A'}</strong></td>
         <td><span class="badge-alerta">${alerta.tipo_alerta}</span></td>
-        <td><strong>${alerta.vecino_nombre}</strong><br><span style="color:var(--accent); font-size:0.8rem;">📞 ${alerta.vecino_telefono}</span></td>
-        <td>${alerta.ficha_medica || 'Sin registros'}</td>
-        <td><span class="badge-estado">${alerta.estado}</span></td>
+        <td><strong>${nombreFinal}</strong><br><span style="color:var(--accent); font-size:0.8rem;">📞 ${telefonoFinal}</span></td>
+        <td>${fichaFinal}</td>
+        <td><span class="badge-estado">${alerta.estado || 'PENDIENTE'}</span></td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  // --- TIEMPO REAL CON SUPABASE Y EFECTOS BLINDADOS ---
   function escucharAlertasEnTiempoReal() {
     supabaseClient.removeAllChannels();
 
@@ -140,68 +147,59 @@
         'postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'alertas' }, 
         (payload) => {
-          console.log("🚨 ¡Alerta nueva en vivo recibida!", payload.new);
+          console.log("🚨 Alerta en tiempo real:", payload.new);
           
-          // 1. Refrescar la tabla
           cargarAlertas();
-          
-          // 2. Reproducir alarma sonora infalible (Sintetizador Web Audio API)
-          reproducirAlarmaSonora();
-
-          // 3. Activar luces estroboscópicas rojas en toda la pantalla
+          sonarSirenaInterna();
           document.body.classList.add('alerta-activa');
-
-          // 4. Mostrar el modal flotante gigante
           dispararPopUpEmergencia(payload.new);
         }
       )
-      .subscribe((status) => {
-        console.log("Estado Realtime COM:", status);
-      });
+      .subscribe();
   }
 
-  // Generador de sirena interna (No depende de internet ni links externos)
-  function reproducirAlarmaSonora() {
+  function sonarSirenaInterna() {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      
-      // Hacemos sonar 3 tonos de alerta tipo patrulla
-      for (let i = 0; i < 3; i++) {
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioContext.state === 'suspended') audioContext.resume();
+
+      for (let i = 0; i < 4; i++) {
         setTimeout(() => {
-          if (audioCtx.state === 'suspended') audioCtx.resume();
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
           
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.3);
+          osc.frequency.setValueAtTime(900, audioContext.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(450, audioContext.currentTime + 0.35);
           
-          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+          gain.gain.setValueAtTime(0.4, audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.35);
           
           osc.connect(gain);
-          gain.connect(audioCtx.destination);
+          gain.connect(audioContext.destination);
           
           osc.start();
-          osc.stop(audioCtx.currentTime + 0.3);
-        }, i * 350);
+          osc.stop(audioContext.currentTime + 0.35);
+        }, i * 400);
       }
-    } catch(e) {
-      console.log("Error reproduciendo audio sintetizado:", e);
-    }
+    } catch(e) { console.log("Audio no activado aún:", e); }
   }
 
   function dispararPopUpEmergencia(alerta) {
     const modal = document.getElementById('modalEmergencia');
     const detalle = document.getElementById('modalTextoDetalle');
     
+    const nombre = alerta.vecino_nombre || alerta.nombre || 'Vecino Registrado';
+    const telefono = alerta.vecino_telefono || alerta.telefono || 'Sin teléfono';
+    const ficha = alerta.ficha_medica || 'Sin registros';
+
     detalle.innerHTML = `
-      <p style="margin-bottom:8px;"><strong>Tipo:</strong> <span style="color:#fca5a5; font-size:1.2rem;">${alerta.tipo_alerta}</span></p>
-      <p style="margin-bottom:8px;"><strong>Zona / Manzana:</strong> ${alerta.manzana}</p>
-      <p style="margin-bottom:8px;"><strong>Vecino Afectado:</strong> ${alerta.vecino_nombre}</p>
-      <p style="margin-bottom:8px;"><strong>Teléfono:</strong> ${alerta.vecino_telefono}</p>
-      <p style="margin-bottom:8px;"><strong>Ficha Médica:</strong> ${alerta.ficha_medica}</p>
-      <p><strong>Hora:</strong> ${new Date(alerta.created_at).toLocaleTimeString('es-AR')}</p>
+      <p style="margin-bottom:8px;"><strong>TIPO:</strong> <span style="color:#fca5a5; font-size:1.3rem; font-weight:bold;">${alerta.tipo_alerta}</span></p>
+      <p style="margin-bottom:8px;"><strong>ZONA / MANZANA:</strong> ${alerta.manzana}</p>
+      <p style="margin-bottom:8px;"><strong>VECINO:</strong> ${nombre}</p>
+      <p style="margin-bottom:8px;"><strong>TELÉFONO:</strong> ${telefono}</p>
+      <p style="margin-bottom:8px;"><strong>FICHA MÉDICA:</strong> ${ficha}</p>
+      <p><strong>HORA:</strong> ${new Date(alerta.created_at).toLocaleTimeString('es-AR')}</p>
     `;
     modal.style.display = 'flex';
   }
