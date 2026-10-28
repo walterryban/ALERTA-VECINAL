@@ -143,7 +143,7 @@
       <button class="btn-success" onclick="agregarManzana()">➕ Crear Manzana</button>
     </div>
 
-    <div class="table-container">
+        <div class="table-container">
       <table>
         <thead>
           <tr>
@@ -151,16 +151,15 @@
             <th>Nombre de Manzana</th>
             <th>PIN Autorizado</th>
             <th>Fecha de Creación</th>
+            <th>Acciones</th> <!-- 👈 ESTA ES LA COLUMNA NUEVA -->
           </tr>
         </thead>
         <tbody id="tablaManzanasBody">
-          <tr><td colspan="4" style="text-align:center; color:#9ca3af;">Cargando manzanas...</td></tr>
+          <!-- Cambiamos colspan="4" por colspan="5" para que el mensaje de carga ocupe toda la fila -->
+          <tr><td colspan="5" style="text-align:center; color:#9ca3af;">Cargando manzanas...</td></tr>
         </tbody>
       </table>
     </div>
-  </div>
-
-</div>
 
 <script>
   const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
