@@ -193,17 +193,20 @@ async function validarYGuardar() {
     btnSOS.addEventListener('touchcancel', cancelPress);
   }
 
-    async function enviarAlertaInmediata() {
+     async function enviarAlertaInmediata() {
     if (enviando) return;
     enviando = true;
     const tipoAlerta = document.getElementById('selectTipoAlerta').value;
     
     try {
-      // Guardamos SOLO lo que existe en tu tabla: manzana y tipo_alerta
-      // (El 'id' y 'vecino_id' se generan solos)
+      // Guardamos TODOS los datos (ahora que las columnas existen en Supabase)
       const { error } = await supabaseClient.from('alertas').insert([{
         manzana: vecinoActual.manzana,
-        tipo_alerta: tipoAlerta
+        tipo_alerta: tipoAlerta,
+        vecino_nombre: vecinoActual.nombre,
+        vecino_telefono: vecinoActual.telefono,
+        ficha_medica: vecinoActual.fichaMedica || null,
+        estado: 'PENDIENTE'
       }]);
 
       if (error) {
@@ -216,6 +219,3 @@ async function validarYGuardar() {
       setTimeout(() => { enviando = false; }, 5000);
     }
   }
-</script>
-</body>
-</html>
