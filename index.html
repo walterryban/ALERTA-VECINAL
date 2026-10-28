@@ -87,6 +87,25 @@
   const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 👇 ESTO LEE EL CÓDIGO QR Y AUTOCOMPLETA LOS DATOS 👇
+  window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const manzanaQR = urlParams.get('manzana');
+    const pinQR = urlParams.get('pin');
+
+    if (manzanaQR && pinQR) {
+      // Rellenamos los inputs automáticamente
+      document.getElementById('inputManzana').value = manzanaQR;
+      document.getElementById('inputPinManzana').value = pinQR;
+      
+      // Hacemos un pequeño efecto visual (opcional)
+      document.getElementById('inputManzana').style.borderColor = '#22c55e';
+      document.getElementById('inputPinManzana').style.borderColor = '#22c55e';
+      
+      // Mostramos un mensajito
+      alert("✅ Manzana y PIN cargados automáticamente desde el código QR. Por favor, complete su nombre y teléfono.");
+    }
+  });
 
   let vecinoActual = { manzana:'', nombre:'', telefono:'', fichaMedica:'' };
   let enviando = false;
