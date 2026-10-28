@@ -141,13 +141,13 @@ async function validarYGuardar() {
       .eq('pin_autorizado', pin.trim())
       .maybeSingle();
 
-    if (error) {
-      console.error("Supabase error:", error);
-      alert("Error de conexión. Intente nuevamente.");
+        if (error) {
+      // Esto nos va a decir exactamente qué falla
+      alert("Error real de Supabase: " + error.message + " (Código: " + error.code + ")");
       return;
     }
     if (!data) {
-      alert("Acceso denegado: La Manzana o el PIN son incorrectos.");
+      alert("La base de datos buscó la manzana '" + manzana + "' y el PIN '" + pin + "', pero no encontró nada.");
       return;
     }
 
