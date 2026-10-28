@@ -143,7 +143,7 @@
       <button class="btn-success" onclick="agregarManzana()">➕ Crear Manzana</button>
     </div>
 
-        <div class="table-container">
+    <div class="table-container">
       <table>
         <thead>
           <tr>
@@ -151,15 +151,16 @@
             <th>Nombre de Manzana</th>
             <th>PIN Autorizado</th>
             <th>Fecha de Creación</th>
-            <th>Acciones</th> <!-- 👈 ESTA ES LA COLUMNA NUEVA -->
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="tablaManzanasBody">
-          <!-- Cambiamos colspan="4" por colspan="5" para que el mensaje de carga ocupe toda la fila -->
           <tr><td colspan="5" style="text-align:center; color:#9ca3af;">Cargando manzanas...</td></tr>
         </tbody>
       </table>
     </div>
+  </div>
+</div>
 
 <script>
   const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
@@ -192,7 +193,7 @@
     document.getElementById('app-dashboard').style.display = 'block';
     cargarAlertas();
     escucharAlertasEnTiempoReal();
-    cargarManzanas(); // Carga las manzanas al entrar
+    cargarManzanas();
   }
 
   // NAVEGACIÓN DE PESTAÑAS
@@ -260,12 +261,12 @@
     cargarAlertas();
   }
 
-  // --- LÓGICA DE MANZANAS (NUEVO) ---
+  // --- LÓGICA DE MANZANAS ---
   async function cargarManzanas() {
     const { data, error } = await supabaseClient.from('manzanas').select('*').order('id', { ascending: true });
     
     if (error) {
-      document.getElementById('tablaManzanasBody').innerHTML = `<tr><td colspan="4" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
+      document.getElementById('tablaManzanasBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
       return;
     }
 
@@ -273,18 +274,28 @@
     tbody.innerHTML = '';
     
     if (data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#9ca3af;">No hay manzanas registradas aún.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af;">No hay manzanas registradas aún.</td></tr>`;
       return;
     }
 
     data.forEach(m => {
       const fecha = m.created_at ? new Date(m.created_at).toLocaleDateString('es-AR') : 'N/A';
+      const nombreManzana = m.nombre_manzana || m.manzana || 'N/A';
+      const pinManzana = m.pin_autorizado || m.pin || 'N/A';
+      
+      const urlTerminal = `terminal.html?manzana=${encodeURIComponent(nombreManzana)}&pin=${encodeURIComponent(pinManzana)}`;
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${m.id}</td>
-        <td><strong>${m.nombre_manzana || m.manzana || 'N/A'}</strong></td>
-        <td style="color: var(--warning); font-weight: bold;">${m.pin_autorizado || m.pin || 'N/A'}</td>
+        <td><strong>${nombreManzana}</strong></td>
+        <td style="color: var(--warning); font-weight: bold;">${pinManzana}</td>
         <td>${fecha}</td>
+        <td>
+          <button onclick="verQR('${urlTerminal}', '${nombreManzana}')" style="background:#38bdf8; color:#000; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">
+            📱 Ver QR
+          </button>
+        </td>
       `;
       tbody.appendChild(tr);
     });
@@ -299,7 +310,6 @@
       return;
     }
 
-    // Insertamos en Supabase usando los nombres reales de tus columnas
     const { error } = await supabaseClient.from('manzanas').insert([{
       nombre_manzana: nombre,
       pin_autorizado: pin
@@ -311,8 +321,24 @@
       alert("✅ ¡Manzana creada con éxito!");
       document.getElementById('nuevaManzanaNombre').value = '';
       document.getElementById('nuevaManzanaPin').value = '';
-      cargarManzanas(); // Refrescamos la tabla
+      cargarManzanas();
     }
+  }
+
+  // --- GENERADOR DE QR ---
+  function verQR(url, nombre) {
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+    const modalHtml = `
+      <div id="qr-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#1e293b; padding:30px; border-radius:12px; text-align:center; border:2px solid #38bdf8; position:relative;">
+          <h3 style="color:#38bdf8; margin-bottom:15px;">QR de Acceso: ${nombre}</h3>
+          <img src="${qrUrl}" alt="Código QR" style="border-radius:8px; background:white; padding:10px; width:250px; height:250px;" />
+          <p style="color:#94a3b8; font-size:0.8rem; margin-top:15px; max-width:250px;">Este QR abrirá la Terminal Vecinal con los datos de esta manzana.</p>
+          <button onclick="document.getElementById('qr-modal').remove()" style="margin-top:20px; background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">Cerrar</button>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
   }
 </script>
 </body>
