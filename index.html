@@ -134,11 +134,11 @@ async function validarYGuardar() {
     }
 
     // 🔥 LA MAGIA ESTÁ ACÁ: Buscamos ignorando mayúsculas y espacios
-    const { data, error } = await supabaseClient
+        const { data, error } = await supabaseClient
       .from('manzanas')
       .select('*')
-      .ilike('nombre_manzana', `%${manzana}%`) // % busca coincidencias parciales (ej: si la DB dice "MANZANA A " y escribís "MANZANA A", lo encuentra)
-      .eq('pin_autorizado', pin)
+      .ilike('nombre_manzana', manzana.trim()) // Búsqueda exacta ignorando mayúsculas
+      .eq('pin_autorizado', pin.trim())
       .maybeSingle();
 
     if (error) {
