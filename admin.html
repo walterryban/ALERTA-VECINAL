@@ -8,12 +8,13 @@
   <style>
     :root {
       --bg: #090d16; --card: #111827; --accent: #38bdf8;
-      --danger: #ef4444; --warning: #f59e0b; --text: #f3f4f6;
+      --danger: #ef4444; --warning: #f59e0b; --success: #22c55e; --text: #f3f4f6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 20px; }
     .container { max-width: 1200px; margin: 0 auto; }
     
+    /* LOGIN */
     #login-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(9, 13, 22, 0.95); display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -24,63 +25,72 @@
     }
     .login-card h2 { color: var(--danger); margin-bottom: 8px; font-size: 1.4rem; }
     .login-card p { color: #9ca3af; font-size: 0.85rem; margin-bottom: 20px; }
-    
     .form-group { display: flex; flex-direction: column; gap: 6px; text-align: left; margin-bottom: 14px; }
     label { font-size: 0.8rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
-    input, select { background: #1f2937; border: 1px solid #374151; color: #fff; padding: 10px; border-radius: 8px; font-size: 0.95rem; }
+    input, select { background: #1f2937; border: 1px solid #374151; color: #fff; padding: 10px; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    input:focus, select:focus { border-color: var(--accent); }
+    .btn-primary { background: var(--accent); color: #000; font-weight: bold; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; transition: 0.2s; }
+    .btn-primary:hover { opacity: 0.8; }
     
-    .btn-primary { background: var(--accent); color: #000; font-weight: bold; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; }
-    .btn-primary:hover { opacity: 0.9; }
-
+    /* DASHBOARD */
     header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #1f2937; margin-bottom: 24px; }
     .header-title h1 { font-size: 1.6rem; color: #fff; display: flex; align-items: center; gap: 10px; }
     .header-title p { color: #9ca3af; font-size: 0.9rem; }
+    .btn-logout { background: #374151; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
     
+    /* TABS */
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #1f2937; }
+    .tab-btn { background: transparent; color: #9ca3af; border: none; padding: 10px 20px; font-size: 1rem; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* TABLAS */
     .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #1f2937; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
     th { background: #1f2937; padding: 14px; color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
     td { padding: 14px; border-bottom: 1px solid #1f2937; vertical-align: middle; }
     
     tr.coaccion-row {
-      background: rgba(239, 68, 68, 0.25) !important;
-      border-left: 6px solid #ef4444;
+      background: rgba(239, 68, 68, 0.25) !important; border-left: 6px solid #ef4444;
       animation: flashCoaccion 1.5s infinite alternate;
     }
-    @keyframes flashCoaccion {
-      from { background: rgba(239, 68, 68, 0.15); }
-      to { background: rgba(239, 68, 68, 0.4); }
-    }
+    @keyframes flashCoaccion { from { background: rgba(239, 68, 68, 0.15); } to { background: rgba(239, 68, 68, 0.4); } }
 
     .badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; display: inline-block; }
     .badge-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; }
     .badge-coaccion { background: #ef4444; color: #fff; border: 1px solid #f87171; font-weight: 900; letter-spacing: 1px; }
     .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid #f59e0b; }
     .badge-success { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid #22c55e; }
-
-    .btn-logout { background: #374151; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    
+    /* FORMULARIO MANZANAS */
+    .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #1f2937; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+    .card-form .form-group { margin-bottom: 0; flex: 1; min-width: 200px; }
+    .btn-success { background: var(--success); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-success:hover { background: #16a34a; }
   </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login-overlay">
   <div class="login-card">
     <h2>CENTRO DE MONITOREO</h2>
     <p>Ingrese credenciales de operador autorizado</p>
-    
     <div class="form-group">
       <label>Correo Institucional</label>
       <input type="email" id="loginEmail" placeholder="operador@sanluis.gob.ar" />
     </div>
-    
     <div class="form-group">
       <label>Contraseña</label>
       <input type="password" id="loginPassword" placeholder="••••••••" />
     </div>
-    
     <button class="btn-primary" onclick="iniciarSesion()">Ingresar a la Consola</button>
   </div>
 </div>
 
+<!-- DASHBOARD -->
 <div class="container" id="app-dashboard" style="display:none;">
   <header>
     <div class="header-title">
@@ -90,58 +100,87 @@
     <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
   </header>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>Fecha / Hora</th>
-          <th>Manzana</th>
-          <th>Tipo Alerta</th>
-          <th>Vecino / Teléfono</th>
-          <th>Ficha Médica</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tablaAlertasBody">
-        <tr>
-          <td colspan="7" style="text-align:center; color:#9ca3af;">Cargando eventos en tiempo real...</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- PESTAÑAS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="cambiarPestana('alertas', this)">🚨 Alertas en Vivo</button>
+    <button class="tab-btn" onclick="cambiarPestana('manzanas', this)">🗺️ Gestión de Manzanas</button>
   </div>
+
+  <!-- CONTENIDO: ALERTAS -->
+  <div id="tab-alertas" class="tab-content active">
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha / Hora</th>
+            <th>Manzana</th>
+            <th>Tipo Alerta</th>
+            <th>Vecino / Teléfono</th>
+            <th>Ficha Médica</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaAlertasBody">
+          <tr><td colspan="7" style="text-align:center; color:#9ca3af;">Cargando eventos en tiempo real...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONTENIDO: MANZANAS -->
+  <div id="tab-manzanas" class="tab-content">
+    <!-- Formulario de alta -->
+    <div class="card-form">
+      <div class="form-group">
+        <label>Nombre de la Manzana / Zona</label>
+        <input type="text" id="nuevaManzanaNombre" placeholder="Ej: MANZANA B" />
+      </div>
+      <div class="form-group">
+        <label>PIN de Acceso</label>
+        <input type="text" id="nuevaManzanaPin" placeholder="Ej: 5678" maxlength="10" />
+      </div>
+      <button class="btn-success" onclick="agregarManzana()">➕ Crear Manzana</button>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre de Manzana</th>
+            <th>PIN Autorizado</th>
+            <th>Fecha de Creación</th>
+          </tr>
+        </thead>
+        <tbody id="tablaManzanasBody">
+          <tr><td colspan="4" style="text-align:center; color:#9ca3af;">Cargando manzanas...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
 <script>
   const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
-  
-  // CORRECCIÓN CLAVE: Evitar el error de inicialización de 'supabase'
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // LOGIN
   window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-      mostrarDashboard();
-    }
+    if (session) mostrarDashboard();
   });
 
   async function iniciarSesion() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
+    if (!email || !password) { alert("Ingrese correo y contraseña."); return; }
 
-    if (!email || !password) {
-      alert("Ingrese correo y contraseña.");
-      return;
-    }
-
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      alert("Acceso denegado: " + error.message);
-    } else {
-      mostrarDashboard();
-    }
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) alert("Acceso denegado: " + error.message);
+    else mostrarDashboard();
   }
 
   async function cerrarSesion() {
@@ -154,29 +193,30 @@
     document.getElementById('app-dashboard').style.display = 'block';
     cargarAlertas();
     escucharAlertasEnTiempoReal();
+    cargarManzanas(); // Carga las manzanas al entrar
   }
 
-  async function cargarAlertas() {
-    // Ordenamos por fecha (si created_at falla, no rompe la app)
-    const { data, error } = await supabaseClient
-      .from('alertas')
-      .select('*')
-      .order('created_at', { ascending: false });
+  // NAVEGACIÓN DE PESTAÑAS
+  function cambiarPestana(idPestana, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + idPestana).classList.add('active');
+  }
 
+  // --- LÓGICA DE ALERTAS ---
+  async function cargarAlertas() {
+    const { data, error } = await supabaseClient.from('alertas').select('*').order('created_at', { ascending: false });
     if (error) {
-      console.error("Error al cargar alertas:", error);
-      // Si la tabla está vacía o falla, mostramos mensaje
-      document.getElementById('tablaAlertasBody').innerHTML = `<tr><td colspan="7" style="text-align:center; color:#ef4444;">Error al cargar datos: ${error.message}</td></tr>`;
+      document.getElementById('tablaAlertasBody').innerHTML = `<tr><td colspan="7" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
       return;
     }
-    
-    if (data) renderizarTabla(data);
+    renderizarTablaAlertas(data);
   }
 
-  function renderizarTabla(alertas) {
+  function renderizarTablaAlertas(alertas) {
     const tbody = document.getElementById('tablaAlertasBody');
     tbody.innerHTML = '';
-
     if (alertas.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#9ca3af;">No hay alertas registradas.</td></tr>`;
       return;
@@ -186,28 +226,15 @@
       const isCoaccion = a.tipo_alerta && a.tipo_alerta.toUpperCase().includes('COACCIÓN');
       const tr = document.createElement('tr');
       if (isCoaccion) tr.className = 'coaccion-row';
-
-      // Formateo de fecha
       const fechaStr = a.created_at ? new Date(a.created_at).toLocaleString('es-AR') : 'Sin fecha';
 
       tr.innerHTML = `
         <td>${fechaStr}</td>
         <td><strong>${a.manzana || 'N/A'}</strong></td>
-        <td>
-          <span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">
-            ${a.tipo_alerta || 'SOS'}
-          </span>
-        </td>
-        <td>
-          <strong>${a.vecino_nombre || 'Anónimo'}</strong><br>
-          <small style="color:#38bdf8;">📞 ${a.vecino_telefono || 'Sin datos'}</small>
-        </td>
+        <td><span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">${a.tipo_alerta || 'SOS'}</span></td>
+        <td><strong>${a.vecino_nombre || 'Anónimo'}</strong><br><small style="color:#38bdf8;">📞 ${a.vecino_telefono || 'Sin datos'}</small></td>
         <td><small style="color:#cbd5e1;">${a.ficha_medica || 'Sin registros'}</small></td>
-        <td>
-          <span class="badge ${a.estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">
-            ${a.estado || 'PENDIENTE'}
-          </span>
-        </td>
+        <td><span class="badge ${a.estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">${a.estado || 'PENDIENTE'}</span></td>
         <td>
           <select onchange="cambiarEstado('${a.id}', this.value)" style="padding:4px; font-size:0.8rem;">
             <option value="PENDIENTE" ${a.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
@@ -221,21 +248,72 @@
   }
 
   function escucharAlertasEnTiempoReal() {
-    supabaseClient
-      .channel('schema-db-changes')
-      .on('postgres_changes', { event: 'INSERT', table: 'alertas', schema: 'public' }, payload => {
-        cargarAlertas();
-        // Sonido de alerta (requiere interacción previa del usuario, como el login)
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        audio.play().catch(() => console.log("Audio bloqueado por el navegador hasta que haya interacción."));
-      })
-      .subscribe();
+    supabaseClient.channel('db-alertas').on('postgres_changes', { event: 'INSERT', table: 'alertas', schema: 'public' }, payload => {
+      cargarAlertas();
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.play().catch(() => {});
+    }).subscribe();
   }
 
   async function cambiarEstado(id, nuevoEstado) {
     const { error } = await supabaseClient.from('alertas').update({ estado: nuevoEstado }).eq('id', id);
-    if (error) alert("Error al cambiar estado: " + error.message);
+    if (error) alert("Error: " + error.message);
     cargarAlertas();
+  }
+
+  // --- LÓGICA DE MANZANAS (NUEVO) ---
+  async function cargarManzanas() {
+    const { data, error } = await supabaseClient.from('manzanas').select('*').order('id', { ascending: true });
+    
+    if (error) {
+      document.getElementById('tablaManzanasBody').innerHTML = `<tr><td colspan="4" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
+      return;
+    }
+
+    const tbody = document.getElementById('tablaManzanasBody');
+    tbody.innerHTML = '';
+    
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#9ca3af;">No hay manzanas registradas aún.</td></tr>`;
+      return;
+    }
+
+    data.forEach(m => {
+      const fecha = m.created_at ? new Date(m.created_at).toLocaleDateString('es-AR') : 'N/A';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${m.id}</td>
+        <td><strong>${m.nombre_manzana || m.manzana || 'N/A'}</strong></td>
+        <td style="color: var(--warning); font-weight: bold;">${m.pin_autorizado || m.pin || 'N/A'}</td>
+        <td>${fecha}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function agregarManzana() {
+    const nombre = document.getElementById('nuevaManzanaNombre').value.trim().toUpperCase();
+    const pin = document.getElementById('nuevaManzanaPin').value.trim();
+
+    if (!nombre || !pin) {
+      alert("Por favor, complete el nombre de la manzana y el PIN.");
+      return;
+    }
+
+    // Insertamos en Supabase usando los nombres reales de tus columnas
+    const { error } = await supabaseClient.from('manzanas').insert([{
+      nombre_manzana: nombre,
+      pin_autorizado: pin
+    }]);
+
+    if (error) {
+      alert("Error al crear la manzana: " + error.message);
+    } else {
+      alert("✅ ¡Manzana creada con éxito!");
+      document.getElementById('nuevaManzanaNombre').value = '';
+      document.getElementById('nuevaManzanaPin').value = '';
+      cargarManzanas(); // Refrescamos la tabla
+    }
   }
 </script>
 </body>
