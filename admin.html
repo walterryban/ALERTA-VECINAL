@@ -138,7 +138,7 @@
       return;
     }
 
-    // Guardar en sessionStorage del celular para que no se pierdan al disparar
+    // Guardar en la memoria del celular
     sessionStorage.setItem('vecino_manzana', manzana);
     sessionStorage.setItem('vecino_nombre', nombre);
     sessionStorage.setItem('vecino_telefono', telefono);
@@ -193,43 +193,46 @@
     btnSOS.addEventListener('touchcancel', cancelPress);
   }
 
- async function enviarAlertaInmediata() {
-  if (enviando) return;
-  enviando = true;
+  async function enviarAlertaInmediata() {
+    if (enviando) return;
+    enviando = true;
 
-  // 1. Capturamos los datos directamente de los inputs o de la memoria de sesión de forma segura
-  const inputManzana = document.getElementById('inputManzana');
-  const inputNombre = document.getElementById('inputNombre');
-  const inputTelefono = document.getElementById('inputTelefono');
-  const inputFicha = document.getElementById('inputFichaMedica');
+    // Prioridad 1: Obtener de la memoria del celular (sessionStorage)
+    // Prioridad 2: Obtener de los campos de texto
+    const inputManzana = document.getElementById('inputManzana')?.value.trim().toUpperCase();
+    const inputNombre = document.getElementById('inputNombre')?.value.trim();
+    const inputTelefono = document.getElementById('inputTelefono')?.value.trim();
+    const inputFicha = document.getElementById('inputFichaMedica')?.value.trim();
 
-  const manzana = (inputManzana && inputManzana.value.trim()) ? inputManzana.value.trim().toUpperCase() : (sessionStorage.getItem('vecino_manzana') || 'MANZANA A');
-  const nombre = (inputNombre && inputNombre.value.trim()) ? inputNombre.value.trim() : (sessionStorage.getItem('vecino_nombre') || 'Vecino Registrado');
-  const telefono = (inputTelefono && inputTelefono.value.trim()) ? inputTelefono.value.trim() : (sessionStorage.getItem('vecino_telefono') || 'Sin teléfono');
-  const fichaMedica = (inputFicha && inputFicha.value.trim()) ? inputFicha.value.trim() : (sessionStorage.getItem('vecino_ficha') || 'Sin registros');
-  
-  const tipoAlerta = document.getElementById('selectTipoAlerta').value;
-  
-  try {
-    const { error } = await supabaseClient.from('alertas').insert([{
-      manzana: manzana,
-      tipo_alerta: tipoAlerta,
-      vecino_nombre: nombre,
-      vecino_telefono: telefono,
-      ficha_medica: fichaMedica,
-      estado: 'PENDIENTE'
-    }]);
+    const manzana = sessionStorage.getItem('vecino_manzana') || inputManzana || 'MANZANA A';
+    const nombre = sessionStorage.getItem('vecino_nombre') || inputNombre || 'Anónimo';
+    const telefono = sessionStorage.getItem('vecino_telefono') || inputTelefono || 'Sin teléfono';
+    const fichaMedica = sessionStorage.getItem('vecino_ficha') || inputFicha || 'Sin registros';
+    
+    const tipoAlerta = document.getElementById('selectTipoAlerta').value;
+    
+    try {
+      const { error } = await supabaseClient.from('alertas').insert([{
+        manzana: manzana,
+        tipo_alerta: tipoAlerta,
+        vecino_nombre: nombre,
+        vecino_telefono: telefono,
+        ficha_medica: fichaMedica,
+        estado: 'PENDIENTE'
+      }]);
 
-    if (error) {
-      alert("Error al enviar alerta: " + error.message);
-    } else {
-      alert("🚨 ¡ALERTA ENVIADA CON ÉXITO AL CENTRO DE MONITOREO!");
+      if (error) {
+        alert("Error al enviar alerta: " + error.message);
+      } else {
+        alert("🚨 ¡ALERTA ENVIADA CON ÉXITO AL CENTRO DE MONITOREO!");
+      }
+    } catch(e) {
+      alert("Error de conexión: " + e.message);
+    } finally {
+      if (sosProgress) sosProgress.style.height = '0%';
+      setTimeout(() => { enviando = false; }, 4000);
     }
-  } catch(e) {
-    alert("Error de conexión: " + e.message);
-  } finally {
-    if (sosProgress) sosProgress.style.height = '0%';
-    setTimeout(() => { enviando = false; }, 4000);
   }
-}
+</script>
+</body>
 </html>
