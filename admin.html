@@ -227,7 +227,7 @@
       const tr = document.createElement('tr');
       if (isCoaccion) tr.className = 'coaccion-row';
       const fechaStr = a.created_at ? new Date(a.created_at).toLocaleString('es-AR') : 'Sin fecha';
-console.log("data", a);
+
       tr.innerHTML = `
         <td>${fechaStr}</td>
         <td><strong>${a.manzana || 'N/A'}</strong></td>
