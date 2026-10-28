@@ -16,7 +16,8 @@
     .card { background:var(--card); border-radius:12px; padding:16px; border:1px solid #334155; }
     .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
     label { font-size:0.8rem; font-weight:600; color:#cbd5e1; text-transform:uppercase; }
-    input, select { background:#0f172a; border:1px solid #475569; color:#fff; padding:10px; border-radius:8px; font-size:0.95rem; }
+    input, select { background:#0f172a; border:1px solid #475569; color:#fff; padding:10px; border-radius:8px; font-size:0.95rem; outline: none; }
+    input:focus, select:focus { border-color: var(--accent); }
     .sos-wrapper { display:flex; flex-direction:column; align-items:center; justify-content:center; margin:16px 0; position:relative; }
     .sos-btn { width:180px; height:180px; border-radius:50%; background:radial-gradient(circle,#ef4444 0%,#991b1b 100%); border:4px solid #fca5a5; color:white; font-weight:900; font-size:1.8rem; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; box-shadow:0 0 25px rgba(239,68,68,0.5); transition:transform 0.1s ease; position:relative; overflow:hidden; touch-action:none; }
     .sos-btn:active { transform:scale(0.96); }
@@ -41,7 +42,7 @@
 
   <div class="card" id="section-registro">
     <h3 style="font-size:1rem; margin-bottom:12px; color:var(--accent);">1. Validación de Vecino y Manzana</h3>
-    <div class="form-group"><label>Manzana / Zona</label><input type="text" id="inputManzana" placeholder="Ej: Manzana 12" /></div>
+    <div class="form-group"><label>Manzana / Zona</label><input type="text" id="inputManzana" placeholder="Ej: MANZANA B" /></div>
     <div class="form-group"><label>Código PIN de Manzana</label><input type="password" id="inputPinManzana" placeholder="Ingrese PIN de su manzana" /></div>
     <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="inputNombre" placeholder="Tu nombre completo" /></div>
     <div class="form-group"><label>Teléfono (Solo visible para Monitoreo)</label><input type="tel" id="inputTelefono" placeholder="266 4000000" /></div>
@@ -49,7 +50,7 @@
     <div class="legal-box">
       <input type="checkbox" id="checkLey25326" />
       <label for="checkLey25326" style="text-transform:none; font-weight:normal; color:#94a3b8;">
-        Acepto el tratamiento de mis datos personales y de salud de acuerdo a la <strong>Ley Nacional 25.326</strong>, autorizando su uso exclusivo para la gestión de emergencias por el Centro de Monitoreo.
+        Acepto el tratamiento de mis datos personales y de salud de acuerdo al marco de la <strong>Ley Nacional 25.326</strong>, autorizando su uso exclusivo para la gestión de emergencias.
       </label>
     </div>
     <button onclick="validarYGuardar()" style="width:100%; margin-top:14px; background:var(--accent); color:#000; font-weight:bold; border:none; padding:12px; border-radius:8px; cursor:pointer;">
@@ -98,8 +99,8 @@
     const pinQR = urlParams.get('pin');
 
     if (manzanaQR && pinQR) {
-      document.getElementById('inputManzana').value = manzanaQR;
-      document.getElementById('inputPinManzana').value = pinQR;
+      document.getElementById('inputManzana').value = decodeURIComponent(manzanaQR).trim();
+      document.getElementById('inputPinManzana').value = decodeURIComponent(pinQR).trim();
       document.getElementById('inputManzana').style.borderColor = '#22c55e';
       document.getElementById('inputPinManzana').style.borderColor = '#22c55e';
     }
@@ -107,7 +108,7 @@
 
   // --- VALIDAR VECINO ---
   async function validarYGuardar() {
-    const manzana = document.getElementById('inputManzana').value.trim();
+    const manzana = document.getElementById('inputManzana').value.trim().toUpperCase();
     const pin = document.getElementById('inputPinManzana').value.trim();
     const nombre = document.getElementById('inputNombre').value.trim();
     const telefono = document.getElementById('inputTelefono').value.trim();
@@ -123,19 +124,21 @@
       return;
     }
 
+    // Consulta exacta con Supabase
     const { data, error } = await supabaseClient
       .from('manzanas')
       .select('*')
-      .ilike('nombre_manzana', `%${manzana}%`) 
+      .eq('nombre_manzana', manzana) 
       .eq('pin_autorizado', pin)
       .maybeSingle();
 
     if (error) {
-      alert("Error al validar con el servidor: " + error.message);
+      alert("Error de conexión con la base de datos: " + error.message);
       return;
     }
+    
     if (!data) {
-      alert("Manzana o PIN incorrectos. Verifique sus datos.");
+      alert("⚠️ Manzana o PIN incorrectos.\nAsegúrese de que el nombre (Ej: MANZANA B) y el PIN coincidan con los registrados en el Centro de Monitoreo.");
       return;
     }
 
