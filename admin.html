@@ -23,8 +23,11 @@
     header h1 { font-size:1.4rem; color:var(--danger); font-weight:800; display:flex; align-items:center; gap:8px; }
     header p { font-size:0.8rem; color:#94a3b8; }
     
-    .btn-audio { background:#22c55e; color:#000; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:bold; }
-    
+    .acciones-header { display:flex; gap:10px; align-items:center; }
+    .btn-audio { background:#22c55e; color:#000; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; }
+    .btn-salir { background:transparent; border:1px solid #475569; color:#94a3b8; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.85rem; }
+    .btn-salir:hover { background:#334155; color:#fff; }
+
     .table-container { background:var(--card); border-radius:12px; border:1px solid #334155; overflow:hidden; }
     table { width:100%; border-collapse:collapse; text-align:left; font-size:0.9rem; }
     th { background:#090d16; color:#94a3b8; padding:12px 16px; font-weight:600; text-transform:uppercase; font-size:0.75rem; }
@@ -49,7 +52,10 @@
       <h1>🚨 Alerta Vecinal Pro — Consola COM</h1>
       <p>Centro de Operaciones y Monitoreo Municipal | San Luis / Villa Mercedes</p>
     </div>
-    <button class="btn-audio" id="btnHabilitarAudio" onclick="activarAudioSistema()">🔊 Habilitar Audio / Sirena</button>
+    <div class="acciones-header">
+      <button class="btn-audio" id="btnHabilitarAudio" onclick="activarAudioSistema()">🔊 Habilitar Audio</button>
+      <button class="btn-salir" onclick="window.location.reload()">Actualizar</button>
+    </div>
   </header>
 
   <div class="table-container">
