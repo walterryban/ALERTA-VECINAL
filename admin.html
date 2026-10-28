@@ -193,37 +193,43 @@
     btnSOS.addEventListener('touchcancel', cancelPress);
   }
 
-  async function enviarAlertaInmediata() {
-    if (enviando) return;
-    enviando = true;
+ async function enviarAlertaInmediata() {
+  if (enviando) return;
+  enviando = true;
 
-    // Recuperar datos asegurando que nunca vayan vacíos
-    const manzana = sessionStorage.getItem('vecino_manzana') || document.getElementById('inputManzana').value.toUpperCase();
-    const nombre = sessionStorage.getItem('vecino_nombre') || document.getElementById('inputNombre').value;
-    const telefono = sessionStorage.getItem('vecino_telefono') || document.getElementById('inputTelefono').value;
-    const fichaMedica = sessionStorage.getItem('vecino_ficha') || document.getElementById('inputFichaMedica').value;
-    const tipoAlerta = document.getElementById('selectTipoAlerta').value;
-    
-    try {
-      const { error } = await supabaseClient.from('alertas').insert([{
-        manzana: manzana,
-        tipo_alerta: tipoAlerta,
-        vecino_nombre: nombre,
-        vecino_telefono: telefono,
-        ficha_medica: fichaMedica || 'Sin registros',
-        estado: 'PENDIENTE'
-      }]);
+  // 1. Capturamos los datos directamente de los inputs o de la memoria de sesión de forma segura
+  const inputManzana = document.getElementById('inputManzana');
+  const inputNombre = document.getElementById('inputNombre');
+  const inputTelefono = document.getElementById('inputTelefono');
+  const inputFicha = document.getElementById('inputFichaMedica');
 
-      if (error) {
-        alert("Error al enviar alerta: " + error.message);
-      } else {
-        alert("🚨 ¡ALERTA ENVIADA CON ÉXITO AL CENTRO DE MONITOREO!");
-      }
-    } finally {
-      sosProgress.style.height = '0%';
-      setTimeout(() => { enviando = false; }, 4000);
+  const manzana = (inputManzana && inputManzana.value.trim()) ? inputManzana.value.trim().toUpperCase() : (sessionStorage.getItem('vecino_manzana') || 'MANZANA A');
+  const nombre = (inputNombre && inputNombre.value.trim()) ? inputNombre.value.trim() : (sessionStorage.getItem('vecino_nombre') || 'Vecino Registrado');
+  const telefono = (inputTelefono && inputTelefono.value.trim()) ? inputTelefono.value.trim() : (sessionStorage.getItem('vecino_telefono') || 'Sin teléfono');
+  const fichaMedica = (inputFicha && inputFicha.value.trim()) ? inputFicha.value.trim() : (sessionStorage.getItem('vecino_ficha') || 'Sin registros');
+  
+  const tipoAlerta = document.getElementById('selectTipoAlerta').value;
+  
+  try {
+    const { error } = await supabaseClient.from('alertas').insert([{
+      manzana: manzana,
+      tipo_alerta: tipoAlerta,
+      vecino_nombre: nombre,
+      vecino_telefono: telefono,
+      ficha_medica: fichaMedica,
+      estado: 'PENDIENTE'
+    }]);
+
+    if (error) {
+      alert("Error al enviar alerta: " + error.message);
+    } else {
+      alert("🚨 ¡ALERTA ENVIADA CON ÉXITO AL CENTRO DE MONITOREO!");
     }
+  } catch(e) {
+    alert("Error de conexión: " + e.message);
+  } finally {
+    if (sosProgress) sosProgress.style.height = '0%';
+    setTimeout(() => { enviando = false; }, 4000);
   }
-</script>
-</body>
+}
 </html>
