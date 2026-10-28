@@ -83,40 +83,31 @@
   </div>
 </div>
 
-<script>
   const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    // 👇 ESTO LEE EL CÓDIGO QR Y AUTOCOMPLETA LOS DATOS 👇
+
+  // Variables globales
+  let vecinoActual = { manzana:'', nombre:'', telefono:'', fichaMedica:'' };
+  let enviando = false;
+
+  // --- LÓGICA DEL CÓDIGO QR ---
   window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const manzanaQR = urlParams.get('manzana');
     const pinQR = urlParams.get('pin');
 
     if (manzanaQR && pinQR) {
-      // Rellenamos los inputs automáticamente
       document.getElementById('inputManzana').value = manzanaQR;
       document.getElementById('inputPinManzana').value = pinQR;
-      
-      // Hacemos un pequeño efecto visual (opcional)
       document.getElementById('inputManzana').style.borderColor = '#22c55e';
       document.getElementById('inputPinManzana').style.borderColor = '#22c55e';
-      
-      // Mostramos un mensajito
-      alert("✅ Manzana y PIN cargados automáticamente desde el código QR. Por favor, complete su nombre y teléfono.");
+      alert("✅ Manzana y PIN cargados automáticamente desde el QR. Complete su nombre y teléfono.");
     }
   });
 
-  let vecinoActual = { manzana:'', nombre:'', telefono:'', fichaMedica:'' };
-  let enviando = false;
-
-  // Elementos del SOS (se declaran arriba para evitar TDZ)
-  const btnSOS = document.getElementById('btnSOS');
-  const sosProgress = document.getElementById('sosProgress');
-  let pressTimer, progressInterval, startTime;
-  const holdDuration = 3000;
-
-async function validarYGuardar() {
+  // --- VALIDAR VECINO ---
+  async function validarYGuardar() {
     const manzana = document.getElementById('inputManzana').value.trim();
     const pin = document.getElementById('inputPinManzana').value.trim();
     const nombre = document.getElementById('inputNombre').value.trim();
@@ -133,21 +124,20 @@ async function validarYGuardar() {
       return;
     }
 
-    // 🔥 LA MAGIA ESTÁ ACÁ: Buscamos ignorando mayúsculas y espacios
-        const { data, error } = await supabaseClient
+    // Consulta a Supabase
+    const { data, error } = await supabaseClient
       .from('manzanas')
       .select('*')
-      .ilike('nombre_manzana', manzana.trim()) // Búsqueda exacta ignorando mayúsculas
-      .eq('pin_autorizado', pin.trim())
+      .ilike('nombre_manzana', `%${manzana}%`) 
+      .eq('pin_autorizado', pin)
       .maybeSingle();
 
-        if (error) {
-      // Esto nos va a decir exactamente qué falla
-      alert("Error real de Supabase: " + error.message + " (Código: " + error.code + ")");
+    if (error) {
+      alert("Error real de Supabase: " + error.message);
       return;
     }
     if (!data) {
-      alert("La base de datos buscó la manzana '" + manzana + "' y el PIN '" + pin + "', pero no encontró nada.");
+      alert("La base de datos buscó '" + manzana + "' con PIN '" + pin + "' y no encontró nada.");
       return;
     }
 
@@ -155,13 +145,19 @@ async function validarYGuardar() {
     document.getElementById('section-registro').style.display = 'none';
     document.getElementById('section-sos').style.display = 'block';
     alert("¡Acceso validado con éxito para " + manzana + "!");
-} 
+  }
 
   function cerrarSesionVecino() {
     document.getElementById('section-sos').style.display = 'none';
     document.getElementById('section-registro').style.display = 'block';
     document.getElementById('inputPinManzana').value = '';
   }
+
+  // --- LÓGICA DEL BOTÓN SOS ---
+  const btnSOS = document.getElementById('btnSOS');
+  const sosProgress = document.getElementById('sosProgress');
+  let pressTimer, progressInterval, startTime;
+  const holdDuration = 3000;
 
   function startPress(e) {
     e.preventDefault();
@@ -193,13 +189,13 @@ async function validarYGuardar() {
     btnSOS.addEventListener('touchcancel', cancelPress);
   }
 
-     async function enviarAlertaInmediata() {
+  // --- ENVIAR ALERTA ---
+  async function enviarAlertaInmediata() {
     if (enviando) return;
     enviando = true;
     const tipoAlerta = document.getElementById('selectTipoAlerta').value;
     
     try {
-      // Guardamos TODOS los datos (ahora que las columnas existen en Supabase)
       const { error } = await supabaseClient.from('alertas').insert([{
         manzana: vecinoActual.manzana,
         tipo_alerta: tipoAlerta,
@@ -210,7 +206,7 @@ async function validarYGuardar() {
       }]);
 
       if (error) {
-        alert("Error crítico al enviar alerta: " + error.message);
+        alert("Error al enviar alerta: " + error.message);
       } else {
         alert("🚨 ¡ALERTA ENVIADA AL CENTRO DE MONITOREO! Ayuda en camino.");
       }
