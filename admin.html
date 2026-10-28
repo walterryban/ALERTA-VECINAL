@@ -89,144 +89,126 @@
   const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  let enviando = false;
-
   window.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const manzanaQR = urlParams.get('manzana');
-    const pinQR = urlParams.get('pin');
-
-    if (manzanaQR && pinQR) {
-      document.getElementById('inputManzana').value = decodeURIComponent(manzanaQR).trim();
-      document.getElementById('inputPinManzana').value = decodeURIComponent(pinQR).trim();
-      document.getElementById('inputManzana').style.borderColor = '#22c55e';
-      document.getElementById('inputPinManzana').style.borderColor = '#22c55e';
-    }
+    cargarAlertas();
+    escucharAlertasEnTiempoReal();
   });
 
-  async function validarYGuardar() {
-    const manzana = document.getElementById('inputManzana').value.trim().toUpperCase();
-    const pin = document.getElementById('inputPinManzana').value.trim();
-    const nombre = document.getElementById('inputNombre').value.trim();
-    const telefono = document.getElementById('inputTelefono').value.trim();
-    const fichaMedica = document.getElementById('inputFichaMedica').value.trim();
-    const aceptaLey = document.getElementById('checkLey25326').checked;
-
-    if (!manzana || !pin || !nombre || !telefono) {
-      alert("Por favor complete Manzana, PIN, Nombre y Teléfono.");
-      return;
-    }
-    if (!aceptaLey) {
-      alert("Debe aceptar los términos de la Ley 25.326 para continuar.");
-      return;
-    }
-
+  // Cargar histórico inicial
+  async function cargarAlertas() {
     const { data, error } = await supabaseClient
-      .from('manzanas')
+      .from('alertas')
       .select('*')
-      .eq('nombre_manzana', manzana) 
-      .eq('pin_autorizado', pin)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(30);
 
     if (error) {
-      alert("Error de conexión: " + error.message);
-      return;
-    }
-    
-    if (!data) {
-      alert("⚠️ Manzana o PIN incorrectos. Verifique sus datos.");
+      console.error("Error al cargar alertas:", error.message);
       return;
     }
 
-    // Guardar en la memoria del celular
-    sessionStorage.setItem('vecino_manzana', manzana);
-    sessionStorage.setItem('vecino_nombre', nombre);
-    sessionStorage.setItem('vecino_telefono', telefono);
-    sessionStorage.setItem('vecino_ficha', fichaMedica);
+    const tbody = document.getElementById('tablaAlertasBody');
+    tbody.innerHTML = '';
 
-    document.getElementById('infoVecinoLogueado').innerText = `Vecino: ${nombre} (${manzana})`;
-    document.getElementById('section-registro').style.display = 'none';
-    document.getElementById('section-sos').style.display = 'block';
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">No hay alertas registradas.</td></tr>`;
+      return;
+    }
+
+    data.forEach(alerta => {
+      const fecha = new Date(alerta.created_at).toLocaleString('es-AR');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${fecha}</td>
+        <td><strong>${alerta.manzana || 'N/A'}</strong></td>
+        <td><span class="badge-alerta">${alerta.tipo_alerta}</span></td>
+        <td><strong>${alerta.vecino_nombre}</strong><br><span style="color:var(--accent); font-size:0.8rem;">📞 ${alerta.vecino_telefono}</span></td>
+        <td>${alerta.ficha_medica || 'Sin registros'}</td>
+        <td><span class="badge-estado">${alerta.estado}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
   }
 
-  function cerrarSesionVecino() {
-    sessionStorage.clear();
-    document.getElementById('section-sos').style.display = 'none';
-    document.getElementById('section-registro').style.display = 'block';
-    document.getElementById('inputPinManzana').value = '';
+  // --- TIEMPO REAL CON SUPABASE Y EFECTOS BLINDADOS ---
+  function escucharAlertasEnTiempoReal() {
+    supabaseClient.removeAllChannels();
+
+    supabaseClient
+      .channel('canal-alertas-com')
+      .on(
+        'postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'alertas' }, 
+        (payload) => {
+          console.log("🚨 ¡Alerta nueva en vivo recibida!", payload.new);
+          
+          // 1. Refrescar la tabla
+          cargarAlertas();
+          
+          // 2. Reproducir alarma sonora infalible (Sintetizador Web Audio API)
+          reproducirAlarmaSonora();
+
+          // 3. Activar luces estroboscópicas rojas en toda la pantalla
+          document.body.classList.add('alerta-activa');
+
+          // 4. Mostrar el modal flotante gigante
+          dispararPopUpEmergencia(payload.new);
+        }
+      )
+      .subscribe((status) => {
+        console.log("Estado Realtime COM:", status);
+      });
   }
 
-  // --- BOTÓN SOS TÁCTIL ---
-  const btnSOS = document.getElementById('btnSOS');
-  const sosProgress = document.getElementById('sosProgress');
-  let pressTimer, progressInterval, startTime;
-  const holdDuration = 3000;
-
-  function startPress(e) {
-    if (e.type === 'touchstart') e.preventDefault();
-    startTime = Date.now();
-    sosProgress.style.height = '0%';
-    progressInterval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      sosProgress.style.height = Math.min((elapsed / holdDuration) * 100, 100) + '%';
-    }, 50);
-    
-    pressTimer = setTimeout(() => {
-      clearInterval(progressInterval);
-      sosProgress.style.height = '100%';
-      enviarAlertaInmediata();
-    }, holdDuration);
-  }
-
-  function cancelPress() {
-    clearTimeout(pressTimer);
-    clearInterval(progressInterval);
-    sosProgress.style.height = '0%';
-  }
-
-  if (btnSOS) {
-    btnSOS.addEventListener('mousedown', startPress);
-    btnSOS.addEventListener('mouseup', cancelPress);
-    btnSOS.addEventListener('mouseleave', cancelPress);
-    btnSOS.addEventListener('touchstart', startPress, { passive: false });
-    btnSOS.addEventListener('touchend', cancelPress);
-    btnSOS.addEventListener('touchcancel', cancelPress);
-  }
-
-  async function enviarAlertaInmediata() {
-    if (enviando) return;
-    enviando = true;
-
-    // Captura segura de datos desde la memoria o campos de texto
-    const manzana = sessionStorage.getItem('vecino_manzana') || document.getElementById('inputManzana')?.value.trim().toUpperCase() || 'MANZANA A';
-    const nombre = sessionStorage.getItem('vecino_nombre') || document.getElementById('inputNombre')?.value.trim() || 'Vecino Registrado';
-    const telefono = sessionStorage.getItem('vecino_telefono') || document.getElementById('inputTelefono')?.value.trim() || 'Sin teléfono';
-    const fichaMedica = sessionStorage.getItem('vecino_ficha') || document.getElementById('inputFichaMedica')?.value.trim() || 'Sin registros';
-    
-    const selectAlerta = document.getElementById('selectTipoAlerta');
-    const tipoAlerta = selectAlerta ? selectAlerta.value : 'ROBO / INSEGURIDAD';
-    
+  // Generador de sirena interna (No depende de internet ni links externos)
+  function reproducirAlarmaSonora() {
     try {
-      const { error } = await supabaseClient.from('alertas').insert([{
-        manzana: manzana,
-        tipo_alerta: tipoAlerta,
-        vecino_nombre: nombre,
-        vecino_telefono: telefono,
-        ficha_medica: fichaMedica,
-        estado: 'PENDIENTE'
-      }]);
-
-      if (error) {
-        alert("Error al enviar alerta: " + error.message);
-      } else {
-        alert("🚨 ¡ALERTA ENVIADA CON ÉXITO AL CENTRO DE MONITOREO!");
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Hacemos sonar 3 tonos de alerta tipo patrulla
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.3);
+          
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+        }, i * 350);
       }
     } catch(e) {
-      alert("Error de red: " + e.message);
-    } finally {
-      if (sosProgress) sosProgress.style.height = '0%';
-      setTimeout(() => { enviando = false; }, 4000);
+      console.log("Error reproduciendo audio sintetizado:", e);
     }
+  }
+
+  function dispararPopUpEmergencia(alerta) {
+    const modal = document.getElementById('modalEmergencia');
+    const detalle = document.getElementById('modalTextoDetalle');
+    
+    detalle.innerHTML = `
+      <p style="margin-bottom:8px;"><strong>Tipo:</strong> <span style="color:#fca5a5; font-size:1.2rem;">${alerta.tipo_alerta}</span></p>
+      <p style="margin-bottom:8px;"><strong>Zona / Manzana:</strong> ${alerta.manzana}</p>
+      <p style="margin-bottom:8px;"><strong>Vecino Afectado:</strong> ${alerta.vecino_nombre}</p>
+      <p style="margin-bottom:8px;"><strong>Teléfono:</strong> ${alerta.vecino_telefono}</p>
+      <p style="margin-bottom:8px;"><strong>Ficha Médica:</strong> ${alerta.ficha_medica}</p>
+      <p><strong>Hora:</strong> ${new Date(alerta.created_at).toLocaleTimeString('es-AR')}</p>
+    `;
+    modal.style.display = 'flex';
+  }
+
+  function cerrarModalAlerta() {
+    document.getElementById('modalEmergencia').style.display = 'none';
+    document.body.classList.remove('alerta-activa');
   }
 </script>
 </body>
