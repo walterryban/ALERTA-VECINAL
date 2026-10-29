@@ -121,7 +121,6 @@
             <h3>🟢 Central Operativa: Monitoreando la red sin alertas pendientes...</h3>
         </div>
     </div>
-
     <script>
         // ==========================================
         // 1. CONFIGURACIÓN DE CREDENCIALES (YA INTEGRADAS)
@@ -237,3 +236,32 @@
                     console.log("Estado del canal Supabase:", status);
                     
                     if (status === 'SUBSCRIBED') {
+                        statusBadge.innerText = "Conectado";
+                        statusBadge.className = "status-badge status-connected";
+                    }
+                    
+                    // Manejo reactivo de desconexiones repentinas en Vercel (Error 1006)
+                    if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+                        statusBadge.innerText = "Error de Red (Reconectando...)";
+                        statusBadge.className = "status-badge status-disconnected";
+                        console.warn("⚠️ Conexión perdida con el WebSocket de Supabase. Reiniciando canal de escucha...");
+                        
+                        if(canalAlertas) {
+                            clienteSupabase.removeChannel(canalAlertas);
+                        }
+                        
+                        // Espera de 3 segundos para reintentar sin saturar el hilo principal
+                        setTimeout(() => {
+                            conectarTiempoReal();
+                        }, 3000);
+                    }
+                });
+        }
+
+        // Inicialización automatizada del ciclo de red al cargar el documento
+        window.onload = () => {
+            conectarTiempoReal();
+        };
+    </script>
+</body>
+</html>
