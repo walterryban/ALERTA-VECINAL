@@ -120,19 +120,35 @@
         </div>
     </div>
     <script>
+              // ==========================================
+        // 1. CONFIGURACIÓN DE CREDENCIALES (REPLAZA ESTE BLOQUE)
         // ==========================================
-        // 1. CONFIGURACIÓN DE CREDENCIALES
-        // ==========================================
-        const SUPABASE_URL ="https://wwirxlwgsswkzqiwqkux.supabase.co" ; 
-        const SUPABASE_KEY =  "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB"; 
+        const SUPABASE_URL = "https://supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB"; 
 
-        // Inicializamos Supabase configurando parámetros para mitigar el corte de red (Error 1006)
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            realtime: {
-                params: { eventsPerSecond: 10 },
-                timeout: 40000 // Aumentamos el tiempo de espera del socket en Vercel
+        // Cambiamos 'supabase.createClient' por 'supabase.supabaseClient' o 'supabase.createClient' directo según el CDN de la v2
+        let supabase;
+        try {
+            if (typeof supabase !== 'undefined' && supabase.createClient) {
+                supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    realtime: {
+                        params: { eventsPerSecond: 10 },
+                        timeout: 40000 
+                    }
+                });
+            } else if (typeof window.supabase !== 'undefined') {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    realtime: {
+                        params: { eventsPerSecond: 10 },
+                        timeout: 40000 
+                    }
+                });
             }
-        });
+            console.log("Cliente Supabase inicializado correctamente.");
+        } catch (e) {
+            console.error("Error crítico inicializando cliente Supabase:", e);
+        }
+
 
         // ==========================================
         // 2. CONFIGURACIÓN DE AUDIO (SIRENA)
