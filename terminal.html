@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>Alerta Vecinal Pro — Terminal Ciudadana</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --red:#dc2626; --bg:#0f172a; --card:#1e293b; --text:#f8fafc; --muted:#cbd5e1; --line:#475569; --blue:#38bdf8; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:16px; min-height:100vh; display:flex; justify-content:center; align-items:flex-start; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,sans-serif; }
+    .container { width:100%; max-width:480px; display:grid; gap:16px; }
+    header { text-align:center; padding:8px 0; }
+    h1 { margin:0 0 6px; color:#f87171; font-size:1.45rem; }
+    header p { margin:0; color:#94a3b8; font-size:.9rem; }
+    .card { background:var(--card); border:1px solid #334155; border-radius:14px; padding:18px; }
+    h2 { margin:0 0 14px; font-size:1.05rem; }
+    .group { display:grid; gap:6px; margin-bottom:13px; }
+    label { font-size:.82rem; font-weight:650; color:var(--muted); }
+    input,select { width:100%; padding:12px; color:white; background:#0f172a; border:1px solid var(--line); border-radius:9px; font:inherit; }
+    input:focus,select:focus { outline:2px solid var(--blue); outline-offset:1px; }
+    button { font:inherit; cursor:pointer; }
+    .primary { width:100%; border:0; border-radius:9px; padding:13px; background:var(--blue); color:#082f49; font-weight:800; }
+    .primary:disabled { opacity:.6; cursor:wait; }
+    .hint { font-size:.78rem; color:#94a3b8; line-height:1.45; }
+    .legal { display:flex; gap:9px; align-items:flex-start; margin:12px 0; color:#cbd5e1; font-size:.78rem; line-height:1.4; }
+    .legal input { width:auto; margin-top:3px; }
+    #sosSection { display:none; text-align:center; }
+    #sosSection select { margin:12px 0; }
+    .sos { position:relative; overflow:hidden; width:190px; height:190px; border-radius:50%; border:5px solid #fca5a5; background:radial-gradient(circle,#ef4444,#991b1b); color:white; box-shadow:0 0 24px #ef444455; font-weight:900; font-size:1.8rem; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:18px auto 8px; user-select:none; touch-action:none; }
+    .sos small { font-size:.7rem; font-weight:600; margin-top:6px; }
+    .progress { position:absolute; bottom:0; left:0; width:100%; height:0; background:#ffffff55; pointer-events:none; }
+    .secondary { background:transparent; color:#cbd5e1; border:1px solid var(--line); border-radius:8px; padding:9px 12px; margin-top:10px; }
+    .status { min-height:1.3em; color:#bae6fd; font-size:.85rem; margin-top:10px; white-space:pre-wrap; }
+    .footer { text-align:center; color:#64748b; font-size:.75rem; padding-bottom:12px; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>🚨 ALERTA VECINAL PRO</h1>
+      <p>Terminal ciudadana de emergencias</p>
+    </header>
+
+    <section class="card" id="registerSection">
+      <h2>Validación de vecino y manzana</h2>
+      <div class="group">
+        <label for="manzana">Manzana / zona</label>
+        <input id="manzana" autocomplete="organization" placeholder="Ej.: MANZANA A" required>
+      </div>
+      <div class="group">
+        <label for="pin">PIN autorizado de la manzana</label>
+        <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Ingrese el PIN" required>
+      </div>
+      <div class="group">
+        <label for="nombre">Nombre y apellido</label>
+        <input id="nombre" autocomplete="name" placeholder="Nombre completo" required>
+      </div>
+      <div class="group">
+        <label for="telefono">Teléfono</label>
+        <input id="telefono" type="tel" autocomplete="tel" placeholder="Número de contacto" required>
+      </div>
+      <div class="group">
+        <label for="direccion">Dirección / referencia (opcional)</label>
+        <input id="direccion" autocomplete="street-address" placeholder="Calle, altura, casa o lote">
+      </div>
+      <div class="group">
+        <label for="ficha">Ficha médica / alergias (opcional)</label>
+        <input id="ficha" placeholder="Solo información útil ante una emergencia">
+      </div>
+      <label class="legal">
+        <input id="consent" type="checkbox">
+        <span>Autorizo el uso de los datos ingresados para gestionar esta alerta de emergencia, de acuerdo con la normativa aplicable sobre datos personales.</span>
+      </label>
+      <button class="primary" id="validateBtn" type="button">Validar acceso</button>
+      <div class="status" id="registerStatus" role="status"></div>
+      <p class="hint">Si el acceso no se valida, confirme con el responsable del Centro de Monitoreo que el nombre de la manzana y el PIN sean correctos.</p>
+    </section>
+
+    <section class="card" id="sosSection">
+      <h2 style="color:#f87171">Disparador de emergencia</h2>
+      <p class="hint">Elegí el tipo de emergencia y mantené presionado el botón SOS durante 3 segundos.</p>
+      <label for="tipo">Tipo de alerta</label>
+      <select id="tipo">
+        <option value="ROBO / INSEGURIDAD">🚨 Robo / inseguridad</option>
+        <option value="ACTIVIDAD SOSPECHOSA">👁️ Actividad sospechosa</option>
+        <option value="EMERGENCIA MÉDICA">🚑 Emergencia médica</option>
+        <option value="INCENDIO">🔥 Incendio</option>
+        <option value="COACCIÓN / SECUESTRO">⚠️ Coacción / secuestro</option>
+      </select>
+      <button class="sos" id="sosBtn" type="button" aria-label="Mantener presionado tres segundos para enviar una alerta">
+        <span>S.O.S</span><small>MANTENER 3 s</small><span class="progress" id="progress"></span>
+      </button>
+      <p class="hint">La alerta se enviará al Centro de Monitoreo. Si es posible, el sistema adjuntará la ubicación GPS.</p>
+      <div class="status" id="sosStatus" role="status"></div>
+      <button class="secondary" id="exitBtn" type="button">Salir / cambiar de datos</button>
+    </section>
+    <div class="footer">Alerta Vecinal Pro · Terminal ciudadana</div>
+  </main>
+
+  <script>
+    // Usa la clave pública/publishable de Supabase. Nunca coloques aquí una service_role key.
+    const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    const $ = (id) => document.getElementById(id);
+    let vecinoActual = null;
+    let pressTimer = null;
+    let progressTimer = null;
+    let pressStartedAt = 0;
+    let sending = false;
+    const HOLD_MS = 3000;
+
+    function setStatus(id, message) { $(id).textContent = message || ''; }
+
+    $('validateBtn').addEventListener('click', validarAcceso);
+    $('exitBtn').addEventListener('click', () => {
+      cancelarPresion();
+      vecinoActual = null;
+      $('sosSection').style.display = 'none';
+      $('registerSection').style.display = 'block';
+      $('pin').value = '';
+      setStatus('registerStatus', '');
+      setStatus('sosStatus', '');
+    });
+
+    async function validarAcceso() {
+      const manzana = $('manzana').value.trim();
+      const pin = $('pin').value.trim();
+      const nombre = $('nombre').value.trim();
+      const telefono = $('telefono').value.trim();
+      if (!manzana || !pin || !nombre || !telefono) {
+        setStatus('registerStatus', 'Completá manzana, PIN, nombre y teléfono.');
+        return;
+      }
+      if (!$('consent').checked) {
+        setStatus('registerStatus', 'Debés aceptar el uso de datos para continuar.');
+        return;
+      }
+
+      $('validateBtn').disabled = true;
+      setStatus('registerStatus', 'Verificando manzana y PIN…');
+      try {
+        // Los nombres de columnas corresponden a la estructura actual confirmada.
+        const { data, error } = await db
+          .from('manzanas')
+          .select('id,nombre_manzana')
+          .ilike('nombre_manzana', manzana)
+          .eq('pin_autorizado', pin)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) {
+          setStatus('registerStatus', 'Acceso no validado. Revisá el nombre de la manzana y el PIN.');
+          return;
+        }
+
+        vecinoActual = {
+          manzana: data.nombre_manzana,
+          nombre,
+          telefono,
+          direccion: $('direccion').value.trim(),
+          ficha: $('ficha').value.trim()
+        };
+        $('registerSection').style.display = 'none';
+        $('sosSection').style.display = 'block';
+        setStatus('sosStatus', 'Acceso validado para ' + data.nombre_manzana + '.');
+      } catch (err) {
+        console.error(err);
+        setStatus('registerStatus', 'No se pudo validar el acceso. Revisá la conexión y las políticas de acceso de Supabase.');
+      } finally {
+        $('validateBtn').disabled = false;
+      }
+    }
+
+    function comenzarPresion(event) {
+      if (!vecinoActual || sending) return;
+      event.preventDefault();
+      if (pressTimer) return;
+      pressStartedAt = Date.now();
+      $('progress').style.height = '0%';
+      progressTimer = setInterval(() => {
+        const pct = Math.min(100, ((Date.now() - pressStartedAt) / HOLD_MS) * 100);
+        $('progress').style.height = pct + '%';
+      }, 40);
+      pressTimer = setTimeout(() => {
+        cancelarPresion();
+        enviarAlerta();
+      }, HOLD_MS);
+    }
+
+    function cancelarPresion() {
+      if (pressTimer) clearTimeout(pressTimer);
+      if (progressTimer) clearInterval(progressTimer);
+      pressTimer = null;
+      progressTimer = null;
+      $('progress').style.height = '0%';
+    }
+
+    const sosBtn = $('sosBtn');
+    sosBtn.addEventListener('pointerdown', comenzarPresion);
+    sosBtn.addEventListener('pointerup', cancelarPresion);
+    sosBtn.addEventListener('pointerleave', cancelarPresion);
+    sosBtn.addEventListener('pointercancel', cancelarPresion);
+    sosBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    function obtenerGPS() {
+      return new Promise(resolve => {
+        if (!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => resolve(null),
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+        );
+      });
+    }
+
+    async function enviarAlerta() {
+      if (!vecinoActual || sending) return;
+      sending = true;
+      sosBtn.disabled = true;
+      setStatus('sosStatus', 'Enviando alerta al Centro de Monitoreo…');
+      try {
+        const gps = await obtenerGPS();
+        const mapsLink = gps
+          ? `https://www.google.com/maps?q=${gps.lat},${gps.lng}`
+          : (vecinoActual.direccion ? 'Dirección ingresada: ' + vecinoActual.direccion : null);
+
+        const payload = {
+          manzana: vecinoActual.manzana,
+          tipo_alerta: $('tipo').value,
+          vecino_nombre: vecinoActual.nombre,
+          vecino_telefono: vecinoActual.telefono,
+          ficha_medica: vecinoActual.ficha || null,
+          direccion: vecinoActual.direccion || null,
+          nombre: vecinoActual.nombre,
+          telefono: vecinoActual.telefono,
+          latitud: gps ? gps.lat : null,
+          longitud: gps ? gps.lng : null,
+          maps_link: mapsLink,
+          estado: 'PENDIENTE',
+          fecha_hora: new Date().toISOString()
+        };
+
+        const { error } = await db.from('alertas').insert(payload);
+        if (error) throw error;
+        setStatus('sosStatus', '✅ Alerta enviada al Centro de Monitoreo.');
+        alert('Alerta enviada al Centro de Monitoreo.');
+      } catch (err) {
+        console.error(err);
+        setStatus('sosStatus', 'No se pudo enviar la alerta. Verificá la conexión o las políticas RLS de Supabase.');
+        alert('No se pudo enviar la alerta. El Centro de Monitoreo podría no haberla recibido.');
+      } finally {
+        sending = false;
+        sosBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
