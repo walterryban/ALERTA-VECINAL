@@ -1,165 +1,25 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Central de Monitoreo - Administración</title>
-    <!-- Cargamos Supabase JS desde CDN -->
-    <script src="https://jsdelivr.net"></script>
-    <style>
-        :root {
-            --primary: #0f172a;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --gray: #64748b;
-        }
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: #f8fafc;
-            margin: 0;
-            padding: 20px;
-            color: var(--primary);
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 15px 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        #btnIniciar {
-            padding: 12px 24px;
-            background-color: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-        .container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        .card-alerta {
-            background: white;
-            border-left: 8px solid var(--danger);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            display: none;
-        }
-        .datos-emisor h2 { margin: 0 0 10px 0; color: var(--danger); }
-        .datos-emisor p { margin: 5px 0; font-size: 16px; }
-        .panel-botones {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-        }
-        .btn-accion {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 15px;
-            transition: background 0.2s;
-        }
-        .btn-atender { background-color: var(--success); color: white; }
-        .btn-atender:hover { background-color: #16a34a; }
-        .btn-cerrar { background-color: #e2e8f0; color: var(--primary); }
-        .btn-cerrar:hover { background-color: #cbd5e1; }
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .status-connected { background: #dcfce7; color: #15803d; }
-        .status-disconnected { background: #fee2e2; color: #b91c1c; }
-    </style>
-</head>
-<body>
-
-    <div class="header">
-        <div>
-            <h1 style="margin:0; font-size: 24px;">🚨 Panel de Control de Monitoreo</h1>
-            <p style="margin:5px 0 0 0; color: var(--gray);">Conexión: <span id="network-status" class="status-badge status-disconnected">Desconectado</span></p>
-        </div>
-        <button id="btnIniciar" onclick="inicializarSistemaAudio()">🔊 ACTIVAR SONIDO DE SIRENA</button>
-    </div>
-
-    <div class="container">
-        <div id="contenedor-alerta" class="card-alerta">
-            <div class="datos-emisor">
-                <h2>⚠️ ¡ALERTA RECIBIDA EN TIEMPO REAL!</h2>
-                <p><strong>ID Alerta:</strong> <span id="alerta-id">-</span></p>
-                <p><strong>Usuario / Emisor:</strong> <span id="alerta-usuario">Cargando datos...</span></p>
-                <p><strong>Ubicación/Detalle:</strong> <span id="alerta-detalle">No especificado</span></p>
-                <p><strong>Hora de emisión:</strong> <span id="alerta-hora">-</span></p>
-            </div>
-            
-            <div class="panel-botones">
-                <button class="btn-accion btn-atender" onclick="atenderAlertaActual()">✅ Atender Alerta</button>
-                <button class="btn-accion btn-cerrar" onclick="cerrarAlertaActual()">❌ Descartar / Cerrar</button>
-            </div>
-        </div>
-        
-        <div id="sin-alertas" style="text-align: center; padding: 40px; color: var(--gray); background: white; border-radius: 12px;">
-            <h3>🟢 Central Operativa: Monitoreando la red sin alertas pendientes...</h3>
-        </div>
-    </div>
-    <script>
-              // ==========================================
-        // 1. CONFIGURACIÓN DE CREDENCIALES (REPLAZA ESTE BLOQUE)
         // ==========================================
-        const SUPABASE_URL = "https://supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB"; 
+        // 1. CONFIGURACIÓN DE CREDENCIALES CORREGIDA
+        // ==========================================
+        const URL_SUPABASE = "https://supabase.co"; 
+        const KEY_SUPABASE = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB"; 
 
-        // Cambiamos 'supabase.createClient' por 'supabase.supabaseClient' o 'supabase.createClient' directo según el CDN de la v2
-        let supabase;
-        try {
-            if (typeof supabase !== 'undefined' && supabase.createClient) {
-                supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-                    realtime: {
-                        params: { eventsPerSecond: 10 },
-                        timeout: 40000 
-                    }
-                });
-            } else if (typeof window.supabase !== 'undefined') {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-                    realtime: {
-                        params: { eventsPerSecond: 10 },
-                        timeout: 40000 
-                    }
-                });
+        // Usamos 'window.supabase' para evitar que se pisen los nombres en el navegador
+        const clienteSupabase = window.supabase.createClient(URL_SUPABASE, KEY_SUPABASE, {
+            realtime: {
+                params: { eventsPerSecond: 10 },
+                timeout: 40000 
             }
-            console.log("Cliente Supabase inicializado correctamente.");
-        } catch (e) {
-            console.error("Error crítico inicializando cliente Supabase:", e);
-        }
-
+        });
 
         // ==========================================
         // 2. CONFIGURACIÓN DE AUDIO (SIRENA)
         // ==========================================
-        // URL de muestra de una sirena estándar. Podés cambiarla por tu propio archivo .mp3
         let audioSirena = new Audio('https://mixkit.co'); 
         audioSirena.loop = true; 
         let audioHabilitado = false;
 
         function inicializarSistemaAudio() {
-            // Reproducir y pausar desbloquea los permisos estrictos de los navegadores
             audioSirena.play().then(() => {
                 audioSirena.pause();
                 audioSirena.currentTime = 0;
@@ -169,7 +29,7 @@
                 setTimeout(() => {
                     document.getElementById('btnIniciar').style.display = "none";
                 }, 1500);
-                console.log("Audio aprobado con éxito por el navegador.");
+                console.log("Audio aprobado con éxito.");
             }).catch(error => {
                 console.error("Fallo al inicializar el audio:", error);
                 alert("Por favor, haz clic nuevamente en el botón para activar el sonido.");
@@ -180,14 +40,13 @@
             if (audioHabilitado) {
                 audioSirena.play().catch(e => console.log("La sirena no pudo sonar:", e));
             } else {
-                console.log("🚨 La alerta llegó, pero el audio no está habilitado. Presioná el botón rojo.");
+                console.log("🚨 Audio no habilitado. Presioná el botón rojo.");
             }
         }
 
         function detenerSirena() {
             audioSirena.pause();
             audioSirena.currentTime = 0;
-            console.log("Sirena silenciada por el operador.");
         }
 
         // ==========================================
@@ -198,35 +57,26 @@
         function desplegarAlertaEnPantalla(alerta) {
             idAlertaActiva = alerta.id;
             
-            // Inyectamos los datos en el HTML de forma segura
             document.getElementById('alerta-id').innerText = alerta.id || 'N/A';
             document.getElementById('alerta-usuario').innerText = alerta.usuario || alerta.emisor_name || 'Usuario Anónimo';
             document.getElementById('alerta-detalle').innerText = alerta.detalle || alerta.mensaje || 'Señal de Pánico Activada';
             document.getElementById('alerta-hora').innerText = new Date(alerta.created_at || Date.now()).toLocaleTimeString();
             
-            // Visibilidad de elementos en la pantalla
             document.getElementById('sin-alertas').style.display = 'none';
             document.getElementById('contenedor-alerta').style.display = 'block';
             
-            // Disparar sonido de emergencia
             sonarSirena();
         }
 
-        // Botón Atender Alerta
         function atenderAlertaActual() {
             if (!idAlertaActiva) return;
-            console.log("Atendiendo alerta ID:", idAlertaActiva);
-            
             detenerSirena();
             limpiarPantallaAlerta();
-            alert("Alerta marcada como ATENDIDA en el centro de monitoreo.");
+            alert("Alerta marcada como ATENDIDA.");
         }
 
-        // Botón Descartar / Cerrar Alerta
         function cerrarAlertaActual() {
             if (!idAlertaActiva) return;
-            console.log("Aviso cerrado por el operador:", idAlertaActiva);
-            
             detenerSirena();
             limpiarPantallaAlerta();
         }
@@ -238,15 +88,14 @@
         }
 
         // ==========================================
-        // 4. CONEXIÓN EN TIEMPO REAL CON MANEJO DE ERROR 1006
+        // 4. CONEXIÓN CORREGIDA USANDO EL NUEVO CLIENTE
         // ==========================================
         let canalAlertas = null;
 
         function conectarTiempoReal() {
             const statusBadge = document.getElementById('network-status');
 
-            // Nos suscribimos a la tabla 'alertas' de Supabase
-            canalAlertas = supabase
+            canalAlertas = clienteSupabase
                 .channel('monitoreo-alertas-canal')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'alertas' }, (payload) => {
                     console.log("🚨 Nueva alerta en tiempo real:", payload.new);
@@ -260,18 +109,14 @@
                         statusBadge.className = "status-badge status-connected";
                     }
                     
-                    // Captura activa del Error 1006 (Socket cerrado / canal roto)
                     if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
                         statusBadge.innerText = "Error de Red (Reconectando...)";
                         statusBadge.className = "status-badge status-disconnected";
-                        console.warn("⚠️ Conexión caída en Vercel. Limpiando canal e intentando reconexión limpia...");
                         
-                        // Eliminamos el canal roto para que no congele el hilo de ejecución de los botones
                         if(canalAlertas) {
-                            supabase.removeChannel(canalAlertas);
+                            clienteSupabase.removeChannel(canalAlertas);
                         }
                         
-                        // Forzamos una reconexión automática en 3 segundos sin colapsar el sistema
                         setTimeout(() => {
                             conectarTiempoReal();
                         }, 3000);
@@ -279,10 +124,6 @@
                 });
         }
 
-        // Arrancar la escucha en tiempo real inmediatamente al cargar la página
         window.onload = () => {
             conectarTiempoReal();
         };
-    </script>
-</body>
-</html>
