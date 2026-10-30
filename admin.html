@@ -1,267 +1,354 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Central de Monitoreo - Administración</title>
-    <!-- Cargamos Supabase JS desde CDN v2 -->
-    <script src="https://jsdelivr.net"></script>
-    <style>
-        :root {
-            --primary: #0f172a;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --gray: #64748b;
-        }
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: #f8fafc;
-            margin: 0;
-            padding: 20px;
-            color: var(--primary);
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 15px 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        #btnIniciar {
-            padding: 12px 24px;
-            background-color: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-        .container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        .card-alerta {
-            background: white;
-            border-left: 8px solid var(--danger);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            display: none;
-        }
-        .datos-emisor h2 { margin: 0 0 10px 0; color: var(--danger); }
-        .datos-emisor p { margin: 5px 0; font-size: 16px; }
-        .panel-botones {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-        }
-        .btn-accion {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 15px;
-            transition: background 0.2s;
-        }
-        .btn-atender { background-color: var(--success); color: white; }
-        .btn-atender:hover { background-color: #16a34a; }
-        .btn-cerrar { background-color: #e2e8f0; color: var(--primary); }
-        .btn-cerrar:hover { background-color: #cbd5e1; }
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .status-connected { background: #dcfce7; color: #15803d; }
-        .status-disconnected { background: #fee2e2; color: #b91c1c; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alerta Vecinal Pro - Centro de Monitoreo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#142136;--line:#304158;--text:#e5edf8;--muted:#9fb0c8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Arial,sans-serif}
+main{max-width:1450px;margin:auto;padding:22px}
+header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+h1{font-size:clamp(22px,3vw,32px);margin:0}
+p{margin:8px 0}
+button{cursor:pointer;padding:10px 13px;border:1px solid #475569;border-radius:8px;background:#263750;color:white;font-weight:bold}
+button:disabled{opacity:.5;cursor:default}
+button:hover:not(:disabled){filter:brightness(1.2)}
+.blue{background:#075985;border-color:#0284c7}
+.green{background:#166534;border-color:#22c55e}
+.red{background:#7f1d1d;border-color:#ef4444}
+.toolbar,.statusbar,.actions{display:flex;flex-wrap:wrap;gap:8px}
+.statusbar{margin:20px 0}
+.pill{border:1px solid var(--line);background:var(--panel);padding:8px 12px;border-radius:20px;color:#cbd5e1}
+.notice{padding:12px 14px;background:#17243a;border:1px solid var(--line);border-radius:9px;margin:15px 0}
+.warning{background:#3a250b;border-color:#d97706}
+.tablebox{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{width:100%;min-width:950px;border-collapse:collapse}
+th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#1c2b42;color:#cbd5e1;font-size:12px;text-transform:uppercase}
+tbody tr:hover{background:#1b2a40}
+.muted{font-size:12px;color:var(--muted)}
+.badge{display:inline-block;padding:4px 8px;border-radius:20px;font-size:12px;font-weight:bold;background:#7f1d1d;color:#fee2e2}
+.badge.att{background:#78350f;color:#fef3c7}
+.badge.done{background:#14532d;color:#dcfce7}
+.actions{margin-top:8px}
+.small{font-size:12px;padding:7px 9px}
+.empty{text-align:center;padding:28px;color:var(--muted)}
+footer{text-align:center;color:#64748b;padding:22px}
+#modal{display:none;position:fixed;z-index:10;inset:0;background:#000c;align-items:center;justify-content:center;padding:15px}
+#modal.open{display:flex}
+.modalbox{width:min(620px,100%);max-height:90vh;overflow:auto;background:#142136;border:1px solid #64748b;border-radius:15px;padding:22px;box-shadow:0 20px 80px #0009}
+.modalbox h2{color:#fca5a5;margin-top:0}
+.modalbox p{overflow-wrap:anywhere}
+#main.flash{animation:flash 1s infinite}
+@keyframes flash{50%{box-shadow:inset 0 0 0 6px #ef444455}}
+a{color:#7dd3fc}
+@media(max-width:600px){main{padding:12px}.toolbar button{flex:1}}
+</style>
 </head>
 <body>
+<main id="main">
+<header>
+  <div>
+    <h1>🚨 ALERTA VECINAL PRO</h1>
+    <p class="muted">Centro de Monitoreo · Panel de administración</p>
+  </div>
+  <div class="toolbar">
+    <button class="blue" id="audioBtn">🔊 Activar sonido</button>
+    <button id="testBtn">Probar sirena</button>
+    <button id="refreshBtn">↻ Actualizar</button>
+  </div>
+</header>
 
-    <div class="header">
-        <div>
-            <h1 style="margin:0; font-size: 24px;">🚨 Panel de Control de Monitoreo</h1>
-            <p style="margin:5px 0 0 0; color: var(--gray);">Conexión: <span id="network-status" class="status-badge status-disconnected">Desconectado</span></p>
-        </div>
-        <button id="btnIniciar" onclick="inicializarSistemaAudio()">🔊 ACTIVAR SONIDO DE SIRENA</button>
-    </div>
+<div class="statusbar">
+  <span class="pill">Conexión: <strong id="connection">Conectando…</strong></span>
+  <span class="pill">Última consulta: <strong id="lastUpdate">—</strong></span>
+  <span class="pill">Alertas: <strong id="count">0</strong></span>
+</div>
 
-    <div class="container">
-        <!-- Tarjeta dinámica de alerta -->
-        <div id="contenedor-alerta" class="card-alerta">
-            <div class="datos-emisor">
-                <h2>⚠️ ¡ALERTA RECIBIDA EN TIEMPO REAL!</h2>
-                <p><strong>ID Alerta:</strong> <span id="alerta-id">-</span></p>
-                <p><strong>Usuario / Emisor:</strong> <span id="alerta-usuario">Cargando datos...</span></p>
-                <p><strong>Ubicación/Detalle:</strong> <span id="alerta-detalle">No especificado</span></p>
-                <p><strong>Hora de emisión:</strong> <span id="alerta-hora">-</span></p>
-            </div>
-            
-            <div class="panel-botones">
-                <button class="btn-accion btn-atender" onclick="atenderAlertaActual()">✅ Atender Alerta</button>
-                <button class="btn-accion btn-cerrar" onclick="cerrarAlertaActual()">❌ Descartar / Cerrar</button>
-            </div>
-        </div>
-        
-        <!-- Mensaje de espera por defecto -->
-        <div id="sin-alertas" style="text-align: center; padding: 40px; color: var(--gray); background: white; border-radius: 12px;">
-            <h3>🟢 Central Operativa: Monitoreando la red sin alertas pendientes...</h3>
-        </div>
-    </div>
-    <script>
-        // ==========================================
-        // 1. CONFIGURACIÓN DE CREDENCIALES (YA INTEGRADAS)
-        // ==========================================
-        const URL_SUPABASE = "https://supabase.co"; 
-        const KEY_SUPABASE = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB"; 
+<div class="notice" id="notice">
+  Para escuchar las emergencias, pulsá «Activar sonido» una vez.
+</div>
 
-        // Inicialización segura utilizando la ventana global del navegador
-        const clienteSupabase = window.supabase.createClient(URL_SUPABASE, KEY_SUPABASE, {
-            realtime: {
-                params: { eventsPerSecond: 10 },
-                timeout: 40000 
-            }
-        });
+<div class="tablebox">
+<table>
+<thead><tr>
+  <th>Fecha y hora</th><th>Manzana / zona</th><th>Tipo de alerta</th>
+  <th>Vecino / contacto</th><th>Ficha médica</th><th>Estado / acciones</th>
+</tr></thead>
+<tbody id="tablaAlertasBody">
+<tr><td colspan="6" class="empty">Cargando alertas…</td></tr>
+</tbody>
+</table>
+</div>
+<p class="muted">Las alertas se actualizan automáticamente. Mantené esta pestaña abierta.</p>
+<footer>Alerta Vecinal Pro · Centro de Monitoreo</footer>
+</main>
 
-        // ==========================================
-        // 2. CONFIGURACIÓN DE AUDIO (SIRENA)
-        // ==========================================
-        let audioSirena = new Audio('https://mixkit.co'); 
-        audioSirena.loop = true; 
-        let audioHabilitado = false;
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div class="modalbox">
+  <h2 id="modalTitle">🚨 NUEVA ALERTA</h2>
+  <div id="modalDetails"></div>
+  <div class="toolbar">
+    <button class="blue" id="modalAudio">🔊 Activar sonido</button>
+    <button id="closeModal">Cerrar aviso</button>
+  </div>
+  <p class="muted">Cerrar este aviso no resuelve la emergencia. Usá los botones de la tabla para cambiar su estado.</p>
+</div>
+</div>
 
-        function inicializarSistemaAudio() {
-            audioSirena.play().then(() => {
-                audioSirena.pause();
-                audioSirena.currentTime = 0;
-                audioHabilitado = true;
-                document.getElementById('btnIniciar').style.backgroundColor = "var(--success)";
-                document.getElementById('btnIniciar').innerHTML = "🟢 SIRENA CONFIGURADA Y LISTA";
-                setTimeout(() => {
-                    document.getElementById('btnIniciar').style.display = "none";
-                }, 1500);
-                console.log("Sistema de audio desbloqueado correctamente.");
-            }).catch(error => {
-                console.error("Error al desbloquear audio:", error);
-                alert("Por favor, vuelve a presionar el botón para habilitar los sonidos.");
-            });
+<script>
+const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const $ = id => document.getElementById(id);
+let audioContext = null;
+let audioReady = false;
+let sirenTimer = null;
+let channel = null;
+let firstLoad = true;
+let loading = false;
+let knownIds = new Set();
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  })[c]);
+}
+function dateOf(a) { return a.fecha_hora || a.created_at || a.fecha || null; }
+function zoneOf(a) { return a.manzana || a.nombre_manzana || a.zona || '—'; }
+function typeOf(a) { return a.tipo_alerta || a.tipo || 'ALERTA'; }
+function nameOf(a) { return a.vecino_nombre || a.nombre || 'Sin nombre'; }
+function phoneOf(a) { return a.vecino_telefono || a.telefono || 'Sin teléfono'; }
+function statusOf(a) {
+  const s = String(a.estado || 'PENDIENTE').toUpperCase();
+  if (s.includes('RESUEL')) return 'RESUELTA';
+  if (s.includes('ATEN')) return 'EN ATENCIÓN';
+  return s;
+}
+function dateText(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString('es-AR');
+}
+
+async function enableAudio() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) throw new Error('El navegador no admite audio web.');
+    if (!audioContext) audioContext = new AudioCtx();
+    if (audioContext.state !== 'running') await audioContext.resume();
+    audioReady = true;
+    $('audioBtn').textContent = '🔊 Sonido activado';
+    $('notice').textContent = 'Sonido habilitado. Esta pestaña puede reproducir avisos.';
+    $('notice').classList.remove('warning');
+    tone(740, .18, .12);
+  } catch (e) {
+    console.error(e);
+    alert('No se pudo activar el sonido. Revisá el volumen y los permisos del navegador.');
+  }
+}
+
+function tone(freq, duration, volume) {
+  if (!audioContext || audioContext.state !== 'running') return;
+  const osc = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(.0001, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(volume, audioContext.currentTime + .02);
+  gain.gain.exponentialRampToValueAtTime(.0001, audioContext.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.start();
+  osc.stop(audioContext.currentTime + duration + .03);
+}
+
+function stopSiren() {
+  if (sirenTimer) clearInterval(sirenTimer);
+  sirenTimer = null;
+}
+
+function siren() {
+  if (!audioReady || !audioContext || audioContext.state !== 'running') {
+    $('notice').textContent = 'Nueva alerta recibida. Pulsá «Activar sonido» para habilitar la sirena.';
+    $('notice').classList.add('warning');
+    return;
+  }
+  stopSiren();
+  const tones = [880,660,990,660,880,660];
+  let step = 0;
+  tone(tones[0], .32, .22);
+  sirenTimer = setInterval(() => {
+    step++;
+    if (step >= 12) { stopSiren(); return; }
+    tone(tones[step % tones.length], .32, .22);
+  }, 380);
+}
+
+function showModal(a) {
+  $('modalDetails').innerHTML = `
+    <p><strong>Tipo:</strong> ${esc(typeOf(a))}</p>
+    <p><strong>Zona:</strong> ${esc(zoneOf(a))}</p>
+    <p><strong>Vecino:</strong> ${esc(nameOf(a))}</p>
+    <p><strong>Teléfono:</strong> ${esc(phoneOf(a))}</p>
+    <p><strong>Fecha:</strong> ${esc(dateText(dateOf(a)))}</p>
+    ${a.direccion ? `<p><strong>Dirección:</strong> ${esc(a.direccion)}</p>` : ''}
+    ${a.ficha_medica ? `<p><strong>Ficha médica:</strong> ${esc(a.ficha_medica)}</p>` : ''}
+    ${a.maps_link ? `<p><a href="${esc(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Abrir ubicación</a></p>` : ''}
+  `;
+  $('modal').classList.add('open');
+  $('main').classList.add('flash');
+  siren();
+}
+
+function closeModal() {
+  $('modal').classList.remove('open');
+  $('main').classList.remove('flash');
+  stopSiren();
+}
+
+function drawAlerts(alerts) {
+  $('count').textContent = alerts.length;
+  if (!alerts.length) {
+    $('tablaAlertasBody').innerHTML =
+      '<tr><td colspan="6" class="empty">Todavía no hay alertas registradas.</td></tr>';
+    return;
+  }
+
+  $('tablaAlertasBody').innerHTML = alerts.map(a => {
+    const id = a.id;
+    const state = statusOf(a);
+    const stateClass = state === 'RESUELTA' ? 'done' :
+      state === 'EN ATENCIÓN' ? 'att' : '';
+    const location = a.maps_link
+      ? `<br><a href="${esc(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Ubicación</a>` : '';
+    const actions = id == null ? '<span class="muted">Sin ID</span>' : `
+      <div class="actions">
+        <button class="small blue" data-action="atender" data-id="${esc(id)}"
+          ${state === 'RESUELTA' || state === 'EN ATENCIÓN' ? 'disabled' : ''}>Atender</button>
+        <button class="small green" data-action="resolver" data-id="${esc(id)}"
+          ${state === 'RESUELTA' ? 'disabled' : ''}>Resolver</button>
+      </div>`;
+    return `<tr>
+      <td>${esc(dateText(dateOf(a)))}</td>
+      <td><strong>${esc(zoneOf(a))}</strong></td>
+      <td><strong>${esc(typeOf(a))}</strong></td>
+      <td><strong>${esc(nameOf(a))}</strong><br><span class="muted">☎ ${esc(phoneOf(a))}</span></td>
+      <td>${a.ficha_medica ? esc(a.ficha_medica) : '<span class="muted">No informada</span>'}${location}</td>
+      <td><span class="badge ${stateClass}">${esc(state)}</span>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadAlerts() {
+  if (loading) return;
+  loading = true;
+  try {
+    const { data, error } = await db.from('alertas')
+      .select('*').order('created_at', { ascending: false }).limit(100);
+    if (error) throw error;
+
+    const alerts = data || [];
+    if (!firstLoad) {
+      for (const a of alerts) {
+        const key = String(a.id ?? `${dateOf(a)}-${nameOf(a)}`);
+        if (!knownIds.has(key)) {
+          knownIds.add(key);
+          if (statusOf(a) === 'PENDIENTE') showModal(a);
         }
+      }
+    }
+    for (const a of alerts) knownIds.add(String(a.id ?? `${dateOf(a)}-${nameOf(a)}`));
+    firstLoad = false;
+    drawAlerts(alerts);
+    $('lastUpdate').textContent = new Date().toLocaleTimeString('es-AR');
+    $('connection').textContent = channel ? 'Tiempo real / consulta' : 'Consulta automática';
+  } catch (e) {
+    console.error('Error al consultar alertas:', e);
+    $('connection').textContent = 'Error de consulta';
+    $('notice').textContent = 'No se pudieron cargar las alertas. Revisá la conexión y las políticas de lectura de Supabase.';
+    $('notice').classList.add('warning');
+  } finally {
+    loading = false;
+  }
+}
 
-        function sonarSirena() {
-            if (audioHabilitado) {
-                audioSirena.play().catch(e => console.log("La sirena no pudo sonar automáticamente:", e));
-            } else {
-                console.log("🚨 Alerta recibida, pero el operador no ha habilitado el audio en la central.");
-            }
+async function changeStatus(id, action, button) {
+  const newStatus = action === 'atender' ? 'EN ATENCIÓN' :
+    action === 'resolver' ? 'RESUELTA' : null;
+  if (!newStatus || !id) return;
+  if (!confirm(`¿Cambiar el estado de esta alerta a "${newStatus}"?`)) return;
+
+  button.disabled = true;
+  try {
+    const { error } = await db.from('alertas')
+      .update({ estado: newStatus }).eq('id', id);
+    if (error) throw error;
+    $('notice').textContent = `Estado guardado: ${newStatus}.`;
+    $('notice').classList.remove('warning');
+    await loadAlerts();
+  } catch (e) {
+    console.error('No se pudo actualizar el estado:', e);
+    alert('No se pudo guardar el estado. Supabase puede estar bloqueando la actualización mediante RLS. Hay que revisar los permisos UPDATE de la tabla alertas.');
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$('tablaAlertasBody').addEventListener('click', event => {
+  const button = event.target.closest('button[data-action][data-id]');
+  if (button) changeStatus(button.dataset.id, button.dataset.action, button);
+});
+
+function listenRealtime() {
+  if (channel) db.removeChannel(channel);
+  channel = db.channel('admin-alertas-' + Date.now())
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'alertas' },
+      payload => {
+        const a = payload.new;
+        const key = String(a.id ?? `${dateOf(a)}-${nameOf(a)}`);
+        if (!knownIds.has(key)) {
+          knownIds.add(key);
+          showModal(a);
         }
+        loadAlerts();
+      })
+    .subscribe(status => {
+      console.log('Estado del canal Supabase:', status);
+      $('connection').textContent =
+        status === 'SUBSCRIBED' ? 'Tiempo real activo' :
+        status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' ? 'Reconectando…' : status;
+    });
+}
 
-        function detenerSirena() {
-            audioSirena.pause();
-            audioSirena.currentTime = 0;
-        }
+$('audioBtn').addEventListener('click', enableAudio);
+$('modalAudio').addEventListener('click', enableAudio);
+$('testBtn').addEventListener('click', async () => {
+  if (!audioReady) await enableAudio();
+  if (audioReady) siren();
+});
+$('refreshBtn').addEventListener('click', loadAlerts);
+$('closeModal').addEventListener('click', closeModal);
+$('modal').addEventListener('click', event => {
+  if (event.target === $('modal')) closeModal();
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) loadAlerts();
+});
+window.addEventListener('online', () => {
+  loadAlerts();
+  listenRealtime();
+});
 
-        // ==========================================
-        // 3. CONTROL DE ALERTAS Y ACCIONES DE BOTONES
-        // ==========================================
-        let idAlertaActiva = null;
-
-        function desplegarAlertaEnPantalla(alerta) {
-            idAlertaActiva = alerta.id;
-            
-            // Mapeamos los datos dinámicos verificando múltiples variantes de campos
-            document.getElementById('alerta-id').innerText = alerta.id || 'N/A';
-            document.getElementById('alerta-usuario').innerText = alerta.usuario || alerta.emisor_name || alerta.nombre || 'Usuario Anónimo';
-            document.getElementById('alerta-detalle').innerText = alerta.detalle || alerta.mensaje || alerta.tipo || 'Señal de Emergencia Activada';
-            document.getElementById('alerta-hora').innerText = new Date(alerta.created_at || Date.now()).toLocaleTimeString();
-            
-            // Cambios estéticos de visibilidad
-            document.getElementById('sin-alertas').style.display = 'none';
-            document.getElementById('contenedor-alerta').style.display = 'block';
-            
-            sonarSirena();
-        }
-
-        function atenderAlertaActual() {
-            if (!idAlertaActiva) return;
-            console.log("Procesando atención para alerta:", idAlertaActiva);
-            
-            detenerSirena();
-            limpiarPantallaAlerta();
-            alert("La alerta ha sido gestionada y la pantalla ha sido liberada.");
-        }
-
-        function cerrarAlertaActual() {
-            if (!idAlertaActiva) return;
-            console.log("Alerta descartada por el operador:", idAlertaActiva);
-            
-            detenerSirena();
-            limpiarPantallaAlerta();
-        }
-
-        function limpiarPantallaAlerta() {
-            idAlertaActiva = null;
-            document.getElementById('contenedor-alerta').style.display = 'none';
-            document.getElementById('sin-alertas').style.display = 'block';
-        }
-
-        // ==========================================
-        // 4. CONEXIÓN EN TIEMPO REAL (LÓGICA ANTI-CONGELAMIENTO)
-        // ==========================================
-        let canalAlertas = null;
-
-        function conectarTiempoReal() {
-            const statusBadge = document.getElementById('network-status');
-
-            // Conexión directa a eventos INSERT de la tabla 'alertas'
-            canalAlertas = clienteSupabase
-                .channel('monitoreo-alertas-canal')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'alertas' }, (payload) => {
-                    console.log("🚨 Nueva alerta detectada en Supabase:", payload.new);
-                    desplegarAlertaEnPantalla(payload.new);
-                })
-                .subscribe((status, err) => {
-                    console.log("Estado del canal Supabase:", status);
-                    
-                    if (status === 'SUBSCRIBED') {
-                        statusBadge.innerText = "Conectado";
-                        statusBadge.className = "status-badge status-connected";
-                    }
-                    
-                    // Manejo reactivo de desconexiones repentinas en Vercel (Error 1006)
-                    if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-                        statusBadge.innerText = "Error de Red (Reconectando...)";
-                        statusBadge.className = "status-badge status-disconnected";
-                        console.warn("⚠️ Conexión perdida con el WebSocket de Supabase. Reiniciando canal de escucha...");
-                        
-                        if(canalAlertas) {
-                            clienteSupabase.removeChannel(canalAlertas);
-                        }
-                        
-                        // Espera de 3 segundos para reintentar sin saturar el hilo principal
-                        setTimeout(() => {
-                            conectarTiempoReal();
-                        }, 3000);
-                    }
-                });
-        }
-
-        // Inicialización automatizada del ciclo de red al cargar el documento
-        window.onload = () => {
-            conectarTiempoReal();
-        };
-    </script>
+loadAlerts();
+listenRealtime();
+setInterval(loadAlerts, 5000);
+</script>
 </body>
 </html>
