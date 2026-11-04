@@ -104,6 +104,7 @@ async function loadContext(){
   organizations=Array.isArray(data.organizaciones)?data.organizaciones:[];
   organizations=organizations.filter(o=>o.estado==="activa");
   if(!organizations.length){
+    $("inviteForm").classList.add("hidden");
     $("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");
     $("profileTitle").textContent=isOwner?"Propietario de plataforma":"Sin organización activa";
     $("profileScope").textContent=isOwner?"Control global":"No hay una membresía municipal activa.";
