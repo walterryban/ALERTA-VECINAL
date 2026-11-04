@@ -1,3 +1,8 @@
+-- AVISO: ESTE BORRADOR RPC V0.1 QUEDÓ SUPERSEDIDO.
+-- NO EJECUTAR NI CONECTAR. Usar como referencia histórica únicamente.
+-- Las RPC corregidas forman parte de docs/migracion-identidad-vecinal-v0.2-borrador.sql.
+-- V0.1 depende de public.vecinos.auth_user_id y no del perfil global.
+
 -- VIGIARED — APROBACION, REVOCACION Y CONTEXTO VECINAL v0.1
 -- BORRADOR PARA REVISION / NO EJECUTAR NI DESPLEGAR.
 -- Dependencias: migraciones red-comunitaria, identidad y RPC invitaciones.
