@@ -1,1 +1,87 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=/terminal.html"><title>Alerta Vecinal Pro</title><link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#0f172a"></head><body style="background:#0f172a;color:white;font-family:system-ui;padding:24px"><p>Abriendo Alerta Vecinal Pro…</p><a href="/terminal.html">Ingresar a la terminal vecinal</a><script>location.replace("/terminal.html"+location.search)</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081426">
+  <meta name="description" content="Alerta Vecinal Pro: acceso ciudadano y centro de monitoreo municipal.">
+  <link rel="manifest" href="/manifest.json">
+  <title>Alerta Vecinal Pro | Seguridad comunitaria</title>
+  <style>
+    :root{color-scheme:dark;--bg:#081426;--panel:#10223b;--panel2:#142b49;--line:#29415f;--text:#f5f8fc;--muted:#a9bbd0;--cyan:#58d5f5;--red:#ff5364;--green:#64d6a1}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 15% 0%,#17385c 0,transparent 42%),radial-gradient(ellipse at 100% 85%,#3a1d35 0,transparent 34%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    a{color:inherit;text-decoration:none}
+    .shell{width:min(1120px,calc(100% - 36px));margin:auto}
+    .top{display:flex;justify-content:space-between;align-items:center;padding:26px 0;border-bottom:1px solid #ffffff18}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:.02em}
+    .mark{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(145deg,#ff6674,#b51d3b);box-shadow:0 8px 28px #ff536433;font-size:23px}
+    .brand small{display:block;color:var(--muted);font-size:11px;font-weight:650;letter-spacing:.13em;margin-top:3px}
+    .top-tag{border:1px solid #58d5f555;color:#b9f1ff;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:750;letter-spacing:.08em}
+    main{padding:68px 0 54px}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;color:#b9f1ff;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px #64d6a122}
+    h1{max-width:780px;margin:18px 0 16px;font-size:clamp(2.5rem,6vw,5rem);line-height:.99;letter-spacing:-.055em}
+    h1 span{color:var(--cyan)}
+    .lead{max-width:660px;color:var(--muted);font-size:clamp(1rem,2vw,1.18rem);line-height:1.7;margin:0}
+    .access-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:42px}
+    .access{position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:270px;padding:28px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,#132b49ee,#0e1e34ee);transition:transform .2s,border-color .2s,box-shadow .2s}
+    .access:hover{transform:translateY(-4px);border-color:#58d5f5aa;box-shadow:0 22px 55px #0005}
+    .access.municipal{background:linear-gradient(145deg,#29233b,#111e35)}
+    .access-icon{width:54px;height:54px;display:grid;place-items:center;border-radius:17px;background:#58d5f51c;border:1px solid #58d5f544;font-size:27px}
+    .municipal .access-icon{background:#ff53641c;border-color:#ff536455}
+    .access h2{font-size:1.55rem;margin:20px 0 8px}
+    .access p{color:var(--muted);line-height:1.6;margin:0 0 24px;max-width:430px}
+    .cta{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:12px;background:var(--cyan);color:#062033;font-weight:850}
+    .municipal .cta{background:#ff6474;color:#2a0710}
+    .cta span:last-child{font-size:20px}
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+    .feature{padding:18px;border:1px solid #ffffff17;border-radius:16px;background:#ffffff08}
+    .feature b{display:block;margin-bottom:6px;font-size:14px}
+    .feature p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+    footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid #ffffff18;padding:22px 0 30px;color:#8298b2;font-size:12px}
+    @media(max-width:700px){.top{align-items:flex-start}.top-tag{font-size:10px;padding:7px 9px}main{padding:48px 0 36px}.access-grid,.features{grid-template-columns:1fr}.access{min-height:245px}.brand{font-size:14px}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand"><div class="mark" aria-hidden="true">🚨</div><div>ALERTA VECINAL PRO<small>SEGURIDAD COMUNITARIA</small></div></div>
+      <div class="top-tag">SAN LUIS · VILLA MERCEDES</div>
+    </header>
+    <main>
+      <div class="eyebrow"><span class="dot"></span> Plataforma de prevención y respuesta</div>
+      <h1>Una comunidad conectada.<br><span>Una respuesta más rápida.</span></h1>
+      <p class="lead">Un punto de acceso para la red vecinal y el Centro de Monitoreo. Elegí tu espacio de ingreso para continuar.</p>
+
+      <section class="access-grid" aria-label="Elegir tipo de acceso">
+        <a class="access" id="neighborLink" href="/terminal.html">
+          <div class="access-icon" aria-hidden="true">🏘️</div>
+          <h2>Acceso ciudadano</h2>
+          <p>Ingresá a la terminal vecinal para validar tu acceso y comunicar una emergencia.</p>
+          <div class="cta"><span>Ingresar como vecino</span><span aria-hidden="true">→</span></div>
+        </a>
+        <a class="access municipal" href="/admin.html">
+          <div class="access-icon" aria-hidden="true">🖥️</div>
+          <h2>Centro de Monitoreo</h2>
+          <p>Acceso institucional para operadores autorizados y gestión de alertas municipales.</p>
+          <div class="cta"><span>Acceso institucional</span><span aria-hidden="true">→</span></div>
+        </a>
+      </section>
+
+      <section class="features" aria-label="Componentes de la plataforma">
+        <article class="feature"><b>🚨 Alertas de emergencia</b><p>Un canal de comunicación para reportar situaciones urgentes.</p></article>
+        <article class="feature"><b>📍 Ubicación del evento</b><p>La terminal puede adjuntar coordenadas GPS cuando el dispositivo lo permite.</p></article>
+        <article class="feature"><b>🤝 Red comunitaria</b><p>Una arquitectura preparada para integrar viviendas, unidades y comercios protegidos.</p></article>
+      </section>
+    </main>
+    <footer><span>Alerta Vecinal Pro · Rastreo Urbano GPS</span><span>Accesos diferenciados · Protección de datos</span></footer>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const neighborLink = document.getElementById('neighborLink');
+    const query = params.toString();
+    if (query) neighborLink.href = '/terminal.html?' + query;
+  </script>
+</body>
+</html>
