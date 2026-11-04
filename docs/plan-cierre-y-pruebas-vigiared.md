@@ -191,3 +191,18 @@ Se agregó `docs/diseno-backend-alertas-v0.2.md`, especificación previa al SQL 
 
 
 **Aclaración de arquitectura:** la revisión de RBAC v0.3 permitió identificar que la relación prevista es `manzanas.organizacion_id` (una organización por manzana). Se actualizó el diseño v0.2 para derivar el alcance mediante `unidades → establecimientos → manzanas`, sin duplicar la organización en tablas hijas. Sigue pendiente verificar esa columna en un esquema aislado, porque el RBAC v0.3 también es un borrador y no prueba el estado de la base compartida.
+
+
+### Auditoría de coherencia RBAC + red comunitaria
+
+Se creó `docs/auditoria-coherencia-rbac-red-v0.1.md` tras revisar RBAC v0.1–v0.3, bootstrap del propietario y red comunitaria v0.1.
+
+Hallazgos que bloquean el SQL integral:
+- La política UPDATE por fila de alertas no limita columnas; se recomienda quitar UPDATE directo y usar RPC de transición auditada.
+- Las políticas actuales permiten escrituras directas sobre manzanas; se recomienda reemplazarlas por comandos RPC auditados.
+- El vínculo histórico `alertas.manzana` por texto es temporal; la nueva autoridad debe ser unidad de origen y relaciones persistidas.
+- Deben inventariarse grants efectivos, privilegios por columna, funciones SECURITY DEFINER, triggers, vistas y RLS antes de consolidar.
+- La matriz de permisos COM se explicitó para propietario, administrador, supervisor, operador y auditor.
+- Se reafirma que `vecinos` legado no es fuente de autorización y que no se deben emparejar datos ficticios.
+
+**Decisión técnica:** no escribir ni ejecutar todavía un SQL integral. Primero consolidar el contrato de permisos y verificar el DDL/privilegios reales en un Supabase desechable. No se modificó el proyecto Supabase compartido.
