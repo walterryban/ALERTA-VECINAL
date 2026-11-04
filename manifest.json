@@ -1,7 +1,7 @@
 {
-  "name": "Alerta Vecinal Pro",
-  "short_name": "Alerta Pro",
-  "description": "Plataforma de seguridad comunitaria y monitoreo municipal",
+  "name": "VIGIARED | Tecnología que conecta y protege",
+  "short_name": "VIGIARED",
+  "description": "Plataforma independiente de prevención, comunicación y gestión de alertas.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
