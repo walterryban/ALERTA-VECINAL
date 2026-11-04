@@ -152,7 +152,7 @@
       const params = new URLSearchParams(location.search);
       const manzana = ($('manzana').value || params.get('manzana') || '').trim();
       $('manzana').value = manzana;
-      if (params.get('pin')) $('pin').value = params.get('pin');
+      // El QR público nunca completa ni transporta el PIN de acceso.
       const pin = $('pin').value.trim();
       const nombre = $('nombre').value.trim();
       const telefono = $('telefono').value.trim();
