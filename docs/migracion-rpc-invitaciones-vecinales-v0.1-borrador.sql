@@ -1,3 +1,8 @@
+-- AVISO: ESTE BORRADOR RPC V0.1 QUEDÓ SUPERSEDIDO.
+-- NO EJECUTAR NI CONECTAR. Usar como referencia histórica únicamente.
+-- Las RPC corregidas forman parte de docs/migracion-identidad-vecinal-v0.2-borrador.sql.
+-- V0.1 depende del modelo anterior vinculado a public.vecinos.
+
 -- VIGIARED
 -- RPC DE INVITACION Y SOLICITUD DE INGRESO v0.1
 -- BORRADOR PARCIAL: NO EJECUTAR / NO DESPLEGAR.
