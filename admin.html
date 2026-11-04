@@ -258,7 +258,7 @@
   }
 
   function configurarAlcanceAdministrativo() {
-    const tabManzanas = document.querySelector(".tab-btn[onclick*=\"cambiarPestana('manzanas'"]");
+    const tabManzanas = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.textContent.includes('Gestión de Manzanas'));
     if (tabManzanas) tabManzanas.style.display = puedeGestionarManzanas ? '' : 'none';
     const formManzanas = document.querySelector('#tab-manzanas .card-form');
     if (formManzanas) formManzanas.style.display = puedeGestionarManzanas ? 'flex' : 'none';
