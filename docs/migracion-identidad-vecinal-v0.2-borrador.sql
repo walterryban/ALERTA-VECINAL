@@ -214,6 +214,13 @@ BEGIN
         actualizado_at = pg_catalog.now()
   RETURNING id INTO v_profile_id;
 
+  IF NOT EXISTS (
+    SELECT 1 FROM public.perfiles_vecinales AS p
+    WHERE p.id = v_profile_id AND p.estado = 'activo'
+  ) THEN
+    RAISE EXCEPTION 'El perfil está bloqueado o suspendido' USING ERRCODE = '42501';
+  END IF;
+
   INSERT INTO public.auditoria_vecinal (
     actor_auth_user_id, perfil_id, accion, resultado
   ) VALUES (
@@ -284,6 +291,13 @@ BEGIN
   ON CONFLICT (auth_user_id) DO UPDATE
     SET actualizado_at = pg_catalog.now()
   RETURNING id INTO v_profile_id;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.perfiles_vecinales AS p
+    WHERE p.id = v_profile_id AND p.estado = 'activo'
+  ) THEN
+    RAISE EXCEPTION 'El perfil está bloqueado o suspendido' USING ERRCODE = '42501';
+  END IF;
 
   INSERT INTO public.membresias_vecinales (
     perfil_id, unidad_id, rol, estado, aprobada_at, aprobada_por
@@ -542,11 +556,21 @@ BEGIN
     RAISE EXCEPTION 'Solicitud no disponible' USING ERRCODE = '22023';
   END IF;
 
+  IF EXISTS (
+    SELECT 1 FROM public.perfiles_vecinales AS p
+    WHERE p.id = v_profile_id AND p.auth_user_id = v_actor
+  ) THEN
+    RAISE EXCEPTION 'No se puede aprobar la propia solicitud' USING ERRCODE = '42501';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM public.membresias_vecinales AS m
     JOIN public.perfiles_vecinales AS p ON p.id = m.perfil_id
+    JOIN public.unidades AS un ON un.id = m.unidad_id
+    JOIN public.establecimientos AS es ON es.id = un.establecimiento_id
     WHERE p.auth_user_id = v_actor AND p.estado = 'activo'
       AND m.unidad_id = v_unit_id AND m.rol = 'titular' AND m.estado = 'activa'
+      AND un.estado = 'activo' AND es.estado = 'activo'
   ) THEN
     RAISE EXCEPTION 'No autorizado para esta unidad' USING ERRCODE = '42501';
   END IF;
