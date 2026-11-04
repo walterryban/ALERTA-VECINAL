@@ -10,14 +10,14 @@ Esta guía corresponde a la rama `integracion-segura-2026-11-04`. No ejecutar co
 4. Crear la membresía inicial del administrador municipal después de verificar su cuenta e identidad.
 5. Confirmar que RLS y RPC operativas ya restringen los datos por organización antes de habilitar la consola multi-municipal.
 
-## Edge Function
+## Interfaz web\n\nLa página `administracion.html` permite al propietario crear organizaciones y gestionar operadores; el administrador municipal gestiona únicamente los operadores de su organización. El enlace está disponible desde la página inicial. La página requiere una sesión Auth y las RPC RBAC aplicadas.\n\n## Edge Function
 
 La función `supabase/functions/administrar-operadores/index.ts` ofrece acciones:
 - `list`: listar membresías de la organización autorizada.
 - `invite`: enviar invitación por correo; crea membresía en estado `pendiente`.
 - `activate`: activar solo cuando Supabase Auth confirma el correo.
 - `change_role`: cambiar un rol dentro de los límites del actor.
-- `revoke`: revocar una membresía sin borrar la identidad Auth ni afectar otras organizaciones.
+- `revoke`: revocar una membresía sin borrar la identidad Auth ni afectar otras organizaciones.\n- `create_organization`: crear una organización activa, acción exclusiva del propietario.
 
 La función valida el JWT del usuario, consulta el contexto y la autorización RBAC mediante RPC y usa la clave service role exclusivamente en el entorno Edge. La cuenta propietaria está protegida frente a revocación municipal.
 
@@ -57,4 +57,4 @@ No ejecutar estos comandos contra producción durante esta etapa.
 - El borrador RBAC no reemplaza aún las políticas heredadas de `alertas` y `manzanas`; por eso todavía no debe anunciarse aislamiento multi-municipal completo.
 - La función no incorpora todavía vinculación de cuentas Auth ya existentes ni gestión de MFA. Para cuentas existentes se requiere un flujo separado, sin duplicar usuarios.
 - La auditoría se inserta después de la operación de Auth/DB; ante error de auditoría la función devuelve una advertencia explícita para revisión.
-- No se crearon usuarios, invitaciones, organizaciones ni membresías con este commit.
+- No se crearon usuarios, invitaciones, organizaciones ni membresías con estos commits. El código está en la rama de integración y la vista previa de Vercel compila, pero la Edge Function aún debe desplegarse en Supabase y las migraciones no están aplicadas.
