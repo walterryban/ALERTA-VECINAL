@@ -1,3 +1,9 @@
+-- AVISO: ESTE BORRADOR V0.1 QUEDÓ SUPERSEDIDO.
+-- NO EJECUTAR NI CONECTAR. Usar como referencia histórica únicamente.
+-- La versión corregida es docs/migracion-identidad-vecinal-v0.2-borrador.sql.
+-- V0.1 acopla membresías a public.vecinos y no soporta identidad global
+-- con membresías múltiples por persona. No aplicar este archivo.
+
 -- VIGIARED
 -- IDENTIDAD VECINAL v0.1 — BORRADOR ADITIVO / NO EJECUTAR
 -- Dependencia: docs/migracion-red-comunitaria-v0.1-borrador.sql
