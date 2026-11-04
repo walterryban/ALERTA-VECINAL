@@ -217,3 +217,16 @@ Se creó `docs/contrato-unico-permisos-operaciones-v0.1.md`. Consolida las fuent
 Quedan marcadas decisiones de producto que requieren aprobación antes de abrir funciones sensibles: datos personales visibles por rol COM, acceso excepcional a datos médicos, recuperación/transferencia del propietario, titularidad de unidad, menores/tutores, retención y cardinalidad de manzana-organización.
 
 **Estado:** documento guardado; no se ejecutó SQL ni se modificó Supabase o producción.
+
+
+### Bloqueo de compatibilidad de esquema — inventario v0.1
+
+Se agregó `docs/inventario-compatibilidad-esquema-v0.1.md` (commit `eb237b7a171cee340d79ec258d71735a42da0eaf`). Antes de consolidar SQL:
+- Incorporar `alertas.unidad_id` como origen canónico derivado de la membresía autenticada.
+- No duplicar `manzana_id` en difusiones; derivar el alcance por FK.
+- Eliminar el join temporal por nombre entre `alertas` y `manzanas`.
+- No usar `vecinos` ni `credenciales_integrantes` como autoridad de identidad.
+- Resolver fuente única de alertas y verificar tipo real de IDs, timestamps, estados y dependencias.
+- Inspeccionar DDL en un Supabase aislado antes de preparar una migración ejecutable.
+
+Sin SQL ejecutado, sin cambios en Supabase y sin alteración de alertas/manzanas ficticias.
