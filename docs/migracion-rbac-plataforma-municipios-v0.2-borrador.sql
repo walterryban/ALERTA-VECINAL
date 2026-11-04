@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS public.auditoria_administrativa (
   objetivo_auth_user_id uuid
     REFERENCES auth.users(id) ON DELETE RESTRICT,
   accion text NOT NULL CHECK (accion IN (
+    'organizacion_creada',
     'invitacion_enviada',
     'membresia_activada',
     'membresia_revocada',
