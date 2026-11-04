@@ -96,6 +96,14 @@ Deno.serve(async (req) => {
     const role = String(body.role ?? "");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Correo electrónico inválido." }, 400);
     if (!allowedRoles.has(role)) return json({ error: "Rol no permitido." }, 400);
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count: recentInvites, error: rateError } = await admin.from("auditoria_administrativa")
+      .select("id", { count: "exact", head: true })
+      .eq("actor_auth_user_id", actorId)
+      .eq("accion", "invitacion_enviada")
+      .gte("creado_at", since);
+    if (rateError) return json({ error: "No se pudo comprobar el límite de invitaciones." }, 500);
+    if ((recentInvites ?? 0) >= 10) return json({ error: "Se alcanzó el límite de 10 invitaciones por hora para esta cuenta." }, 429);
     const { data: permission, error: permissionError } = await caller.rpc("puede_gestionar_membresias", {
       p_organizacion_id: organizationId, p_rol_objetivo: role,
     });
