@@ -399,7 +399,7 @@ LANGUAGE plpgsql
 VOLATILE
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
 DECLARE
   v_actor uuid := auth.uid();
   v_unit_id uuid;
@@ -442,7 +442,7 @@ BEGIN
 
   RETURN true;
 END;
-$;
+$$;
 
 CREATE FUNCTION public.solicitar_ingreso_vecinal(p_token text)
 RETURNS uuid
