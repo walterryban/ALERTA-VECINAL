@@ -127,7 +127,10 @@
     });
 
     async function validarAcceso() {
-      const manzana = $('manzana').value.trim();
+      const params = new URLSearchParams(location.search);
+      const manzana = ($('manzana').value || params.get('manzana') || '').trim();
+      $('manzana').value = manzana;
+      if (params.get('pin')) $('pin').value = params.get('pin');
       const pin = $('pin').value.trim();
       const nombre = $('nombre').value.trim();
       const telefono = $('telefono').value.trim();
