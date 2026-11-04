@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#081426">
+  <meta name="description" content="Terminal ciudadana de Alerta Vecinal Pro.">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <title>Alerta Vecinal Pro — Terminal Ciudadana</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -34,6 +36,26 @@
     .secondary { background:transparent; color:#cbd5e1; border:1px solid var(--line); border-radius:8px; padding:9px 12px; margin-top:10px; }
     .status { min-height:1.3em; color:#bae6fd; font-size:.85rem; margin-top:10px; white-space:pre-wrap; }
     .footer { text-align:center; color:#64748b; font-size:.75rem; padding-bottom:12px; }
+    body { background:radial-gradient(ellipse at 50% -12%,#1d4265 0,transparent 48%),#081426; padding:clamp(12px,3vw,24px); }
+    .container { max-width:500px; gap:18px; }
+    header { padding:12px 8px 18px; }
+    h1 { color:#ff7584; font-size:clamp(1.35rem,5vw,1.7rem); letter-spacing:.025em; }
+    header p { color:#a9bbd0; letter-spacing:.02em; }
+    .card { background:linear-gradient(150deg,#142b49,#0f2038); border:1px solid #35516f; border-radius:20px; padding:clamp(18px,5vw,24px); box-shadow:0 18px 48px #0004; }
+    h2 { color:#f7fbff; font-size:1.08rem; letter-spacing:.01em; }
+    label { color:#d2e0ee; }
+    input,select { background:#08182b; border:1px solid #3b5877; border-radius:11px; min-height:46px; }
+    input:focus,select:focus { outline:2px solid #58d5f5; border-color:#58d5f5; }
+    .primary { background:linear-gradient(100deg,#62dcf5,#39b8e7); border-radius:11px; min-height:48px; box-shadow:0 8px 22px #38bdf833; }
+    .primary:hover:not(:disabled) { filter:brightness(1.06); transform:translateY(-1px); }
+    .hint { color:#a9bbd0; }
+    .legal { color:#c8d7e6; }
+    .sos { border-color:#ffb3bb; box-shadow:0 0 0 8px #ef44441a,0 0 34px #ef444455; }
+    .secondary { border-color:#55718f; border-radius:10px; }
+    .status { background:#07182a99; border:1px solid #2e4a67; border-radius:10px; padding:9px 11px; color:#b9efff; }
+    .footer { color:#8298b2; letter-spacing:.02em; }
+    @media (max-width:380px) { .sos { width:164px; height:164px; } }
+
   </style>
 </head>
 <body>
