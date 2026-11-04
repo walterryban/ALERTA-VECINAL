@@ -47,12 +47,12 @@ button.secondary{background:#263d59;color:white;border:1px solid #49617f}button.
     <div class="row">
       <div><div class="muted small">PERFIL AUTORIZADO</div><h2 id="profileTitle">Cargando...</h2><p id="profileScope" class="muted small"></p></div>
       <div class="spacer"></div>
-      <div class="field" style="max-width:420px"><label for="organization">Organización / Municipalidad</label><select id="organization"></select></div>
+      <div class="field" style="max-width:420px"><label for="organization">Organización</label><select id="organization"></select></div>
     </div>
     <div id="contextMessage" class="notice hidden"></div>
     <form id="createOrgForm" class="row hidden" style="margin-top:16px">
-      <div class="field"><label for="orgName">Nueva Municipalidad / organización</label><input id="orgName" maxlength="120" placeholder="Municipalidad de ..." required></div>
-      <div class="field"><label for="orgCode">Código único</label><input id="orgCode" maxlength="40" pattern="[a-z0-9][a-z0-9-]{1,39}" placeholder="municipio-ejemplo" required></div>
+      <div class="field"><label for="orgName">Nueva organización</label><input id="orgName" maxlength="120" placeholder="Nombre de la organización" required></div>
+      <div class="field"><label for="orgCode">Código único</label><input id="orgCode" maxlength="40" pattern="[a-z0-9][a-z0-9-]{1,39}" placeholder="organizacion-ejemplo" required></div>
       <button type="submit">Crear organización</button>
     </form>
     <div id="orgMessage" class="notice hidden"></div>
@@ -62,7 +62,7 @@ button.secondary{background:#263d59;color:white;border:1px solid #49617f}button.
     <h2>Invitar operador</h2>
     <p class="muted small">La invitación es nominativa. La persona establece su propia contraseña y debe confirmar su correo antes de activar el acceso.</p>
     <form id="inviteForm" class="row">
-      <div class="field"><label for="inviteEmail">Correo personal/institucional</label><input id="inviteEmail" type="email" placeholder="nombre@municipio.gob.ar" required></div>
+      <div class="field"><label for="inviteEmail">Correo personal/institucional</label><input id="inviteEmail" type="email" placeholder="nombre@organizacion.org" required></div>
       <div class="field"><label for="inviteRole">Perfil</label><select id="inviteRole"></select></div>
       <button type="submit">Enviar invitación</button>
     </form>
