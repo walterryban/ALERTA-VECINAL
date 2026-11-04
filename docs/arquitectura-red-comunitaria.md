@@ -75,3 +75,30 @@ La tabla `manzanas` existente usa id identity bigint; las nuevas relaciones debe
 ## 8. Límites de este entregable
 
 Este documento define la arquitectura. No ejecuta SQL, no cambia Supabase, no modifica el dominio de producción y no afirma que la difusión vecinal o las notificaciones push estén ya operativas.
+
+
+## 9. Avance de interfaz en la rama de integración (04-11-2026)
+
+Cambios implementados en código de la rama de prueba, sin modificar producción ni Supabase:
+
+- La página inicial ofrece dos accesos diferenciados: terminal ciudadana y consola municipal.
+- La PWA abre ahora la página inicial unificada.
+- La terminal ciudadana recibió una actualización visual y conserva las RPC actuales.
+- La consola municipal incorpora indicadores de alertas por estado, búsqueda y filtro.
+- El sonido de alertas requiere activación manual del operador y permite probar la sirena desde el botón de activación.
+- Los QR nuevos de la consola y del cartel público abren la terminal con la manzana preseleccionada, sin incluir el PIN.
+- La terminal ignora cualquier PIN recibido por parámetros de URL. Los carteles antiguos que imprimían PIN deben retirarse y reemplazarse.
+- Se agregó un borrador de endurecimiento RLS para las tablas `vecinos` y `vendedores`; todavía no fue ejecutado.
+
+## 10. Funciones que todavía no están implementadas
+
+No se debe presentar como disponible hasta completar esquema, RPC, interfaz y pruebas:
+
+- Credenciales individuales revocables.
+- Alta y aprobación de integrantes por unidad.
+- Gestión de establecimientos, departamentos, habitaciones y locales.
+- Red de Comercios Protegidos y gestión de empleados.
+- Difusión de alertas anónimas a vecinos de la misma manzana.
+- Notificaciones push cuando la aplicación está cerrada.
+
+La vista previa de Vercel usa la configuración actual de Supabase. No enviar alertas de prueba ni cambiar estados desde la vista previa, porque esas acciones pueden modificar datos reales.
