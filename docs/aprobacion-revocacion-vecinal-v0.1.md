@@ -20,7 +20,8 @@ Se agrega `vecinos.auth_user_id` como vínculo único nullable. Los registros hi
 3. Revisión de concurrencia al revocar titulares y aprobación simultánea.
 4. Notificación segura al solicitante después de aprobar/rechazar.
 5. Revisión del acceso a datos de solicitudes y auditoría.
-6. Pruebas en un proyecto Supabase aislado, incluyendo usuarios simultáneos, doble aprobación, doble revocación y último titular.
+6. La revocación bloquea la fila de unidad para serializar operaciones concurrentes y proteger la regla del último titular; probar carreras con dos sesiones en un proyecto Supabase aislado.
+7. Pruebas en un proyecto Supabase aislado, incluyendo doble aprobación, doble revocación y último titular.
 
 ## Pruebas de aceptación
 
