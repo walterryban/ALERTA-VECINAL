@@ -253,7 +253,7 @@
     await supabaseClient.auth.signOut();
     document.getElementById('login-overlay').style.display = 'flex';
     document.getElementById('app-dashboard').style.display = 'none';
-    alert('La cuenta está autenticada, pero no tiene un rol autorizado para ingresar a la consola municipal.');
+    alert('La cuenta está autenticada, pero no tiene un rol autorizado para ingresar al Centro de Monitoreo.');
     return false;
   }
 
