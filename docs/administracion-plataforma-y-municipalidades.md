@@ -71,3 +71,14 @@ Los roles se almacenan en el servidor. Nunca se aceptan como autoridad valores e
 ## Estado real
 
 Este documento y el SQL asociado son especificación/borrador. No se crearon cuentas, no se enviaron invitaciones, no se ejecutó migración y no se cambió Supabase ni producción.
+
+
+## Implementación preparada en la rama (04-11-2026)
+
+- `administracion.html`: acceso autenticado para propietario y administradores municipales, selector de organización, alta de organización exclusiva del propietario, invitación de operadores, activación después de confirmar correo, cambio de rol y revocación de membresías.
+- `supabase/functions/administrar-operadores/index.ts`: valida JWT, contexto RBAC y alcance organizacional; usa Auth Admin API solo en servidor; aplica límite de 10 invitaciones por hora por actor; protege la identidad propietaria y deja membresías nuevas en estado pendiente hasta confirmar correo.
+- `supabase/config.toml`: exige verificación JWT para la Edge Function.
+- `admin.html`: ya no muestra el COM a cualquier sesión autenticada; exige que la función heredada `es_operador()` autorice el acceso. El PIN de cada manzana queda oculto en la tabla.
+- `index.html`: agrega acceso a la administración institucional, que exige sesión y rol autorizado.
+
+Estos componentes requieren aplicar las migraciones RBAC v0.1 y v0.2 y desplegar la Edge Function en un proyecto de pruebas. No se crearon cuentas ni invitaciones. El COM operativo aún conserva las políticas heredadas; el aislamiento multi-municipal de alertas y manzanas sigue siendo una fase pendiente y obligatoria.
