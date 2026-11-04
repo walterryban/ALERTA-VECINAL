@@ -773,7 +773,8 @@ GRANT EXECUTE ON FUNCTION public.inicializar_titular_vecinal(uuid, uuid, text)
 GRANT EXECUTE ON FUNCTION public.emitir_invitacion_vecinal(uuid, integer)
   TO authenticated;
 GRANT EXECUTE ON FUNCTION public.revocar_invitacion_vecinal(uuid)
-  TO authenticated;\nGRANT EXECUTE ON FUNCTION public.solicitar_ingreso_vecinal(text)
+  TO authenticated;
+GRANT EXECUTE ON FUNCTION public.solicitar_ingreso_vecinal(text)
   TO authenticated;
 GRANT EXECUTE ON FUNCTION public.aprobar_ingreso_vecinal(uuid)
   TO authenticated;
