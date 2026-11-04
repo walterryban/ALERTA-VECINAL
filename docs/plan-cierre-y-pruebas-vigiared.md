@@ -1,0 +1,146 @@
+# VIGIARED — Plan de cierre, integración y pruebas
+
+Estado: plan de trabajo para la rama `integracion-segura-2026-11-04`.
+Objetivo: completar la plataforma en desarrollo, probarla con un entorno de datos aislado y promover a producción únicamente después de aprobar todos los criterios de salida.
+
+## Regla de publicación
+
+- No fusionar esta rama a `main` ni asignar el dominio de producción durante el desarrollo.
+- No ejecutar migraciones experimentales en el proyecto Supabase actualmente conectado.
+- Las manzanas y alertas existentes son datos ficticios de prueba; no representan domicilios, personas ni emergencias reales.
+- La vista previa de Vercel utiliza el proyecto Supabase existente. Por eso no se deben ejecutar allí pruebas que inserten alertas, cambien estados, creen manzanas o modifiquen cuentas.
+- Las pruebas de escritura requieren un proyecto Supabase aislado con datos sintéticos, cuentas de prueba y claves independientes.
+- No habilitar vecinos, comercios ni organizaciones reales hasta completar pruebas funcionales, de autorización, privacidad y recuperación.
+
+## Hallazgos de la revisión del código
+
+### 1. Acceso vecinal — incompleto
+
+La terminal actual valida el nombre de la manzana y un PIN compartido mediante `validar_acceso`. Luego toma nombre, teléfono, dirección y ficha desde el navegador y permite enviar una alerta mediante `crear_alerta`.
+
+Falta implementar antes de considerarlo acceso vecinal seguro:
+
+- Registro y autenticación individual de cada integrante.
+- Relación validada en servidor entre cuenta, domicilio, unidad habitacional y manzana.
+- Aprobación del alta por una persona autorizada.
+- Revocación individual sin afectar a los demás integrantes del domicilio.
+- Límite de intentos, bloqueo temporal y auditoría de credenciales.
+- Separación de vivienda, departamento, habitación, hostel, comercio y otras unidades independientes.
+- Reglas de consentimiento y minimización de datos; ficha médica solo con acceso operativo estrictamente autorizado.
+
+El PIN de manzana no debe convertirse en una credencial permanente ni ser el único control de pertenencia.
+
+### 2. Alertas y distribución comunitaria — incompleto
+
+La terminal llama a `crear_alerta` y muestra confirmación si la RPC responde sin error. El Centro de Operaciones consulta `public.alertas` y escucha inserciones de Realtime.
+
+Falta implementar y verificar:
+
+- Resolver la identidad y unidad desde una credencial validada en servidor; no confiar en identidad/domicilio enviados por el navegador.
+- Vincular cada alerta a `manzana_id`, unidad e integrante mediante claves foráneas; no depender a largo plazo del nombre de manzana como texto.
+- Entrega de aviso anónimo a los integrantes activos y autorizados de la misma comunidad.
+- Preferencias de recepción, consentimiento, baja y revocación.
+- Confirmación técnica de recepción, reintentos y trazabilidad sin duplicar alertas.
+- Notificación con la aplicación cerrada mediante Web Push/FCM; Realtime solo cubre clientes conectados.
+- Tratamiento de GPS denegado, dirección incompleta, pérdida de conectividad y reenvío seguro.
+
+El mensaje comunitario no debe revelar nombre, teléfono, dirección exacta ni ficha médica del emisor.
+
+### 3. Centro de Operaciones — base existente, requiere integración
+
+El COM ya contiene listado, filtros, estados, datos de domicilio, enlace de mapa, suscripción Realtime y activación manual de sonido.
+
+Pendiente de validar y completar:
+
+- Alcance de datos impuesto por RLS, nunca solo por ocultar controles en pantalla.
+- Identificación inequívoca de organización y manzana de cada alerta.
+- Revisión de transiciones de estado y registro de auditoría.
+- Sonido al recibir nuevas alertas, control de duplicados y comportamiento con pestaña en segundo plano.
+- Mapa y domicilio exacto; distinguir ubicación GPS del dispositivo y domicilio declarado.
+- Estados de conexión y reconexión de Realtime.
+- Operador auditor en modo de solo lectura.
+
+### 4. Organizaciones y permisos — código preliminar, no habilitado
+
+Existen borradores RBAC v0.1, v0.2 y v0.3, una pantalla administrativa y una Edge Function para operadores. No están aplicados ni desplegados.
+
+Antes de activarlos:
+
+- Revisar las migraciones en conjunto y probarlas en una base aislada.
+- Confirmar que el propietario de plataforma tenga control global.
+- Confirmar que cada administrador solo gestione su organización.
+- Confirmar que supervisor/operador/auditor tengan permisos mínimos.
+- Comprobar que un usuario sin membresía no lea ni modifique datos.
+- Eliminar cualquier vía heredada que permita acceso global por estar listado en `public.operadores`.
+- Desplegar la Edge Function solo después de verificar esquema, secretos y autorización.
+- Crear al propietario solo mediante el procedimiento explícito con una cuenta Auth ya confirmada; nunca inferir correo ni crear un propietario automáticamente.
+
+La consola dejó de usar el fallback heredado `es_operador()`: si no puede obtener el contexto RBAC, deniega el acceso. Esto es deliberadamente fail-closed; la consola no funcionará para operadores antiguos hasta completar la migración y asignar membresías RBAC.
+
+### 5. Comercios — no cerrar como funcional todavía
+
+La arquitectura contempla comercios y empleados, pero deben completarse altas, unidades/sucursales, usuarios individuales, revocación, alertas y aislamiento respecto de vecinos y otras organizaciones.
+
+### 6. Identidad y documentación
+
+- Marca de producto: VIGIARED.
+- Lema: “Tecnología que conecta y protege”.
+- Plataforma independiente; no sugerir convenio, aval ni afiliación municipal inexistente.
+- Mantener Rastreo Urbano GPS como desarrollador/identidad comercial donde corresponda.
+- No asociar Educa 360 como titular o responsable sin decisión expresa.
+- La disponibilidad legal de la marca sigue pendiente de búsqueda y evaluación formal.
+
+## Secuencia de implementación
+
+1. Cerrar modelo de datos de organizaciones, manzanas, establecimientos, unidades e integrantes.
+2. Implementar RPC seguras de alta, aprobación, autenticación, revocación y resolución de identidad.
+3. Adaptar la terminal vecinal a credenciales individuales y unidades habitacionales.
+4. Implementar la alerta segura con vínculo relacional a la unidad y organización.
+5. Implementar difusión comunitaria anónima y notificaciones en segundo plano.
+6. Completar COM: alcance RBAC, mapa, estados, auditoría, sonido y reconexión.
+7. Completar gestión de organizaciones, administradores y operadores mediante Edge Function.
+8. Completar comercios y sus empleados con aislamiento propio.
+9. Preparar entorno aislado de QA y ejecutar las pruebas siguientes.
+10. Corregir hallazgos, repetir regresión y obtener aprobación antes de producción.
+
+## Matriz mínima de pruebas de aceptación
+
+| Área | Prueba | Resultado requerido |
+|---|---|---|
+| Identidad | Usuario sin sesión intenta entrar al COM | Acceso denegado |
+| RBAC | Usuario autenticado sin membresía | No lee ni modifica datos |
+| Aislamiento | Admin A consulta datos de organización B | Cero filas y ninguna mutación |
+| RBAC | Auditor intenta cambiar estado | Operación denegada |
+| RBAC | Operador intenta crear organización | Operación denegada |
+| Propietario | Propietario consulta organizaciones autorizadas | Vista global disponible |
+| Vecinos | Dos integrantes del mismo domicilio | Cuentas individuales independientes |
+| Vecinos | Revocar un integrante | Los demás conservan acceso |
+| Vecinos | Unidad/departamento distinto | No recibe alertas privadas de otra unidad |
+| QR | Escanear QR público | Abre terminal sin PIN ni secreto en URL |
+| Alertas | Envío autorizado | Una alerta registrada con identidad resuelta por servidor |
+| Alertas | Envío repetido o doble clic | No duplica una misma operación |
+| Comunidad | Alerta de manzana | Aviso anónimo solo a participantes activos de esa manzana |
+| Privacidad | Inspeccionar aviso comunitario | No expone identidad, teléfono, domicilio exacto ni ficha médica |
+| COM | Alerta nueva | Aparece una vez, con domicilio y ubicación diferenciados |
+| COM | Operador activa sonido | Tono de prueba audible y nuevas alertas audibles |
+| COM | Cambiar estado | Solo roles autorizados; queda auditoría |
+| Push | Aplicación cerrada | Notificación recibida en dispositivo suscripto |
+| Revocación | Revocar credencial/dispositivo | Acceso futuro rechazado |
+| Comercios | Empleado de comercio A consulta comercio B | Acceso denegado |
+| Resiliencia | Sin GPS / sin red / reconexión | Mensaje claro; no confirma entrega no realizada |
+| Regresión | Recorrer todos los roles y módulos | Sin errores bloqueantes ni filtraciones |
+
+## Criterios para autorizar producción
+
+Todos deben cumplirse:
+
+- [ ] Migraciones aprobadas y ejecutadas en el entorno correcto después de backup y ensayo aislado.
+- [ ] RLS verificada con cuentas de cada rol y pruebas negativas entre organizaciones.
+- [ ] Credenciales vecinales individuales y revocables funcionando.
+- [ ] Alertas y difusión comunitaria probadas de extremo a extremo.
+- [ ] Push probado con aplicación cerrada.
+- [ ] COM probado en escritorio y móvil, incluyendo sonido y mapa.
+- [ ] Comercios y organizaciones aislados y probados.
+- [ ] Edge Functions y secretos configurados sin claves privilegiadas en el navegador.
+- [ ] Pruebas de regresión aprobadas y hallazgos críticos resueltos.
+- [ ] Copia de seguridad, plan de reversión y aprobación expresa de publicación.
