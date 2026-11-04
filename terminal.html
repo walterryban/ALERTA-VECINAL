@@ -168,7 +168,7 @@
         };
         $('registerSection').style.display = 'none';
         $('sosSection').style.display = 'block';
-        setStatus('sosStatus', 'Acceso validado para ' + data.nombre_manzana + '.');
+        setStatus('sosStatus', 'Acceso validado para ' + data + '.');
       } catch (err) {
         console.error(err);
         setStatus('registerStatus', 'No se pudo validar el acceso. Revisá la conexión y las políticas de acceso de Supabase.');
