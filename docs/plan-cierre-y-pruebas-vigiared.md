@@ -16,7 +16,7 @@ Objetivo: completar la plataforma en desarrollo, probarla con un entorno de dato
 
 ### 1. Acceso vecinal — incompleto
 
-La terminal actual valida el nombre de la manzana y un PIN compartido mediante `validar_acceso`. Luego toma nombre, teléfono, dirección y ficha desde el navegador y permite enviar una alerta mediante `crear_alerta`.
+La terminal vecinal de la rama de desarrollo fue reemplazada por una pantalla de identidad individual VIGIARED. Es actualmente un **andamio visual**: los controles de registro, ingreso, invitación y solicitud permanecen deshabilitados; no inicializa Supabase, no autentica usuarios y no envía alertas. El flujo anterior de manzana/PIN y las llamadas RPC heredadas fueron retirados de esa pantalla.
 
 Falta implementar antes de considerarlo acceso vecinal seguro:
 
@@ -32,7 +32,7 @@ El PIN de manzana no debe convertirse en una credencial permanente ni ser el ún
 
 ### 2. Alertas y distribución comunitaria — incompleto
 
-La terminal llama a `crear_alerta` y muestra confirmación si la RPC responde sin error. El Centro de Operaciones consulta `public.alertas` y escucha inserciones de Realtime.
+El Centro de Operaciones conserva la consulta de `public.alertas` y la escucha de inserciones de Realtime. La terminal vecinal actual no crea alertas: el envío permanece deshabilitado hasta que se implemente y pruebe la identidad individual y la RPC segura.
 
 Falta implementar y verificar:
 
@@ -144,3 +144,12 @@ Todos deben cumplirse:
 - [ ] Edge Functions y secretos configurados sin claves privilegiadas en el navegador.
 - [ ] Pruebas de regresión aprobadas y hallazgos críticos resueltos.
 - [ ] Copia de seguridad, plan de reversión y aprobación expresa de publicación.
+
+
+## Avance de identidad vecinal v0.2 (2026-11-04)
+
+Se incorporó el borrador `docs/migracion-identidad-vecinal-v0.2-borrador.sql` y su documentación. El modelo separa cuenta Auth, perfil único y membresías por unidad; una misma persona puede pertenecer a múltiples unidades. Las RPC de provisionamiento y bootstrap se reservan a `service_role`; las RPC de usuario se limitan a `authenticated`. Las tablas nuevas mantienen RLS y no conceden acceso directo.
+
+Los borradores v0.1 de identidad, invitación y aprobación quedaron marcados como supersedidos. Se agregó una revisión estática en `docs/revision-seguridad-identidad-vecinal-v0.2.md`. Se corrigieron hallazgos de sintaxis y controles de perfil/autoaprobación durante la revisión.
+
+**Límite actual:** no se ejecutó ni compiló el SQL en PostgreSQL; no existe todavía un proyecto Supabase aislado. No conectar las RPC a la terminal. Tampoco hay un runner de pruebas de aplicación identificado en la raíz del repositorio (no se encontró `package.json`). El siguiente paso es preparar un entorno aislado y probar migración, permisos y concurrencia antes de integrar frontend.
