@@ -1,7 +1,2 @@
-{
-  "functions": {
-    "administrar-operadores": {
-      "verify_jwt": true
-    }
-  }
-}
+[functions.administrar-operadores]
+verify_jwt = true
