@@ -159,3 +159,17 @@ Los borradores v0.1 de identidad, invitación y aprobación quedaron marcados co
 Se incorporó `docs/pruebas-identidad-vecinal-v0.2.md` con 28 casos funcionales, 7 escenarios de concurrencia y 8 verificaciones de privilegios/SECURITY DEFINER. La revisión estática también reforzó el canje para unidades activas y el rechazo por titulares con perfil activo.
 
 **Estado:** casos documentados, no ejecutados. Sigue bloqueado cualquier ensayo de escritura hasta contar con proyecto Supabase aislado. La Preview actual comparte la base existente.
+
+
+### Revisión de alertas y COM v0.2 (2026-11-04)
+
+Se incorporó `docs/revision-alertas-com-v0.2.md` con auditoría estática del COM y diseño de autorización/difusión. Hallazgos relevantes:
+
+- `admin.html` consulta `alertas` mediante `select('*')`; el filtrado posterior ocurre en el navegador y no constituye aislamiento.
+- La gestión heredada consulta `manzanas` con `select('*')` y todavía crea manzanas mediante INSERT directo desde el cliente, con PIN compartido.
+- La verificación RBAC al iniciar sesión falla cerrado, pero por sí sola no protege lecturas y escrituras posteriores. El aislamiento debe aplicarse en RLS/RPC.
+- Las alertas nuevas deben derivar usuario, unidad, manzana y organización desde la sesión y las membresías verificadas en servidor. Nunca aceptar destinos o listas de destinatarios arbitrarios del cliente.
+- COM y red vecinal requieren canales distintos: el aviso vecinal no incluye identidad, domicilio exacto, contacto, GPS, ficha médica ni texto libre.
+- Se definieron 26 casos de prueba para creación, autorización, privacidad, outbox, concurrencia, push y COM.
+
+**Estado:** auditoría y requisitos documentados; no se modificó el flujo de alertas, no se creó una RPC/worker y no se ejecutó SQL. La pestaña de manzanas y la consulta de alertas deben considerarse heredadas/no listas para habilitar usuarios reales hasta que el backend imponga el alcance por organización.
