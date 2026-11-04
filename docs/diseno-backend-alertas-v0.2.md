@@ -21,9 +21,11 @@ Los borradores existentes describen dependencias que deben tratarse como una ún
 5. **RBAC COM:** autorización de lectura y actualización por organización y permiso.
 6. **Workers:** entrega externa con revalidación, lease y reintentos.
 
-### Bloqueo de integridad multi-organización
+### Relación manzana-organización identificada en el diseño RBAC
 
-El borrador de red v0.1 conecta `establecimientos` con `manzanas`, mientras que el RBAC municipal usa organizaciones. Antes del SQL de alertas se debe verificar en el esquema RBAC cuál es la relación canónica manzana-organización y si una manzana puede pertenecer a más de una organización. La autorización debe derivarse de una sola relación no ambigua. No se añadirá una columna redundante de organización sin decidir fuente de verdad y restricciones que impidan inconsistencias.
+La revisión de `docs/migracion-rbac-plataforma-municipios-v0.3-borrador.sql` identifica `manzanas.organizacion_id` como relación canónica prevista. El modelo RBAC la trata como una organización por manzana y aplica las políticas desde esa columna. Por lo tanto, el alcance de un establecimiento/unidad se deriva por `unidades → establecimientos → manzanas.organizacion_id`; no se debe duplicar `organizacion_id` en establecimientos o unidades.
+
+**Pendiente de verificación:** esta relación está en un borrador RBAC, no acredita que exista en la base compartida. Antes del SQL final habrá que comprobar el DDL real en un proyecto aislado y definir migración si el esquema difiere. Si el producto llegara a requerir que una misma manzana pertenezca a varias organizaciones, el modelo actual de RBAC no alcanza y necesitaría una tabla puente con reglas explícitas; no asumir esa cardinalidad en esta versión.
 
 ### Inconsistencia de estados detectada
 
@@ -197,7 +199,7 @@ Todas las pruebas se ejecutan en Supabase desechable con cuentas, domicilios, or
 
 ## 10. Pendientes que bloquean el SQL final
 
-1. Inspeccionar y consolidar DDL real de RBAC: relación manzana-organización y cardinalidad.
+1. Verificar en un proyecto aislado que el DDL real coincide con la relación prevista `manzanas.organizacion_id` (una organización por manzana) del borrador RBAC v0.3.
 2. Decidir si una alerta se guarda en `public.alertas` o en tabla nueva privada; no mantener dos fuentes activas.
 3. Definir catálogo de tipos y mapeo con los botones actuales de la terminal.
 4. Definir permiso separado para ficha médica y si se elimina de la primera versión.
