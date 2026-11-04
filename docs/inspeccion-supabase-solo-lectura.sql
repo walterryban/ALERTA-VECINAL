@@ -85,7 +85,7 @@ CROSS JOIN LATERAL aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) x
 LEFT JOIN pg_roles gr ON gr.oid = x.grantee
 WHERE n.nspname = 'public'
   AND p.proname IN ('validar_acceso','crear_alerta')
-ORDER BY firma::text, otorgado_a;
+ORDER BY p.oid::regprocedure::text, gr.rolname;
 
 -- 7) Tablas publicadas para Supabase Realtime.
 SELECT
