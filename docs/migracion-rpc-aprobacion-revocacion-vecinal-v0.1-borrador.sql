@@ -160,8 +160,9 @@ BEGIN
 END;
 $$;
 
--- Revocación por titular o auto-baja. No permite eliminar al último titular
--- activo; la transferencia de titularidad requiere un flujo separado.
+-- Revocación por titular o auto-baja. Bloquea la fila de unidad para serializar
+-- revocaciones concurrentes y no permite eliminar al último titular activo;
+-- la transferencia de titularidad requiere un flujo separado.
 CREATE OR REPLACE FUNCTION public.revocar_membresia_vecinal(
   p_membresia_id uuid,
   p_motivo text DEFAULT NULL
@@ -175,18 +176,35 @@ AS $$
 DECLARE
   v_actor uuid := auth.uid();
   v_member public.membresias_vecinales%ROWTYPE;
+  v_unit_id uuid;
   v_is_owner boolean;
 BEGIN
   IF v_actor IS NULL THEN
     RAISE EXCEPTION 'Sesión requerida' USING ERRCODE = '42501';
   END IF;
 
+  -- Serializa revocaciones dentro de una unidad para impedir que dos
+  -- titulares se revoquen simultáneamente y dejen la unidad sin titular.
+  SELECT m.unidad_id INTO v_unit_id
+  FROM public.membresias_vecinales AS m
+  WHERE m.id = p_membresia_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Membresía no disponible' USING ERRCODE = '22023';
+  END IF;
+
+  PERFORM 1
+  FROM public.unidades AS u
+  WHERE u.id = v_unit_id
+  FOR UPDATE;
+
   SELECT m.* INTO v_member
   FROM public.membresias_vecinales AS m
   WHERE m.id = p_membresia_id
   FOR UPDATE;
 
-  IF NOT FOUND OR v_member.estado <> 'activa' THEN
+  IF NOT FOUND OR v_member.estado <> 'activa'
+     OR v_member.unidad_id <> v_unit_id THEN
     RAISE EXCEPTION 'Membresía no disponible' USING ERRCODE = '22023';
   END IF;
 
