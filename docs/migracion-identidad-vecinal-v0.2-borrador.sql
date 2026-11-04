@@ -331,7 +331,8 @@ BEGIN
   IF v_actor IS NULL THEN
     RAISE EXCEPTION 'Sesión requerida' USING ERRCODE = '42501';
   END IF;
-  IF p_unidad_id IS NULL OR p_vigencia_horas NOT BETWEEN 1 AND 72 THEN
+  IF p_unidad_id IS NULL OR p_vigencia_horas IS NULL
+     OR p_vigencia_horas NOT BETWEEN 1 AND 72 THEN
     RAISE EXCEPTION 'Solicitud inválida' USING ERRCODE = '22023';
   END IF;
 
@@ -392,6 +393,57 @@ $$;
 
 -- El token es de un solo uso. El canje crea solicitud pendiente, nunca
 -- membresía activa. El perfil debe haber sido provisionado por backend.
+CREATE FUNCTION public.revocar_invitacion_vecinal(p_invitacion_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = ''
+AS $
+DECLARE
+  v_actor uuid := auth.uid();
+  v_unit_id uuid;
+  v_profile_id uuid;
+BEGIN
+  IF v_actor IS NULL OR p_invitacion_id IS NULL THEN
+    RAISE EXCEPTION 'Sesión o invitación inválida' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT i.unidad_id INTO v_unit_id
+  FROM public.invitaciones_vecinales AS i
+  WHERE i.id = p_invitacion_id AND i.usada_at IS NULL
+    AND i.revocada_at IS NULL AND i.expira_at > pg_catalog.now()
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invitación no disponible' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT p.id INTO v_profile_id
+  FROM public.perfiles_vecinales AS p
+  JOIN public.membresias_vecinales AS m ON m.perfil_id = p.id
+  WHERE p.auth_user_id = v_actor AND p.estado = 'activo'
+    AND m.unidad_id = v_unit_id AND m.rol = 'titular'
+    AND m.estado = 'activa';
+
+  IF v_profile_id IS NULL THEN
+    RAISE EXCEPTION 'No autorizado para esta unidad' USING ERRCODE = '42501';
+  END IF;
+
+  UPDATE public.invitaciones_vecinales
+  SET revocada_at = pg_catalog.now(), revocada_por = v_actor
+  WHERE id = p_invitacion_id;
+
+  INSERT INTO public.auditoria_vecinal (
+    actor_auth_user_id, perfil_id, unidad_id, accion, resultado
+  ) VALUES (
+    v_actor, v_profile_id, v_unit_id, 'invitacion_revocada', 'exito'
+  );
+
+  RETURN true;
+END;
+$;
+
 CREATE FUNCTION public.solicitar_ingreso_vecinal(p_token text)
 RETURNS uuid
 LANGUAGE plpgsql
@@ -702,7 +754,7 @@ REVOKE ALL ON FUNCTION public.inicializar_titular_vecinal(uuid, uuid, text)
   FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.emitir_invitacion_vecinal(uuid, integer)
   FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.solicitar_ingreso_vecinal(text)
+REVOKE ALL ON FUNCTION public.revocar_invitacion_vecinal(uuid)\n  FROM PUBLIC, anon;\nREVOKE ALL ON FUNCTION public.solicitar_ingreso_vecinal(text)
   FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.aprobar_ingreso_vecinal(uuid)
   FROM PUBLIC, anon;
@@ -719,7 +771,7 @@ GRANT EXECUTE ON FUNCTION public.inicializar_titular_vecinal(uuid, uuid, text)
   TO service_role;
 GRANT EXECUTE ON FUNCTION public.emitir_invitacion_vecinal(uuid, integer)
   TO authenticated;
-GRANT EXECUTE ON FUNCTION public.solicitar_ingreso_vecinal(text)
+GRANT EXECUTE ON FUNCTION public.revocar_invitacion_vecinal(uuid)\n  TO authenticated;\nGRANT EXECUTE ON FUNCTION public.solicitar_ingreso_vecinal(text)
   TO authenticated;
 GRANT EXECUTE ON FUNCTION public.aprobar_ingreso_vecinal(uuid)
   TO authenticated;
