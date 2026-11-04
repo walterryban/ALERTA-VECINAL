@@ -70,3 +70,7 @@ El QR solo debe abrir VIGIARED o una pantalla de invitación. Nunca debe contene
 | Registro histórico en `vecinos` | No obtiene permisos por sí mismo |
 
 **Importante:** el SQL no fue ejecutado ni probado contra PostgreSQL. La migración tiene preflight para detenerse si detecta tablas de identidad existentes o faltan las tablas base. Aun así, necesita revisión y ensayo en un proyecto aislado antes de cualquier aplicación.
+
+## Estado de revisión adicional
+
+Se reforzó el borrador para impedir el canje de invitaciones en unidades/establecimientos suspendidos y para exigir perfil activo al rechazar solicitudes. La matriz completa está en `docs/pruebas-identidad-vecinal-v0.2.md`. Los cambios siguen sin ejecución ni validación en PostgreSQL.
