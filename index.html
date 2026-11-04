@@ -80,8 +80,9 @@
   <script>
     const params = new URLSearchParams(location.search);
     const neighborLink = document.getElementById('neighborLink');
-    const query = params.toString();
-    if (query) neighborLink.href = '/terminal.html?' + query;
+    const manzana = params.get('manzana');
+    // Solo se conserva la manzana. Nunca reenviar PIN u otros datos en el enlace público.
+    if (manzana) neighborLink.href = '/terminal.html?manzana=' + encodeURIComponent(manzana);
   </script>
 </body>
 </html>
