@@ -153,3 +153,9 @@ Se incorporó el borrador `docs/migracion-identidad-vecinal-v0.2-borrador.sql` y
 Los borradores v0.1 de identidad, invitación y aprobación quedaron marcados como supersedidos. Se agregó una revisión estática en `docs/revision-seguridad-identidad-vecinal-v0.2.md`. Se corrigieron hallazgos de sintaxis y controles de perfil/autoaprobación durante la revisión.
 
 **Límite actual:** no se ejecutó ni compiló el SQL en PostgreSQL; no existe todavía un proyecto Supabase aislado. No conectar las RPC a la terminal. Tampoco hay un runner de pruebas de aplicación identificado en la raíz del repositorio (no se encontró `package.json`). El siguiente paso es preparar un entorno aislado y probar migración, permisos y concurrencia antes de integrar frontend.
+
+### Avance de pruebas de identidad v0.2
+
+Se incorporó `docs/pruebas-identidad-vecinal-v0.2.md` con 28 casos funcionales, 7 escenarios de concurrencia y 8 verificaciones de privilegios/SECURITY DEFINER. La revisión estática también reforzó el canje para unidades activas y el rechazo por titulares con perfil activo.
+
+**Estado:** casos documentados, no ejecutados. Sigue bloqueado cualquier ensayo de escritura hasta contar con proyecto Supabase aislado. La Preview actual comparte la base existente.
