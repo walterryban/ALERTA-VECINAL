@@ -82,3 +82,21 @@ Este documento y el SQL asociado son especificación/borrador. No se crearon cue
 - `index.html`: agrega acceso a la administración institucional, que exige sesión y rol autorizado.
 
 Estos componentes requieren aplicar las migraciones RBAC v0.1 y v0.2 y desplegar la Edge Function en un proyecto de pruebas. No se crearon cuentas ni invitaciones. El COM operativo aún conserva las políticas heredadas; el aislamiento multi-municipal de alertas y manzanas sigue siendo una fase pendiente y obligatoria.
+
+
+## Aislamiento de datos y consola (borrador v0.3)
+
+Se agregó `docs/migracion-rbac-plataforma-municipios-v0.3-borrador.sql`. Retira las políticas heredadas globales `op_alertas_select`, `op_alertas_update` y `op_manzanas_all`, y propone políticas por organización:
+- Propietario: lectura global de alertas/manzanas y gestión global permitida.
+- Administrador municipal: lectura/gestión de manzanas de su organización y gestión operativa de alertas propias.
+- Supervisor: lectura y actualización operativa de alertas propias.
+- Operador: lectura y actualización operativa de alertas propias.
+- Auditor: solo lectura de alertas/manzanas propias.
+
+La consola COM consulta el contexto RBAC, filtra por RLS, oculta acciones de escritura a auditores y asocia cada manzana nueva a una organización. Las manzanas/alertas ficticias existentes no se asignan automáticamente a ningún municipio.
+
+La política de alertas enlaza temporalmente por `alertas.manzana = manzanas.nombre_manzana`; antes de escalar a múltiples municipios se debe migrar a una FK `alertas.manzana_id` y validar que el nombre siga siendo único globalmente.
+
+## Advertencia de transición
+
+La compatibilidad con `es_operador()` solo se usa si la RPC nueva `obtener_contexto_administrativo()` todavía no existe (entorno previo a migraciones). Una vez instalada la nueva arquitectura, una cuenta presente únicamente en `public.operadores` ya no obtiene acceso: debe recibir una membresía municipal explícita. No convertir automáticamente los dos correos heredados.
