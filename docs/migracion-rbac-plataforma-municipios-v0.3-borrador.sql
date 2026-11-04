@@ -45,6 +45,12 @@ DROP POLICY IF EXISTS op_alertas_select ON public.alertas;
 DROP POLICY IF EXISTS op_alertas_update ON public.alertas;
 DROP POLICY IF EXISTS op_manzanas_all ON public.manzanas;
 
+DROP POLICY IF EXISTS rbac_alertas_select ON public.alertas;
+DROP POLICY IF EXISTS rbac_alertas_update ON public.alertas;
+DROP POLICY IF EXISTS rbac_manzanas_select ON public.manzanas;
+DROP POLICY IF EXISTS rbac_manzanas_insert ON public.manzanas;
+DROP POLICY IF EXISTS rbac_manzanas_update ON public.manzanas;
+
 -- ALERTAS: propietario global; los perfiles municipales solo ven alertas
 -- cuya manzana pertenece a una organización donde tienen membresía activa.
 CREATE POLICY rbac_alertas_select
