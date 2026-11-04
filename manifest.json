@@ -1,10 +1,12 @@
 {
   "name": "Alerta Vecinal Pro",
   "short_name": "Alerta Pro",
-  "start_url": "/terminal.html",
+  "description": "Plataforma de seguridad comunitaria y monitoreo municipal",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#d32f2f",
+  "background_color": "#081426",
+  "theme_color": "#081426",
   "orientation": "portrait",
   "icons": [
     {
