@@ -173,3 +173,18 @@ Se incorporó `docs/revision-alertas-com-v0.2.md` con auditoría estática del C
 - Se definieron 26 casos de prueba para creación, autorización, privacidad, outbox, concurrencia, push y COM.
 
 **Estado:** auditoría y requisitos documentados; no se modificó el flujo de alertas, no se creó una RPC/worker y no se ejecutó SQL. La pestaña de manzanas y la consulta de alertas deben considerarse heredadas/no listas para habilitar usuarios reales hasta que el backend imponga el alcance por organización.
+
+
+### Diseño backend de alertas v0.2 (2026-11-04)
+
+Se agregó `docs/diseno-backend-alertas-v0.2.md`, especificación previa al SQL con:
+- Contrato de creación autenticada e idempotente; contexto y destinatarios derivados del servidor.
+- Transacción única para alerta, difusión, entregas y auditoría.
+- Outbox durable con lease, `SKIP LOCKED`, revalidación de membresía y reintentos.
+- DTOs COM acotados por organización, detalle sensible separado y transiciones de estado auditadas.
+- Privilegios/RLS, antiabuso, privacidad de ubicación y separación de datos médicos.
+- 14 pruebas adicionales AL-27 a AL-40.
+
+**Bloqueo detectado:** el borrador de red relaciona establecimientos con manzanas, mientras el RBAC requiere una relación canónica manzana-organización. Debe verificarse cardinalidad y fuente de verdad antes del SQL final. También debe decidirse si se conserva `public.alertas` como almacenamiento operativo o se migra a una tabla privada nueva; no se crearán dos fuentes de verdad.
+
+**Estado:** solo diseño y documentación. Sin DDL nuevo, sin cambios de frontend, sin SQL ejecutado, sin worker desplegado y sin notificaciones activadas.
