@@ -247,7 +247,18 @@
           fecha_hora: new Date().toISOString()
         };
 
-        const { error } = await db.from('alertas').insert(payload);
+        const { error } = await db.rpc('crear_alerta', {
+          p_manzana: vecinoActual.manzana,
+          p_pin: $('pin').value.trim(),
+          p_tipo: payload.tipo_alerta,
+          p_nombre: payload.nombre,
+          p_telefono: payload.telefono,
+          p_ficha: payload.ficha_medica,
+          p_direccion: payload.direccion,
+          p_lat: payload.latitud,
+          p_lng: payload.longitud,
+          p_maps: payload.maps_link
+        });
         if (error) throw error;
         setStatus('sosStatus', '✅ Alerta enviada al Centro de Monitoreo.');
         alert('Alerta enviada al Centro de Monitoreo.');
