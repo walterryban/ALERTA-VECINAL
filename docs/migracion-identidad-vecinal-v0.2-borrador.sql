@@ -498,6 +498,17 @@ BEGIN
     RAISE EXCEPTION 'Invitación inválida o vencida' USING ERRCODE = '22023';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.unidades AS un
+    JOIN public.establecimientos AS es ON es.id = un.establecimiento_id
+    WHERE un.id = v_inv.unidad_id
+      AND un.estado = 'activo'
+      AND es.estado = 'activo'
+  ) THEN
+    RAISE EXCEPTION 'La unidad no está disponible' USING ERRCODE = '42501';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM public.membresias_vecinales AS m
     WHERE m.perfil_id = v_profile_id
@@ -624,20 +635,25 @@ DECLARE
   v_profile_id uuid;
   v_unit_id uuid;
 BEGIN
+  IF v_actor IS NULL OR p_solicitud_id IS NULL THEN
+    RAISE EXCEPTION 'Sesión o solicitud inválida' USING ERRCODE = '42501';
+  END IF;
+
   SELECT s.perfil_id, s.unidad_id
   INTO v_profile_id, v_unit_id
   FROM public.solicitudes_ingreso_vecinales AS s
   WHERE s.id = p_solicitud_id AND s.estado = 'pendiente'
   FOR UPDATE;
 
-  IF v_actor IS NULL OR NOT FOUND THEN
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'Solicitud no disponible' USING ERRCODE = '42501';
   END IF;
 
   IF NOT EXISTS (
     SELECT 1 FROM public.membresias_vecinales AS m
     JOIN public.perfiles_vecinales AS p ON p.id = m.perfil_id
-    WHERE p.auth_user_id = v_actor AND m.unidad_id = v_unit_id
+    WHERE p.auth_user_id = v_actor AND p.estado = 'activo'
+      AND m.unidad_id = v_unit_id
       AND m.rol = 'titular' AND m.estado = 'activa'
   ) THEN
     RAISE EXCEPTION 'No autorizado para esta unidad' USING ERRCODE = '42501';
