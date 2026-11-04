@@ -48,20 +48,41 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "JSON inválido" }, 400); }
   const action = String(body.action ?? "");
-  const organizationId = String(body.organization_id ?? "");
-  if (!organizationId) return json({ error: "Falta organization_id" }, 400);
 
   const { data: context, error: contextError } = await caller.rpc("obtener_contexto_administrativo");
   if (contextError || !context) {
     return json({ error: "No se pudo verificar el perfil administrativo. Compruebe las migraciones RBAC." }, 403);
   }
   const organizations = Array.isArray(context.organizaciones) ? context.organizaciones : [];
+
+  if (action === "create_organization") {
+    if (context.es_propietario !== true) return json({ error: "Solo el propietario de la plataforma puede crear organizaciones." }, 403);
+    const name = String(body.name ?? "").trim();
+    const code = String(body.code ?? "").trim().toLowerCase();
+    if (name.length < 3 || name.length > 120) return json({ error: "El nombre debe tener entre 3 y 120 caracteres." }, 400);
+    if (!/^[a-z0-9][a-z0-9-]{1,39}$/.test(code)) return json({ error: "El código debe tener entre 2 y 40 caracteres: letras minúsculas, números y guiones." }, 400);
+    const { data: created, error: createError } = await admin.from("organizaciones_municipales")
+      .insert({ nombre: name, codigo: code, estado: "activa" })
+      .select("id,nombre,codigo,estado").single();
+    if (createError || !created) return json({ error: createError?.code === "23505" ? "Ese código de organización ya existe." : "No se pudo crear la organización." }, 409);
+    const { error: auditError } = await admin.from("auditoria_administrativa").insert({
+      organizacion_id: created.id, actor_auth_user_id: actorId,
+      accion: "organizacion_creada", detalle: { nombre: name, codigo: code },
+    });
+    return json({ ok: true, organization: created, warning: auditError ? "Organización creada; falló el asiento de auditoría y requiere revisión." : undefined });
+  }
+
+  const organizationId = String(body.organization_id ?? "");
+  if (!organizationId) return json({ error: "Falta organization_id" }, 400);
   const organization = organizations.find((item: Record<string, unknown>) => item.id === organizationId);
   if (!organization || organization.estado !== "activa") {
     return json({ error: "No tiene acceso a esa organización o no está activa." }, 403);
   }
 
   if (action === "list") {
+    if (context.es_propietario !== true && organization.rol !== "administrador_municipal") {
+      return json({ error: "Solo el administrador municipal puede consultar la gestión de operadores." }, 403);
+    }
     const { data, error } = await admin.from("membresias_municipales")
       .select("id, organizacion_id, auth_user_id, email, rol, estado, creada_at, actualizada_at")
       .eq("organizacion_id", organizationId)
