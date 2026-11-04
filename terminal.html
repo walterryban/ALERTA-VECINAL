@@ -2,296 +2,80 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#081426">
-  <meta name="description" content="Terminal ciudadana de VIGIARED.">
+  <meta name="description" content="Acceso individual a VIGIARED.">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <title>VIGIARED — Acceso Vecinal</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --red:#dc2626; --bg:#0f172a; --card:#1e293b; --text:#f8fafc; --muted:#cbd5e1; --line:#475569; --blue:#38bdf8; }
-    * { box-sizing:border-box; }
-    body { margin:0; padding:16px; min-height:100vh; display:flex; justify-content:center; align-items:flex-start; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,sans-serif; }
-    .container { width:100%; max-width:480px; display:grid; gap:16px; }
-    header { text-align:center; padding:8px 0; }
-    h1 { margin:0 0 6px; color:#f87171; font-size:1.45rem; }
-    header p { margin:0; color:#94a3b8; font-size:.9rem; }
-    .card { background:var(--card); border:1px solid #334155; border-radius:14px; padding:18px; }
-    h2 { margin:0 0 14px; font-size:1.05rem; }
-    .group { display:grid; gap:6px; margin-bottom:13px; }
-    label { font-size:.82rem; font-weight:650; color:var(--muted); }
-    input,select { width:100%; padding:12px; color:white; background:#0f172a; border:1px solid var(--line); border-radius:9px; font:inherit; }
-    input:focus,select:focus { outline:2px solid var(--blue); outline-offset:1px; }
-    button { font:inherit; cursor:pointer; }
-    .primary { width:100%; border:0; border-radius:9px; padding:13px; background:var(--blue); color:#082f49; font-weight:800; }
-    .primary:disabled { opacity:.6; cursor:wait; }
-    .hint { font-size:.78rem; color:#94a3b8; line-height:1.45; }
-    .legal { display:flex; gap:9px; align-items:flex-start; margin:12px 0; color:#cbd5e1; font-size:.78rem; line-height:1.4; }
-    .legal input { width:auto; margin-top:3px; }
-    #sosSection { display:none; text-align:center; }
-    #sosSection select { margin:12px 0; }
-    .sos { position:relative; overflow:hidden; width:190px; height:190px; border-radius:50%; border:5px solid #fca5a5; background:radial-gradient(circle,#ef4444,#991b1b); color:white; box-shadow:0 0 24px #ef444455; font-weight:900; font-size:1.8rem; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:18px auto 8px; user-select:none; touch-action:none; }
-    .sos small { font-size:.7rem; font-weight:600; margin-top:6px; }
-    .progress { position:absolute; bottom:0; left:0; width:100%; height:0; background:#ffffff55; pointer-events:none; }
-    .secondary { background:transparent; color:#cbd5e1; border:1px solid var(--line); border-radius:8px; padding:9px 12px; margin-top:10px; }
-    .status { min-height:1.3em; color:#bae6fd; font-size:.85rem; margin-top:10px; white-space:pre-wrap; }
-    .footer { text-align:center; color:#64748b; font-size:.75rem; padding-bottom:12px; }
-    body { background:radial-gradient(ellipse at 50% -12%,#1d4265 0,transparent 48%),#081426; padding:clamp(12px,3vw,24px); }
-    .container { max-width:500px; gap:18px; }
-    header { padding:12px 8px 18px; }
-    h1 { color:#ff7584; font-size:clamp(1.35rem,5vw,1.7rem); letter-spacing:.025em; }
-    header p { color:#a9bbd0; letter-spacing:.02em; }
-    .card { background:linear-gradient(150deg,#142b49,#0f2038); border:1px solid #35516f; border-radius:20px; padding:clamp(18px,5vw,24px); box-shadow:0 18px 48px #0004; }
-    h2 { color:#f7fbff; font-size:1.08rem; letter-spacing:.01em; }
-    label { color:#d2e0ee; }
-    input,select { background:#08182b; border:1px solid #3b5877; border-radius:11px; min-height:46px; }
-    input:focus,select:focus { outline:2px solid #58d5f5; border-color:#58d5f5; }
-    .primary { background:linear-gradient(100deg,#62dcf5,#39b8e7); border-radius:11px; min-height:48px; box-shadow:0 8px 22px #38bdf833; }
-    .primary:hover:not(:disabled) { filter:brightness(1.06); transform:translateY(-1px); }
-    .hint { color:#a9bbd0; }
-    .legal { color:#c8d7e6; }
-    .sos { border-color:#ffb3bb; box-shadow:0 0 0 8px #ef44441a,0 0 34px #ef444455; }
-    .secondary { border-color:#55718f; border-radius:10px; }
-    .status { background:#07182a99; border:1px solid #2e4a67; border-radius:10px; padding:9px 11px; color:#b9efff; }
-    .footer { color:#8298b2; letter-spacing:.02em; }
-    @media (max-width:380px) { .sos { width:164px; height:164px; } }
-
+    :root{color-scheme:dark;--bg:#081426;--panel:#10233c;--panel2:#0b1c31;--line:#294663;--text:#f3f8ff;--muted:#a8bad0;--cyan:#58d5f5;--blue:#2466b1;--red:#ef6675}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px 16px;display:grid;place-items:center;background:radial-gradient(ellipse at 50% -10%,#1e4c72 0,transparent 48%),var(--bg);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text)}
+    main{width:min(100%,510px);display:grid;gap:16px}.brand{text-align:center;padding:12px}.shield{width:54px;height:54px;margin:0 auto 10px;border:1px solid #4d8db6;border-radius:17px;display:grid;place-items:center;background:#123454;font-size:28px}.brand h1{margin:0;font-size:1.8rem;letter-spacing:.08em}.brand p{margin:7px 0 0;color:var(--muted)}
+    .card{padding:22px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(150deg,#142d49,#0e2037);box-shadow:0 18px 50px #0005}.eyebrow{color:var(--cyan);font-size:.72rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.card h2{margin:7px 0 6px;font-size:1.25rem}.sub{margin:0 0 18px;color:var(--muted);font-size:.9rem;line-height:1.5}
+    .field{display:grid;gap:7px;margin:13px 0}.field label{font-size:.82rem;font-weight:700;color:#d7e5f4}.field input{width:100%;min-height:48px;padding:12px 13px;border-radius:11px;border:1px solid #3b5877;background:#07182a;color:white;font:inherit}.field input:focus{outline:2px solid var(--cyan);outline-offset:1px}
+    .actions{display:grid;gap:10px;margin-top:17px}.btn{min-height:48px;padding:12px 16px;border:0;border-radius:11px;font:inherit;font-weight:800}.btn.primary{background:linear-gradient(100deg,#62dcf5,#39b8e7);color:#08243a}.btn.secondary{background:#183653;border:1px solid #3b6487;color:#e8f5ff}.btn:disabled{opacity:.55;cursor:not-allowed}
+    .notice{display:flex;gap:11px;padding:13px;border-radius:12px;background:#102d48;border:1px solid #315b7b;color:#c5d8eb;font-size:.82rem;line-height:1.5}.notice strong{color:white}.notice .i{font-size:1.1rem}.divider{height:1px;background:var(--line);margin:19px 0}.small{font-size:.77rem;color:var(--muted);line-height:1.5}.status{min-height:1.2em;margin-top:12px;color:#aeeaff;font-size:.85rem;white-space:pre-wrap}.foot{text-align:center;color:#8097b2;font-size:.75rem;padding-bottom:8px}
+    @media(max-width:390px){.card{padding:18px}.brand h1{font-size:1.55rem}}
   </style>
 </head>
 <body>
-  <main class="container">
-    <header>
-      <h1>🛡️ VIGIARED</h1>
-      <p>Terminal ciudadana de emergencias</p>
-    </header>
+<main>
+  <header class="brand">
+    <div class="shield" aria-hidden="true">🛡️</div>
+    <h1>VIGIARED</h1>
+    <p>Tecnología que conecta y protege.</p>
+  </header>
 
-    <section class="card" id="registerSection">
-      <h2>Validación de vecino y manzana</h2>
-      <div class="group">
-        <label for="manzana">Manzana / zona</label>
-        <input id="manzana" autocomplete="organization" placeholder="Ej.: MANZANA A" required>
-      </div>
-      <div class="group">
-        <label for="pin">PIN autorizado de la manzana</label>
-        <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Ingrese el PIN" required>
-      </div>
-      <div class="group">
-        <label for="nombre">Nombre y apellido</label>
-        <input id="nombre" autocomplete="name" placeholder="Nombre completo" required>
-      </div>
-      <div class="group">
-        <label for="telefono">Teléfono</label>
-        <input id="telefono" type="tel" autocomplete="tel" placeholder="Número de contacto" required>
-      </div>
-      <div class="group">
-        <label for="direccion">Dirección / referencia (opcional)</label>
-        <input id="direccion" autocomplete="street-address" placeholder="Calle, altura, casa o lote">
-      </div>
-      <div class="group">
-        <label for="ficha">Ficha médica / alergias (opcional)</label>
-        <input id="ficha" placeholder="Solo información útil ante una emergencia">
-      </div>
-      <label class="legal">
-        <input id="consent" type="checkbox">
-        <span>Autorizo el uso de los datos ingresados para gestionar esta alerta de emergencia, de acuerdo con la normativa aplicable sobre datos personales.</span>
-      </label>
-      <button class="primary" id="validateBtn" type="button">Validar acceso</button>
-      <div class="status" id="registerStatus" role="status"></div>
-      <p class="hint">Si el acceso no se valida, confirme con el responsable del Centro de Monitoreo que el nombre de la manzana y el PIN sean correctos.</p>
-    </section>
+  <section class="card" aria-labelledby="accessTitle">
+    <div class="eyebrow">Red vecinal · acceso individual</div>
+    <h2 id="accessTitle">Tu cuenta, tu autorización</h2>
+    <p class="sub">Cada integrante tendrá su propia cuenta. El acceso a una vivienda, departamento, habitación o comercio se habilitará mediante una invitación y la aprobación de una persona autorizada.</p>
 
-    <section class="card" id="sosSection">
-      <h2 style="color:#f87171">Disparador de emergencia</h2>
-      <p class="hint">Elegí el tipo de emergencia y mantené presionado el botón SOS durante 3 segundos.</p>
-      <label for="tipo">Tipo de alerta</label>
-      <select id="tipo">
-        <option value="ROBO / INSEGURIDAD">🚨 Robo / inseguridad</option>
-        <option value="ACTIVIDAD SOSPECHOSA">👁️ Actividad sospechosa</option>
-        <option value="EMERGENCIA MÉDICA">🚑 Emergencia médica</option>
-        <option value="INCENDIO">🔥 Incendio</option>
-        <option value="COACCIÓN / SECUESTRO">⚠️ Coacción / secuestro</option>
-      </select>
-      <button class="sos" id="sosBtn" type="button" aria-label="Mantener presionado tres segundos para enviar una alerta">
-        <span>S.O.S</span><small>MANTENER 3 s</small><span class="progress" id="progress"></span>
-      </button>
-      <p class="hint">La alerta se enviará al Centro de Monitoreo. Si es posible, el sistema adjuntará la ubicación GPS.</p>
-      <div class="status" id="sosStatus" role="status"></div>
-      <button class="secondary" id="exitBtn" type="button">Salir / cambiar de datos</button>
-    </section>
-    <div class="footer">VIGIARED · Terminal ciudadana</div>
-  </main>
+    <div class="notice" role="status">
+      <span class="i">🔒</span>
+      <span><strong>Estamos preparando el nuevo acceso seguro.</strong><br>Esta versión de desarrollo ya no solicita ni valida PIN compartidos de manzana. El alta, la autenticación y las alertas todavía no están habilitadas para uso real.</span>
+    </div>
 
-  <script>
-    // Usa la clave pública/publishable de Supabase. Nunca coloques aquí una service_role key.
-    const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    <div class="divider"></div>
+    <div class="field">
+      <label for="email">Correo electrónico</label>
+      <input id="email" type="email" autocomplete="email" placeholder="tu correo">
+    </div>
+    <div class="field">
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Contraseña individual" disabled>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="loginBtn" type="button" disabled>Ingresar</button>
+      <button class="btn secondary" id="createBtn" type="button" disabled>Crear cuenta</button>
+    </div>
+    <p class="small">La conexión con Supabase Auth se habilitará cuando exista un proyecto de pruebas aislado y estén listas las funciones de identidad y membresía. No ingreses aquí contraseñas reales.</p>
 
-    const $ = (id) => document.getElementById(id);
-    let vecinoActual = null;
-    let pressTimer = null;
-    let progressTimer = null;
-    let pressStartedAt = 0;
-    let sending = false;
-    const HOLD_MS = 3000;
+    <div class="divider"></div>
+    <div class="eyebrow">¿Tenés una invitación?</div>
+    <div class="field">
+      <label for="invite">Código de invitación</label>
+      <input id="invite" type="text" autocomplete="off" placeholder="Código de un solo uso" disabled>
+    </div>
+    <button class="btn secondary" type="button" disabled>Solicitar incorporación</button>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </section>
 
-    function setStatus(id, message) { $(id).textContent = message || ''; }
-
-    $('validateBtn').addEventListener('click', validarAcceso);
-    $('exitBtn').addEventListener('click', () => {
-      cancelarPresion();
-      vecinoActual = null;
-      $('sosSection').style.display = 'none';
-      $('registerSection').style.display = 'block';
-      $('pin').value = '';
-      setStatus('registerStatus', '');
-      setStatus('sosStatus', '');
-    });
-
-    async function validarAcceso() {
-      const params = new URLSearchParams(location.search);
-      const manzana = ($('manzana').value || params.get('manzana') || '').trim();
-      $('manzana').value = manzana;
-      // El QR público nunca completa ni transporta el PIN de acceso.
-      const pin = $('pin').value.trim();
-      const nombre = $('nombre').value.trim();
-      const telefono = $('telefono').value.trim();
-      if (!manzana || !pin || !nombre || !telefono) {
-        setStatus('registerStatus', 'Completá manzana, PIN, nombre y teléfono.');
-        return;
-      }
-      if (!$('consent').checked) {
-        setStatus('registerStatus', 'Debés aceptar el uso de datos para continuar.');
-        return;
-      }
-
-      $('validateBtn').disabled = true;
-      setStatus('registerStatus', 'Verificando manzana y PIN…');
-      try {
-        // Validación mediante RPC SECURITY DEFINER: evita exigir SELECT
-        // directo sobre manzanas al visitante anónimo.
-        const { data, error } = await db.rpc('validar_acceso', {
-          p_manzana: manzana,
-          p_pin: pin
-        });
-
-        if (error) throw error;
-        if (!data || typeof data !== 'string') {
-          setStatus('registerStatus', 'Acceso no validado. Revisá el nombre de la manzana y el PIN.');
-          return;
-        }
-
-        vecinoActual = {
-          manzana: data,
-          nombre,
-          telefono,
-          direccion: $('direccion').value.trim(),
-          ficha: $('ficha').value.trim()
-        };
-        $('registerSection').style.display = 'none';
-        $('sosSection').style.display = 'block';
-        setStatus('sosStatus', 'Acceso validado para ' + data + '.');
-      } catch (err) {
-        console.error(err);
-        setStatus('registerStatus', 'No se pudo validar el acceso. Revisá la conexión y las políticas de acceso de Supabase.');
-      } finally {
-        $('validateBtn').disabled = false;
-      }
-    }
-
-    function comenzarPresion(event) {
-      if (!vecinoActual || sending) return;
-      event.preventDefault();
-      if (pressTimer) return;
-      pressStartedAt = Date.now();
-      $('progress').style.height = '0%';
-      progressTimer = setInterval(() => {
-        const pct = Math.min(100, ((Date.now() - pressStartedAt) / HOLD_MS) * 100);
-        $('progress').style.height = pct + '%';
-      }, 40);
-      pressTimer = setTimeout(() => {
-        cancelarPresion();
-        enviarAlerta();
-      }, HOLD_MS);
-    }
-
-    function cancelarPresion() {
-      if (pressTimer) clearTimeout(pressTimer);
-      if (progressTimer) clearInterval(progressTimer);
-      pressTimer = null;
-      progressTimer = null;
-      $('progress').style.height = '0%';
-    }
-
-    const sosBtn = $('sosBtn');
-    sosBtn.addEventListener('pointerdown', comenzarPresion);
-    sosBtn.addEventListener('pointerup', cancelarPresion);
-    sosBtn.addEventListener('pointerleave', cancelarPresion);
-    sosBtn.addEventListener('pointercancel', cancelarPresion);
-    sosBtn.addEventListener('contextmenu', (e) => e.preventDefault());
-
-    function obtenerGPS() {
-      return new Promise(resolve => {
-        if (!navigator.geolocation) return resolve(null);
-        navigator.geolocation.getCurrentPosition(
-          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          () => resolve(null),
-          { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
-        );
-      });
-    }
-
-    async function enviarAlerta() {
-      if (!vecinoActual || sending) return;
-      sending = true;
-      sosBtn.disabled = true;
-      setStatus('sosStatus', 'Enviando alerta al Centro de Monitoreo…');
-      try {
-        const gps = await obtenerGPS();
-        const mapsLink = gps
-          ? `https://www.google.com/maps?q=${gps.lat},${gps.lng}`
-          : (vecinoActual.direccion ? 'Dirección ingresada: ' + vecinoActual.direccion : null);
-
-        const payload = {
-          manzana: vecinoActual.manzana,
-          tipo_alerta: $('tipo').value,
-          vecino_nombre: vecinoActual.nombre,
-          vecino_telefono: vecinoActual.telefono,
-          ficha_medica: vecinoActual.ficha || null,
-          direccion: vecinoActual.direccion || null,
-          nombre: vecinoActual.nombre,
-          telefono: vecinoActual.telefono,
-          latitud: gps ? gps.lat : null,
-          longitud: gps ? gps.lng : null,
-          maps_link: mapsLink,
-          estado: 'PENDIENTE',
-          fecha_hora: new Date().toISOString()
-        };
-
-        const { error } = await db.rpc('crear_alerta', {
-          p_manzana: vecinoActual.manzana,
-          p_pin: $('pin').value.trim(),
-          p_tipo: payload.tipo_alerta,
-          p_nombre: payload.nombre,
-          p_telefono: payload.telefono,
-          p_ficha: payload.ficha_medica,
-          p_direccion: payload.direccion,
-          p_lat: payload.latitud,
-          p_lng: payload.longitud,
-          p_maps: payload.maps_link
-        });
-        if (error) throw error;
-        setStatus('sosStatus', '✅ Alerta enviada al Centro de Monitoreo.');
-        alert('Alerta enviada al Centro de Monitoreo.');
-      } catch (err) {
-        console.error(err);
-        setStatus('sosStatus', 'No se pudo enviar la alerta. Verificá la conexión o las políticas RLS de Supabase.');
-        alert('No se pudo enviar la alerta. El Centro de Monitoreo podría no haberla recibido.');
-      } finally {
-        sending = false;
-        sosBtn.disabled = false;
-      }
-    }
-  </script>
+  <section class="card">
+    <div class="eyebrow">Protección de la comunidad</div>
+    <h2>Una autorización por persona y unidad</h2>
+    <p class="sub" style="margin-bottom:0">Los integrantes de un mismo domicilio podrán tener cuentas independientes. En edificios, alquileres, hostels y comercios, cada departamento, habitación o local tendrá su propia autorización. Revocar a una persona no quitará el acceso a los demás.</p>
+  </section>
+  <footer class="foot">VIGIARED · Plataforma independiente · Módulo en desarrollo</footer>
+</main>
+<script>
+  // La autenticación y las RPC se mantienen deshabilitadas hasta contar con
+  // un proyecto Supabase aislado y migraciones revisadas. No se realizan
+  // llamadas a la base compartida ni se envían alertas desde esta pantalla.
+  const MODULE_READY = false;
+  document.getElementById('status').textContent = MODULE_READY
+    ? ''
+    : 'Acceso de prueba deshabilitado: falta completar y verificar el backend de identidad.';
+</script>
 </body>
 </html>
