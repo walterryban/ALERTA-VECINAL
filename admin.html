@@ -1,354 +1,346 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Alerta Vecinal Pro - Centro de Monitoreo</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-:root{color-scheme:dark;--bg:#0b1220;--panel:#142136;--line:#304158;--text:#e5edf8;--muted:#9fb0c8}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Arial,sans-serif}
-main{max-width:1450px;margin:auto;padding:22px}
-header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
-h1{font-size:clamp(22px,3vw,32px);margin:0}
-p{margin:8px 0}
-button{cursor:pointer;padding:10px 13px;border:1px solid #475569;border-radius:8px;background:#263750;color:white;font-weight:bold}
-button:disabled{opacity:.5;cursor:default}
-button:hover:not(:disabled){filter:brightness(1.2)}
-.blue{background:#075985;border-color:#0284c7}
-.green{background:#166534;border-color:#22c55e}
-.red{background:#7f1d1d;border-color:#ef4444}
-.toolbar,.statusbar,.actions{display:flex;flex-wrap:wrap;gap:8px}
-.statusbar{margin:20px 0}
-.pill{border:1px solid var(--line);background:var(--panel);padding:8px 12px;border-radius:20px;color:#cbd5e1}
-.notice{padding:12px 14px;background:#17243a;border:1px solid var(--line);border-radius:9px;margin:15px 0}
-.warning{background:#3a250b;border-color:#d97706}
-.tablebox{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
-table{width:100%;min-width:950px;border-collapse:collapse}
-th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
-th{background:#1c2b42;color:#cbd5e1;font-size:12px;text-transform:uppercase}
-tbody tr:hover{background:#1b2a40}
-.muted{font-size:12px;color:var(--muted)}
-.badge{display:inline-block;padding:4px 8px;border-radius:20px;font-size:12px;font-weight:bold;background:#7f1d1d;color:#fee2e2}
-.badge.att{background:#78350f;color:#fef3c7}
-.badge.done{background:#14532d;color:#dcfce7}
-.actions{margin-top:8px}
-.small{font-size:12px;padding:7px 9px}
-.empty{text-align:center;padding:28px;color:var(--muted)}
-footer{text-align:center;color:#64748b;padding:22px}
-#modal{display:none;position:fixed;z-index:10;inset:0;background:#000c;align-items:center;justify-content:center;padding:15px}
-#modal.open{display:flex}
-.modalbox{width:min(620px,100%);max-height:90vh;overflow:auto;background:#142136;border:1px solid #64748b;border-radius:15px;padding:22px;box-shadow:0 20px 80px #0009}
-.modalbox h2{color:#fca5a5;margin-top:0}
-.modalbox p{overflow-wrap:anywhere}
-#main.flash{animation:flash 1s infinite}
-@keyframes flash{50%{box-shadow:inset 0 0 0 6px #ef444455}}
-a{color:#7dd3fc}
-@media(max-width:600px){main{padding:12px}.toolbar button{flex:1}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alerta Vecinal Pro — Centro de Monitoreo Municipal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #090d16; --card: #111827; --accent: #38bdf8;
+      --danger: #ef4444; --warning: #f59e0b; --success: #22c55e; --text: #f3f4f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    /* LOGIN */
+    #login-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(9, 13, 22, 0.95); display: flex; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .login-card {
+      background: var(--card); padding: 32px; border-radius: 12px; border: 1px solid #1f2937;
+      width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .login-card h2 { color: var(--danger); margin-bottom: 8px; font-size: 1.4rem; }
+    .login-card p { color: #9ca3af; font-size: 0.85rem; margin-bottom: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; text-align: left; margin-bottom: 14px; }
+    label { font-size: 0.8rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
+    input, select { background: #1f2937; border: 1px solid #374151; color: #fff; padding: 10px; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    input:focus, select:focus { border-color: var(--accent); }
+    .btn-primary { background: var(--accent); color: #000; font-weight: bold; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; transition: 0.2s; }
+    .btn-primary:hover { opacity: 0.8; }
+    
+    /* DASHBOARD */
+    header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #1f2937; margin-bottom: 24px; }
+    .header-title h1 { font-size: 1.6rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .header-title p { color: #9ca3af; font-size: 0.9rem; }
+    .btn-logout { background: #374151; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    
+    /* TABS */
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #1f2937; }
+    .tab-btn { background: transparent; color: #9ca3af; border: none; padding: 10px 20px; font-size: 1rem; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* TABLAS */
+    .table-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #1f2937; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    th { background: #1f2937; padding: 14px; color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+    td { padding: 14px; border-bottom: 1px solid #1f2937; vertical-align: middle; }
+    
+    tr.coaccion-row {
+      background: rgba(239, 68, 68, 0.25) !important; border-left: 6px solid #ef4444;
+      animation: flashCoaccion 1.5s infinite alternate;
+    }
+    @keyframes flashCoaccion { from { background: rgba(239, 68, 68, 0.15); } to { background: rgba(239, 68, 68, 0.4); } }
+
+    .badge { padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; display: inline-block; }
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; }
+    .badge-coaccion { background: #ef4444; color: #fff; border: 1px solid #f87171; font-weight: 900; letter-spacing: 1px; }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid #f59e0b; }
+    .badge-success { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid #22c55e; }
+    
+    /* FORMULARIO MANZANAS */
+    .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #1f2937; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+    .card-form .form-group { margin-bottom: 0; flex: 1; min-width: 200px; }
+    .btn-success { background: var(--success); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-success:hover { background: #16a34a; }
+  </style>
 </head>
 <body>
-<main id="main">
-<header>
-  <div>
-    <h1>🚨 ALERTA VECINAL PRO</h1>
-    <p class="muted">Centro de Monitoreo · Panel de administración</p>
+
+<!-- LOGIN -->
+<div id="login-overlay">
+  <div class="login-card">
+    <h2>CENTRO DE MONITOREO</h2>
+    <p>Ingrese credenciales de operador autorizado</p>
+    <div class="form-group">
+      <label>Correo Institucional</label>
+      <input type="email" id="loginEmail" placeholder="operador@sanluis.gob.ar" />
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" />
+    </div>
+    <button class="btn-primary" onclick="iniciarSesion()">Ingresar a la Consola</button>
   </div>
-  <div class="toolbar">
-    <button class="blue" id="audioBtn">🔊 Activar sonido</button>
-    <button id="testBtn">Probar sirena</button>
-    <button id="refreshBtn">↻ Actualizar</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="container" id="app-dashboard" style="display:none;">
+  <header>
+    <div class="header-title">
+      <h1>🚨 Alerta Vecinal Pro — Consola COM</h1>
+      <p>Centro de Operaciones y Monitoreo Municipal | San Luis / Villa Mercedes</p>
+    </div>
+    <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+  </header>
+
+  <!-- PESTAÑAS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="cambiarPestana('alertas', this)">🚨 Alertas en Vivo</button>
+    <button class="tab-btn" onclick="cambiarPestana('manzanas', this)">🗺️ Gestión de Manzanas</button>
   </div>
-</header>
 
-<div class="statusbar">
-  <span class="pill">Conexión: <strong id="connection">Conectando…</strong></span>
-  <span class="pill">Última consulta: <strong id="lastUpdate">—</strong></span>
-  <span class="pill">Alertas: <strong id="count">0</strong></span>
-</div>
-
-<div class="notice" id="notice">
-  Para escuchar las emergencias, pulsá «Activar sonido» una vez.
-</div>
-
-<div class="tablebox">
-<table>
-<thead><tr>
-  <th>Fecha y hora</th><th>Manzana / zona</th><th>Tipo de alerta</th>
-  <th>Vecino / contacto</th><th>Ficha médica</th><th>Estado / acciones</th>
-</tr></thead>
-<tbody id="tablaAlertasBody">
-<tr><td colspan="6" class="empty">Cargando alertas…</td></tr>
-</tbody>
-</table>
-</div>
-<p class="muted">Las alertas se actualizan automáticamente. Mantené esta pestaña abierta.</p>
-<footer>Alerta Vecinal Pro · Centro de Monitoreo</footer>
-</main>
-
-<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-<div class="modalbox">
-  <h2 id="modalTitle">🚨 NUEVA ALERTA</h2>
-  <div id="modalDetails"></div>
-  <div class="toolbar">
-    <button class="blue" id="modalAudio">🔊 Activar sonido</button>
-    <button id="closeModal">Cerrar aviso</button>
+  <!-- CONTENIDO: ALERTAS -->
+  <div id="tab-alertas" class="tab-content active">
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha / Hora</th>
+            <th>Manzana</th>
+            <th>Tipo Alerta</th>
+            <th>Vecino / Teléfono</th>
+            <th>Domicilio / GPS</th>
+            <th>Ficha Médica</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaAlertasBody">
+          <tr><td colspan="8" style="text-align:center; color:#9ca3af;">Cargando eventos en tiempo real...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-  <p class="muted">Cerrar este aviso no resuelve la emergencia. Usá los botones de la tabla para cambiar su estado.</p>
-</div>
+
+  <!-- CONTENIDO: MANZANAS -->
+  <div id="tab-manzanas" class="tab-content">
+    <div class="card-form">
+      <div class="form-group">
+        <label>Nombre de la Manzana / Zona</label>
+        <input type="text" id="nuevaManzanaNombre" placeholder="Ej: MANZANA B" />
+      </div>
+      <div class="form-group">
+        <label>PIN de Acceso</label>
+        <input type="text" id="nuevaManzanaPin" placeholder="Ej: 5678" maxlength="10" />
+      </div>
+      <button class="btn-success" onclick="agregarManzana()">➕ Crear Manzana</button>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre de Manzana</th>
+            <th>PIN Autorizado</th>
+            <th>Fecha de Creación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaManzanasBody">
+          <tr><td colspan="5" style="text-align:center; color:#9ca3af;">Cargando manzanas...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script>
-const SUPABASE_URL = 'https://wwirxlwgsswkzqiwqkux.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB';
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const $ = id => document.getElementById(id);
-let audioContext = null;
-let audioReady = false;
-let sirenTimer = null;
-let channel = null;
-let firstLoad = true;
-let loading = false;
-let knownIds = new Set();
+  // LOGIN
+  window.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) mostrarDashboard();
+  });
 
-function esc(value) {
-  return String(value ?? '').replace(/[&<>"']/g, c => ({
-    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
-  })[c]);
-}
-function dateOf(a) { return a.fecha_hora || a.created_at || a.fecha || null; }
-function zoneOf(a) { return a.manzana || a.nombre_manzana || a.zona || '—'; }
-function typeOf(a) { return a.tipo_alerta || a.tipo || 'ALERTA'; }
-function nameOf(a) { return a.vecino_nombre || a.nombre || 'Sin nombre'; }
-function phoneOf(a) { return a.vecino_telefono || a.telefono || 'Sin teléfono'; }
-function statusOf(a) {
-  const s = String(a.estado || 'PENDIENTE').toUpperCase();
-  if (s.includes('RESUEL')) return 'RESUELTA';
-  if (s.includes('ATEN')) return 'EN ATENCIÓN';
-  return s;
-}
-function dateText(value) {
-  if (!value) return '—';
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString('es-AR');
-}
+  async function iniciarSesion() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    if (!email || !password) { alert("Ingrese correo y contraseña."); return; }
 
-async function enableAudio() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) throw new Error('El navegador no admite audio web.');
-    if (!audioContext) audioContext = new AudioCtx();
-    if (audioContext.state !== 'running') await audioContext.resume();
-    audioReady = true;
-    $('audioBtn').textContent = '🔊 Sonido activado';
-    $('notice').textContent = 'Sonido habilitado. Esta pestaña puede reproducir avisos.';
-    $('notice').classList.remove('warning');
-    tone(740, .18, .12);
-  } catch (e) {
-    console.error(e);
-    alert('No se pudo activar el sonido. Revisá el volumen y los permisos del navegador.');
-  }
-}
-
-function tone(freq, duration, volume) {
-  if (!audioContext || audioContext.state !== 'running') return;
-  const osc = audioContext.createOscillator();
-  const gain = audioContext.createGain();
-  osc.type = 'sawtooth';
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(.0001, audioContext.currentTime);
-  gain.gain.exponentialRampToValueAtTime(volume, audioContext.currentTime + .02);
-  gain.gain.exponentialRampToValueAtTime(.0001, audioContext.currentTime + duration);
-  osc.connect(gain);
-  gain.connect(audioContext.destination);
-  osc.start();
-  osc.stop(audioContext.currentTime + duration + .03);
-}
-
-function stopSiren() {
-  if (sirenTimer) clearInterval(sirenTimer);
-  sirenTimer = null;
-}
-
-function siren() {
-  if (!audioReady || !audioContext || audioContext.state !== 'running') {
-    $('notice').textContent = 'Nueva alerta recibida. Pulsá «Activar sonido» para habilitar la sirena.';
-    $('notice').classList.add('warning');
-    return;
-  }
-  stopSiren();
-  const tones = [880,660,990,660,880,660];
-  let step = 0;
-  tone(tones[0], .32, .22);
-  sirenTimer = setInterval(() => {
-    step++;
-    if (step >= 12) { stopSiren(); return; }
-    tone(tones[step % tones.length], .32, .22);
-  }, 380);
-}
-
-function showModal(a) {
-  $('modalDetails').innerHTML = `
-    <p><strong>Tipo:</strong> ${esc(typeOf(a))}</p>
-    <p><strong>Zona:</strong> ${esc(zoneOf(a))}</p>
-    <p><strong>Vecino:</strong> ${esc(nameOf(a))}</p>
-    <p><strong>Teléfono:</strong> ${esc(phoneOf(a))}</p>
-    <p><strong>Fecha:</strong> ${esc(dateText(dateOf(a)))}</p>
-    ${a.direccion ? `<p><strong>Dirección:</strong> ${esc(a.direccion)}</p>` : ''}
-    ${a.ficha_medica ? `<p><strong>Ficha médica:</strong> ${esc(a.ficha_medica)}</p>` : ''}
-    ${a.maps_link ? `<p><a href="${esc(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Abrir ubicación</a></p>` : ''}
-  `;
-  $('modal').classList.add('open');
-  $('main').classList.add('flash');
-  siren();
-}
-
-function closeModal() {
-  $('modal').classList.remove('open');
-  $('main').classList.remove('flash');
-  stopSiren();
-}
-
-function drawAlerts(alerts) {
-  $('count').textContent = alerts.length;
-  if (!alerts.length) {
-    $('tablaAlertasBody').innerHTML =
-      '<tr><td colspan="6" class="empty">Todavía no hay alertas registradas.</td></tr>';
-    return;
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) alert("Acceso denegado: " + error.message);
+    else mostrarDashboard();
   }
 
-  $('tablaAlertasBody').innerHTML = alerts.map(a => {
-    const id = a.id;
-    const state = statusOf(a);
-    const stateClass = state === 'RESUELTA' ? 'done' :
-      state === 'EN ATENCIÓN' ? 'att' : '';
-    const location = a.maps_link
-      ? `<br><a href="${esc(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Ubicación</a>` : '';
-    const actions = id == null ? '<span class="muted">Sin ID</span>' : `
-      <div class="actions">
-        <button class="small blue" data-action="atender" data-id="${esc(id)}"
-          ${state === 'RESUELTA' || state === 'EN ATENCIÓN' ? 'disabled' : ''}>Atender</button>
-        <button class="small green" data-action="resolver" data-id="${esc(id)}"
-          ${state === 'RESUELTA' ? 'disabled' : ''}>Resolver</button>
-      </div>`;
-    return `<tr>
-      <td>${esc(dateText(dateOf(a)))}</td>
-      <td><strong>${esc(zoneOf(a))}</strong></td>
-      <td><strong>${esc(typeOf(a))}</strong></td>
-      <td><strong>${esc(nameOf(a))}</strong><br><span class="muted">☎ ${esc(phoneOf(a))}</span></td>
-      <td>${a.ficha_medica ? esc(a.ficha_medica) : '<span class="muted">No informada</span>'}${location}</td>
-      <td><span class="badge ${stateClass}">${esc(state)}</span>${actions}</td>
-    </tr>`;
-  }).join('');
-}
+  async function cerrarSesion() {
+    await supabaseClient.auth.signOut();
+    location.reload();
+  }
 
-async function loadAlerts() {
-  if (loading) return;
-  loading = true;
-  try {
-    const { data, error } = await db.from('alertas')
-      .select('*').order('created_at', { ascending: false }).limit(100);
-    if (error) throw error;
+  function mostrarDashboard() {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-dashboard').style.display = 'block';
+    cargarAlertas();
+    escucharAlertasEnTiempoReal();
+    cargarManzanas();
+  }
 
-    const alerts = data || [];
-    if (!firstLoad) {
-      for (const a of alerts) {
-        const key = String(a.id ?? `${dateOf(a)}-${nameOf(a)}`);
-        if (!knownIds.has(key)) {
-          knownIds.add(key);
-          if (statusOf(a) === 'PENDIENTE') showModal(a);
-        }
-      }
+  // NAVEGACIÓN DE PESTAÑAS
+  function cambiarPestana(idPestana, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + idPestana).classList.add('active');
+  }
+
+  // --- LÓGICA DE ALERTAS ---
+  async function cargarAlertas() {
+    const { data, error } = await supabaseClient.from('alertas').select('*').order('created_at', { ascending: false });
+    if (error) {
+      document.getElementById('tablaAlertasBody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
+      return;
     }
-    for (const a of alerts) knownIds.add(String(a.id ?? `${dateOf(a)}-${nameOf(a)}`));
-    firstLoad = false;
-    drawAlerts(alerts);
-    $('lastUpdate').textContent = new Date().toLocaleTimeString('es-AR');
-    $('connection').textContent = channel ? 'Tiempo real / consulta' : 'Consulta automática';
-  } catch (e) {
-    console.error('Error al consultar alertas:', e);
-    $('connection').textContent = 'Error de consulta';
-    $('notice').textContent = 'No se pudieron cargar las alertas. Revisá la conexión y las políticas de lectura de Supabase.';
-    $('notice').classList.add('warning');
-  } finally {
-    loading = false;
+    renderizarTablaAlertas(data);
   }
-}
 
-async function changeStatus(id, action, button) {
-  const newStatus = action === 'atender' ? 'EN ATENCIÓN' :
-    action === 'resolver' ? 'RESUELTA' : null;
-  if (!newStatus || !id) return;
-  if (!confirm(`¿Cambiar el estado de esta alerta a "${newStatus}"?`)) return;
+  function renderizarTablaAlertas(alertas) {
+    const tbody = document.getElementById('tablaAlertasBody');
+    tbody.innerHTML = '';
+    if (!alertas || alertas.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#9ca3af;">No hay alertas registradas.</td></tr>`;
+      return;
+    }
 
-  button.disabled = true;
-  try {
-    const { error } = await db.from('alertas')
-      .update({ estado: newStatus }).eq('id', id);
-    if (error) throw error;
-    $('notice').textContent = `Estado guardado: ${newStatus}.`;
-    $('notice').classList.remove('warning');
-    await loadAlerts();
-  } catch (e) {
-    console.error('No se pudo actualizar el estado:', e);
-    alert('No se pudo guardar el estado. Supabase puede estar bloqueando la actualización mediante RLS. Hay que revisar los permisos UPDATE de la tabla alertas.');
-  } finally {
-    button.disabled = false;
-  }
-}
+    alertas.forEach(a => {
+      const isCoaccion = a.tipo_alerta && a.tipo_alerta.toUpperCase().includes('COACCIÓN');
+      const tr = document.createElement('tr');
+      if (isCoaccion) tr.className = 'coaccion-row';
+      const fechaStr = a.created_at ? new Date(a.created_at).toLocaleString('es-AR') : 'Sin fecha';
 
-$('tablaAlertasBody').addEventListener('click', event => {
-  const button = event.target.closest('button[data-action][data-id]');
-  if (button) changeStatus(button.dataset.id, button.dataset.action, button);
-});
-
-function listenRealtime() {
-  if (channel) db.removeChannel(channel);
-  channel = db.channel('admin-alertas-' + Date.now())
-    .on('postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'alertas' },
-      payload => {
-        const a = payload.new;
-        const key = String(a.id ?? `${dateOf(a)}-${nameOf(a)}`);
-        if (!knownIds.has(key)) {
-          knownIds.add(key);
-          showModal(a);
-        }
-        loadAlerts();
-      })
-    .subscribe(status => {
-      console.log('Estado del canal Supabase:', status);
-      $('connection').textContent =
-        status === 'SUBSCRIBED' ? 'Tiempo real activo' :
-        status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' ? 'Reconectando…' : status;
+      tr.innerHTML = `
+        <td>${fechaStr}</td>
+        <td><strong>${escapeHTML(a.manzana || 'N/A')}</strong></td>
+        <td><span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">${escapeHTML(a.tipo_alerta || 'SOS')}</span></td>
+        <td><strong>${escapeHTML(a.vecino_nombre || a.nombre || 'Anónimo')}</strong><br><small style="color:#38bdf8;">📞 ${escapeHTML(a.vecino_telefono || a.telefono || 'Sin datos')}</small></td>
+        <td><strong>${escapeHTML(a.direccion || 'Domicilio no informado')}</strong><br>${a.maps_link ? `<a href="${escapeHTML(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Abrir mapa</a>` : (a.latitud && a.longitud ? `<a href="https://www.google.com/maps?q=${a.latitud},${a.longitud}" target="_blank" rel="noopener noreferrer">📍 Ver GPS</a>` : '<small>Sin ubicación GPS</small>')}</td>
+        <td><small style="color:#cbd5e1;">${a.ficha_medica || 'Sin registros'}</small></td>
+        <td><span class="badge ${a.estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">${a.estado || 'PENDIENTE'}</span></td>
+        <td>
+          <select onchange="cambiarEstado('${a.id}', this.value)" style="padding:4px; font-size:0.8rem;">
+            <option value="PENDIENTE" ${a.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+            <option value="EN PROCESO" ${a.estado === 'EN PROCESO' ? 'selected' : ''}>EN PROCESO</option>
+            <option value="RESUELTA" ${a.estado === 'RESUELTA' ? 'selected' : ''}>RESUELTA</option>
+          </select>
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
-}
+  }
 
-$('audioBtn').addEventListener('click', enableAudio);
-$('modalAudio').addEventListener('click', enableAudio);
-$('testBtn').addEventListener('click', async () => {
-  if (!audioReady) await enableAudio();
-  if (audioReady) siren();
-});
-$('refreshBtn').addEventListener('click', loadAlerts);
-$('closeModal').addEventListener('click', closeModal);
-$('modal').addEventListener('click', event => {
-  if (event.target === $('modal')) closeModal();
-});
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) loadAlerts();
-});
-window.addEventListener('online', () => {
-  loadAlerts();
-  listenRealtime();
-});
+  function escucharAlertasEnTiempoReal() {
+    supabaseClient.channel('db-alertas').on('postgres_changes', { event: 'INSERT', table: 'alertas', schema: 'public' }, () => {
+      cargarAlertas();
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.play().catch(() => {});
+    }).subscribe();
+  }
 
-loadAlerts();
-listenRealtime();
-setInterval(loadAlerts, 5000);
+  async function cambiarEstado(id, nuevoEstado) {
+    const { error } = await supabaseClient.from('alertas').update({ estado: nuevoEstado }).eq('id', id);
+    if (error) alert("Error: " + error.message);
+    cargarAlertas();
+  }
+
+  // --- LÓGICA DE MANZANAS ---
+  async function cargarManzanas() {
+    const { data, error } = await supabaseClient.from('manzanas').select('*').order('id', { ascending: true });
+    
+    if (error) {
+      document.getElementById('tablaManzanasBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
+      return;
+    }
+
+    const tbody = document.getElementById('tablaManzanasBody');
+    tbody.innerHTML = '';
+    
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af;">No hay manzanas registradas aún.</td></tr>`;
+      return;
+    }
+
+    data.forEach(m => {
+      const fecha = m.created_at ? new Date(m.created_at).toLocaleDateString('es-AR') : 'N/A';
+      const nombreManzana = m.nombre_manzana || m.manzana || 'N/A';
+      const pinManzana = m.pin_autorizado || m.pin || 'N/A';
+      
+      const urlTerminal = `terminal.html?manzana=${encodeURIComponent(nombreManzana)}&pin=${encodeURIComponent(pinManzana)}`;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${m.id}</td>
+        <td><strong>${nombreManzana}</strong></td>
+        <td style="color: var(--warning); font-weight: bold;">${pinManzana}</td>
+        <td>${fecha}</td>
+        <td>
+          <button onclick="verQR('${urlTerminal}', '${nombreManzana}')" style="background:#38bdf8; color:#000; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">
+            📱 Ver QR
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function agregarManzana() {
+    const nombre = document.getElementById('nuevaManzanaNombre').value.trim().toUpperCase();
+    const pin = document.getElementById('nuevaManzanaPin').value.trim();
+
+    if (!nombre || !pin) {
+      alert("Por favor, complete el nombre de la manzana y el PIN.");
+      return;
+    }
+
+    const { error } = await supabaseClient.from('manzanas').insert([{
+      nombre_manzana: nombre,
+      pin_autorizado: pin
+    }]);
+
+    if (error) {
+      alert("Error al crear la manzana: " + error.message);
+    } else {
+      alert("✅ ¡Manzana creada con éxito!");
+      document.getElementById('nuevaManzanaNombre').value = '';
+      document.getElementById('nuevaManzanaPin').value = '';
+      cargarManzanas();
+    }
+  }
+
+  // --- GENERADOR DE QR ---
+  function verQR(url, nombre) {
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+    const modalHtml = `
+      <div id="qr-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#1e293b; padding:30px; border-radius:12px; text-align:center; border:2px solid #38bdf8; position:relative;">
+          <h3 style="color:#38bdf8; margin-bottom:15px;">QR de Acceso: ${nombre}</h3>
+          <img src="${qrUrl}" alt="Código QR" style="border-radius:8px; background:white; padding:10px; width:250px; height:250px;" />
+          <p style="color:#94a3b8; font-size:0.8rem; margin-top:15px; max-width:250px;">Este QR abrirá la Terminal Vecinal con los datos de esta manzana.</p>
+          <button onclick="document.getElementById('qr-modal').remove()" style="margin-top:20px; background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">Cerrar</button>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
 </script>
 </body>
 </html>
