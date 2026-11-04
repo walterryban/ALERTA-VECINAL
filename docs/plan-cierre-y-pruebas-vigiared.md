@@ -188,3 +188,6 @@ Se agregó `docs/diseno-backend-alertas-v0.2.md`, especificación previa al SQL 
 **Bloqueo detectado:** el borrador de red relaciona establecimientos con manzanas, mientras el RBAC requiere una relación canónica manzana-organización. Debe verificarse cardinalidad y fuente de verdad antes del SQL final. También debe decidirse si se conserva `public.alertas` como almacenamiento operativo o se migra a una tabla privada nueva; no se crearán dos fuentes de verdad.
 
 **Estado:** solo diseño y documentación. Sin DDL nuevo, sin cambios de frontend, sin SQL ejecutado, sin worker desplegado y sin notificaciones activadas.
+
+
+**Aclaración de arquitectura:** la revisión de RBAC v0.3 permitió identificar que la relación prevista es `manzanas.organizacion_id` (una organización por manzana). Se actualizó el diseño v0.2 para derivar el alcance mediante `unidades → establecimientos → manzanas`, sin duplicar la organización en tablas hijas. Sigue pendiente verificar esa columna en un esquema aislado, porque el RBAC v0.3 también es un borrador y no prueba el estado de la base compartida.
