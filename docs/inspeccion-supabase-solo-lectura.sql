@@ -104,3 +104,69 @@ UNION ALL SELECT 'vecinos', count(*) FROM public.vecinos
 UNION ALL SELECT 'operadores', count(*) FROM public.operadores
 UNION ALL SELECT 'alertas', count(*) FROM public.alertas
 UNION ALL SELECT 'vendedores', count(*) FROM public.vendedores;
+
+
+-- 9) Inventario ampliado de tablas nuevas y dependencias propuestas.
+-- Las tablas que todavía no existen simplemente no devolverán filas.
+SELECT
+  c.table_name, c.ordinal_position, c.column_name,
+  c.data_type, c.udt_name, c.is_nullable, c.column_default
+FROM information_schema.columns c
+WHERE c.table_schema = 'public'
+  AND c.table_name IN (
+    'perfiles_vecinales','membresias_vecinales',
+    'solicitudes_ingreso_vecinales','invitaciones_vecinales',
+    'auditoria_vecinal','establecimientos','unidades',
+    'organizaciones_municipales','propietarios_plataforma',
+    'membresias_municipales','auditoria_administrativa',
+    'difusiones_comunitarias','entregas_notificacion_vecinal',
+    'dispositivos_vecinales'
+  )
+ORDER BY c.table_name, c.ordinal_position;
+
+-- 10) Triggers de tablas actuales y de los módulos propuestos.
+SELECT
+  n.nspname AS schema_name, c.relname AS table_name,
+  t.tgname AS trigger_name, pg_get_triggerdef(t.oid, true) AS definition
+FROM pg_trigger t
+JOIN pg_class c ON c.oid = t.tgrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE NOT t.tgisinternal
+  AND n.nspname = 'public'
+  AND c.relname IN (
+    'manzanas','vecinos','operadores','alertas','vendedores',
+    'perfiles_vecinales','membresias_vecinales','establecimientos',
+    'unidades','organizaciones_municipales','membresias_municipales',
+    'difusiones_comunitarias','entregas_notificacion_vecinal'
+  )
+ORDER BY c.relname, t.tgname;
+
+-- 11) Vistas y vistas materializadas relacionadas con los módulos.
+SELECT
+  schemaname, viewname, definition
+FROM pg_views
+WHERE schemaname = 'public'
+ORDER BY viewname;
+
+SELECT
+  schemaname, matviewname, definition
+FROM pg_matviews
+WHERE schemaname = 'public'
+ORDER BY matviewname;
+
+-- 12) Privilegios efectivos declarados sobre tablas del alcance.
+-- Permite detectar grants heredados a anon/authenticated/PUBLIC.
+SELECT
+  table_schema, table_name, grantee, privilege_type, is_grantable
+FROM information_schema.role_table_grants
+WHERE table_schema = 'public'
+  AND table_name IN (
+    'manzanas','vecinos','operadores','alertas','vendedores',
+    'perfiles_vecinales','membresias_vecinales','establecimientos',
+    'unidades','organizaciones_municipales','membresias_municipales',
+    'difusiones_comunitarias','entregas_notificacion_vecinal',
+    'dispositivos_vecinales'
+  )
+ORDER BY table_name, grantee, privilege_type;
+
+-- Fin de inspección: todas las sentencias de este archivo son SELECT.
