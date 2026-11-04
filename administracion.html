@@ -27,7 +27,7 @@ button.secondary{background:#263d59;color:white;border:1px solid #49617f}button.
 <body>
 <div class="shell">
 <header class="top">
-  <div><div class="muted small">ALERTA VECINAL PRO · GOBIERNO DE ACCESOS</div><h1>Administración institucional</h1><p class="muted">Cada municipio gestiona únicamente sus propias cuentas.</p></div>
+  <div><div class="muted small">ALERTA VECINAL PRO · GOBIERNO DE ACCESOS</div><h1>Administración institucional</h1><p class="muted">Cada organización gestiona únicamente sus propias cuentas.</p></div>
   <div class="right"><a class="link" href="/admin.html">Volver al COM</a><button id="logout" class="secondary hidden">Cerrar sesión</button></div>
 </header>
 
@@ -107,18 +107,18 @@ async function loadContext(){
     $("inviteForm").classList.add("hidden");
     $("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");
     $("profileTitle").textContent=isOwner?"Propietario de plataforma":"Sin organización activa";
-    $("profileScope").textContent=isOwner?"Control global":"No hay una membresía municipal activa.";
-    notice("contextMessage",isOwner?"La identidad propietaria está reconocida, pero todavía no hay organizaciones municipales activas. La creación inicial de la organización debe realizarse mediante el procedimiento de bootstrap seguro en Supabase.":"Solicitá al propietario de la plataforma que active tu membresía municipal.","warn");
+    $("profileScope").textContent=isOwner?"Control global":"No hay una membresía de organización activa.";
+    notice("contextMessage",isOwner?"La identidad propietaria está reconocida, pero todavía no hay organizaciones activas. La creación inicial de la organización debe realizarse mediante el procedimiento de bootstrap seguro en Supabase.":"Solicitá al propietario de la plataforma que active tu membresía de organización.","warn");
     $("organization").innerHTML="";return;
   }
   $("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");
-  $("profileTitle").textContent=isOwner?"Propietario de plataforma":"Administrador municipal";
+  $("profileTitle").textContent=isOwner?"Propietario de plataforma":"Administrador de organización";
   $("profileScope").textContent=isOwner?"Supervisión global; elegí una organización para gestionar sus operadores.":"Acceso limitado a las organizaciones asignadas.";
   $("organization").innerHTML=organizations.map(o=>'<option value="'+esc(o.id)+'">'+esc(o.nombre)+' · '+esc(o.codigo)+'</option>').join("");
   currentOrg=organizations[0].id;
   currentRole=organizations[0].rol||null;
   if(!isOwner && currentRole!=="administrador_municipal"){
-    notice("contextMessage","Tu cuenta tiene acceso institucional, pero no el rol de administrador municipal para gestionar operadores.","warn");
+    notice("contextMessage","Tu cuenta tiene acceso institucional, pero no tiene el rol de administrador de organización para gestionar operadores.","warn");
     $("inviteForm").classList.add("hidden");
   }
   await loadMembers();
@@ -151,7 +151,7 @@ async function memberAction(btn){
     const select=$("membersBody").querySelector('[data-role-for="'+CSS.escape(userId)+'"]');
     body.role=select?.value||"";
   }
-  if(action==="revoke"&&!confirm("¿Revocar el acceso de esta persona a esta Municipalidad? No se borrará su cuenta personal."))return;
+  if(action==="revoke"&&!confirm("¿Revocar el acceso de esta persona a esta organización? No se borrará su cuenta personal."))return;
   btn.disabled=true;
   try{const result=await callAdmin(body);notice("membersMessage",result.message||result.warning||"Operación realizada.",result.warning?"warn":"good");await loadMembers();}
   catch(e){notice("membersMessage",e.message,"warn");btn.disabled=false;}
