@@ -223,37 +223,43 @@
   });
 
   async function verificarOperadorHeredado() {
-    const { data: contexto, error: contextoError } = await supabaseClient.rpc('obtener_contexto_administrativo');
-    if (!contextoError && contexto) {
-      contextoAdministrativo = contexto;
-      esPropietarioPlataforma = contexto.es_propietario === true;
-      organizacionesAdministrativas = Array.isArray(contexto.organizaciones)
-        ? contexto.organizaciones.filter(o => o.estado === 'activa')
-        : [];
-      const roles = organizacionesAdministrativas.map(o => o.rol).filter(Boolean);
-      const autorizado = esPropietarioPlataforma || roles.some(r =>
-        ['administrador_municipal','supervisor_municipal','operador_municipal','auditor_municipal'].includes(r)
-      );
-      puedeGestionarManzanas = esPropietarioPlataforma || roles.includes('administrador_municipal');
-      puedeActualizarAlertas = esPropietarioPlataforma || roles.some(r =>
-        ['administrador_municipal','supervisor_municipal','operador_municipal'].includes(r)
-      );
-      if (autorizado) return true;
-    } else {
-      // Compatibilidad temporal mientras las migraciones RBAC no estén aplicadas.
-      const { data: legacy, error: legacyError } = await supabaseClient.rpc('es_operador');
-      if (!legacyError && legacy === true) {
-        contextoAdministrativo = null;
-        esPropietarioPlataforma = false;
-        puedeGestionarManzanas = true;
-        puedeActualizarAlertas = true;
-        return true;
-      }
+    // Autenticación y autorización son controles distintos.
+    // No se permite fallback a public.operadores: ese esquema heredado no
+    // ofrece aislamiento por organización y podría dar acceso global.
+    contextoAdministrativo = null;
+    esPropietarioPlataforma = false;
+    organizacionesAdministrativas = [];
+    puedeGestionarManzanas = false;
+    puedeActualizarAlertas = false;
+
+    const { data: contexto, error } = await supabaseClient.rpc('obtener_contexto_administrativo');
+    if (error || !contexto) {
+      await supabaseClient.auth.signOut();
+      document.getElementById('login-overlay').style.display = 'flex';
+      document.getElementById('app-dashboard').style.display = 'none';
+      alert('El acceso administrativo todavía no está habilitado. Se requiere aplicar y verificar el esquema RBAC antes de ingresar al Centro de Operaciones.');
+      return false;
     }
+
+    contextoAdministrativo = contexto;
+    esPropietarioPlataforma = contexto.es_propietario === true;
+    organizacionesAdministrativas = Array.isArray(contexto.organizaciones)
+      ? contexto.organizaciones.filter(o => o.estado === 'activa')
+      : [];
+    const roles = organizacionesAdministrativas.map(o => o.rol).filter(Boolean);
+    const autorizado = esPropietarioPlataforma || roles.some(r =>
+      ['administrador_municipal','supervisor_municipal','operador_municipal','auditor_municipal'].includes(r)
+    );
+    puedeGestionarManzanas = esPropietarioPlataforma || roles.includes('administrador_municipal');
+    puedeActualizarAlertas = esPropietarioPlataforma || roles.some(r =>
+      ['administrador_municipal','supervisor_municipal','operador_municipal'].includes(r)
+    );
+
+    if (autorizado) return true;
     await supabaseClient.auth.signOut();
     document.getElementById('login-overlay').style.display = 'flex';
     document.getElementById('app-dashboard').style.display = 'none';
-    alert('La cuenta está autenticada, pero no tiene un rol autorizado para ingresar al Centro de Monitoreo.');
+    alert('La cuenta está autenticada, pero no tiene un rol RBAC activo para ingresar al Centro de Operaciones.');
     return false;
   }
 
