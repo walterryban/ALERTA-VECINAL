@@ -174,7 +174,11 @@
         <label>PIN de Acceso</label>
         <input type="text" id="nuevaManzanaPin" placeholder="Ej: 5678" maxlength="10" />
       </div>
-      <button class="btn-success" onclick="agregarManzana()">➕ Crear Manzana</button>
+      <div class="form-group" id="organizacionManzanaGroup">
+        <label>Municipalidad / Organización</label>
+        <select id="nuevaManzanaOrganizacion"></select>
+      </div>
+      <button class="btn-success" id="crearManzanaBtn" onclick="agregarManzana()">➕ Crear Manzana</button>
     </div>
 
     <div class="table-container">
@@ -203,6 +207,11 @@
 
   function escapeHTML(value) { return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
   let alertasCache = [];
+  let contextoAdministrativo = null;
+  let organizacionesAdministrativas = [];
+  let esPropietarioPlataforma = false;
+  let puedeGestionarManzanas = true;
+  let puedeActualizarAlertas = true;
 
   // LOGIN + AUTORIZACIÓN. Autenticarse no basta para entrar al COM.
   window.addEventListener('DOMContentLoaded', async () => {
@@ -214,15 +223,55 @@
   });
 
   async function verificarOperadorHeredado() {
-    const { data, error } = await supabaseClient.rpc('es_operador');
-    if (error || data !== true) {
-      await supabaseClient.auth.signOut();
-      document.getElementById('login-overlay').style.display = 'flex';
-      document.getElementById('app-dashboard').style.display = 'none';
-      alert('La cuenta está autenticada, pero no está autorizada para ingresar a la consola municipal. Solicite autorización al administrador.');
-      return false;
+    const { data: contexto, error: contextoError } = await supabaseClient.rpc('obtener_contexto_administrativo');
+    if (!contextoError && contexto) {
+      contextoAdministrativo = contexto;
+      esPropietarioPlataforma = contexto.es_propietario === true;
+      organizacionesAdministrativas = Array.isArray(contexto.organizaciones)
+        ? contexto.organizaciones.filter(o => o.estado === 'activa')
+        : [];
+      const roles = organizacionesAdministrativas.map(o => o.rol).filter(Boolean);
+      const autorizado = esPropietarioPlataforma || roles.some(r =>
+        ['administrador_municipal','supervisor_municipal','operador_municipal','auditor_municipal'].includes(r)
+      );
+      puedeGestionarManzanas = esPropietarioPlataforma || roles.includes('administrador_municipal');
+      puedeActualizarAlertas = esPropietarioPlataforma || roles.some(r =>
+        ['administrador_municipal','supervisor_municipal','operador_municipal'].includes(r)
+      );
+      if (autorizado) return true;
+    } else {
+      // Compatibilidad temporal mientras las migraciones RBAC no estén aplicadas.
+      const { data: legacy, error: legacyError } = await supabaseClient.rpc('es_operador');
+      if (!legacyError && legacy === true) {
+        contextoAdministrativo = null;
+        esPropietarioPlataforma = false;
+        puedeGestionarManzanas = true;
+        puedeActualizarAlertas = true;
+        return true;
+      }
     }
-    return true;
+    await supabaseClient.auth.signOut();
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('app-dashboard').style.display = 'none';
+    alert('La cuenta está autenticada, pero no tiene un rol autorizado para ingresar a la consola municipal.');
+    return false;
+  }
+
+  function configurarAlcanceAdministrativo() {
+    const tabManzanas = document.querySelector(".tab-btn[onclick*=\"cambiarPestana('manzanas'"]");
+    if (tabManzanas) tabManzanas.style.display = puedeGestionarManzanas ? '' : 'none';
+    const formManzanas = document.querySelector('#tab-manzanas .card-form');
+    if (formManzanas) formManzanas.style.display = puedeGestionarManzanas ? 'flex' : 'none';
+    const selector = document.getElementById('nuevaManzanaOrganizacion');
+    if (selector) {
+      selector.innerHTML = organizacionesAdministrativas.map(o =>
+        '<option value="' + escapeHTML(o.id) + '">' + escapeHTML(o.nombre) + '</option>'
+      ).join('');
+      selector.disabled = !esPropietarioPlataforma && organizacionesAdministrativas.length <= 1;
+      if (!contextoAdministrativo) {
+        document.getElementById('organizacionManzanaGroup').style.display = 'none';
+      }
+    }
   }
 
   async function iniciarSesion() {
@@ -244,6 +293,7 @@
   }
 
   function mostrarDashboard() {
+    configurarAlcanceAdministrativo();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-dashboard').style.display = 'block';
     cargarAlertas();
@@ -320,11 +370,11 @@
         <td><small style="color:#cbd5e1;">${escapeHTML(a.ficha_medica || 'Sin registros')}</small></td>
         <td><span class="badge ${estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">${escapeHTML(estado)}</span></td>
         <td>
-          <select onchange="cambiarEstado('${escapeHTML(a.id)}', this.value)" style="padding:4px; font-size:0.8rem;">
+          ${puedeActualizarAlertas ? `<select onchange="cambiarEstado('${escapeHTML(a.id)}', this.value)" style="padding:4px; font-size:0.8rem;">
             <option value="PENDIENTE" ${estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
             <option value="EN PROCESO" ${estado === 'EN PROCESO' ? 'selected' : ''}>EN PROCESO</option>
             <option value="RESUELTA" ${estado === 'RESUELTA' ? 'selected' : ''}>RESUELTA</option>
-          </select>
+          </select>` : '<small>Solo lectura</small>'}
         </td>
       `;
       tbody.appendChild(tr);
@@ -442,10 +492,16 @@
       return;
     }
 
-    const { error } = await supabaseClient.from('manzanas').insert([{
+    const nuevaManzana = {
       nombre_manzana: nombre,
       pin_autorizado: pin
-    }]);
+    };
+    const organizacionId = document.getElementById('nuevaManzanaOrganizacion')?.value;
+    if (contextoAdministrativo) {
+      if (!organizacionId) { alert('Seleccioná una organización activa.'); return; }
+      nuevaManzana.organizacion_id = organizacionId;
+    }
+    const { error } = await supabaseClient.from('manzanas').insert([nuevaManzana]);
 
     if (error) {
       alert("Error al crear la manzana: " + error.message);
