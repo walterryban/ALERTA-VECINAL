@@ -779,7 +779,8 @@ REVOKE ALL ON FUNCTION public.inicializar_titular_vecinal(uuid, uuid, text)
 REVOKE ALL ON FUNCTION public.emitir_invitacion_vecinal(uuid, integer)
   FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.revocar_invitacion_vecinal(uuid)
-  FROM PUBLIC, anon;\nREVOKE ALL ON FUNCTION public.solicitar_ingreso_vecinal(text)
+  FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.solicitar_ingreso_vecinal(text)
   FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.aprobar_ingreso_vecinal(uuid)
   FROM PUBLIC, anon;
