@@ -67,6 +67,18 @@
     .badge-coaccion { background: #ef4444; color: #fff; border: 1px solid #f87171; font-weight: 900; letter-spacing: 1px; }
     .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid #f59e0b; }
     .badge-success { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid #22c55e; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0 0 16px; }
+    .stat-card { background:linear-gradient(145deg,#14243a,#101a2b); border:1px solid #263b55; border-radius:12px; padding:16px; }
+    .stat-card span { display:block; color:#9ca3af; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .stat-card strong { display:block; margin-top:7px; font-size:1.8rem; color:#f9fafb; font-variant-numeric:tabular-nums; }
+    .stat-card.pending strong { color:#fbbf24; }
+    .stat-card.progressing strong { color:#7dd3fc; }
+    .stat-card.resolved strong { color:#4ade80; }
+    .alert-filters { display:flex; gap:10px; margin:0 0 14px; flex-wrap:wrap; }
+    .alert-filters input { flex:1; min-width:220px; }
+    .alert-filters select { min-width:180px; }
+    @media(max-width:760px) { .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .stat-card strong { font-size:1.5rem; } }
+
     
     /* FORMULARIO MANZANAS */
     .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #1f2937; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
@@ -115,6 +127,21 @@
 
   <!-- CONTENIDO: ALERTAS -->
   <div id="tab-alertas" class="tab-content active">
+    <div class="stats-grid" aria-label="Resumen de alertas">
+      <div class="stat-card"><span>Total de alertas</span><strong id="statTotal">0</strong></div>
+      <div class="stat-card pending"><span>Pendientes</span><strong id="statPending">0</strong></div>
+      <div class="stat-card progressing"><span>En proceso</span><strong id="statProgress">0</strong></div>
+      <div class="stat-card resolved"><span>Resueltas</span><strong id="statResolved">0</strong></div>
+    </div>
+    <div class="alert-filters">
+      <input id="filtroAlertas" type="search" placeholder="Buscar por manzana, vecino, teléfono o domicilio…" aria-label="Buscar alertas">
+      <select id="filtroEstado" aria-label="Filtrar por estado">
+        <option value="">Todos los estados</option>
+        <option value="PENDIENTE">Pendientes</option>
+        <option value="EN PROCESO">En proceso</option>
+        <option value="RESUELTA">Resueltas</option>
+      </select>
+    </div>
     <div class="table-container">
       <table>
         <thead>
@@ -175,6 +202,7 @@
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   function escapeHTML(value) { return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+  let alertasCache = [];
 
   // LOGIN
   window.addEventListener('DOMContentLoaded', async () => {
@@ -220,42 +248,65 @@
       document.getElementById('tablaAlertasBody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
       return;
     }
-    renderizarTablaAlertas(data);
+    alertasCache = data || [];
+    renderizarTablaAlertas(alertasCache);
   }
 
   function renderizarTablaAlertas(alertas) {
     const tbody = document.getElementById('tablaAlertasBody');
+    const todos = alertas || [];
+    const contar = estado => todos.filter(a => String(a.estado || 'PENDIENTE').toUpperCase() === estado).length;
+
+    document.getElementById('statTotal').textContent = String(todos.length);
+    document.getElementById('statPending').textContent = String(contar('PENDIENTE'));
+    document.getElementById('statProgress').textContent = String(contar('EN PROCESO'));
+    document.getElementById('statResolved').textContent = String(contar('RESUELTA'));
+
+    const q = (document.getElementById('filtroAlertas').value || '').trim().toLocaleLowerCase('es-AR');
+    const estadoFiltro = document.getElementById('filtroEstado').value;
+    const visibles = todos.filter(a => {
+      const estado = String(a.estado || 'PENDIENTE').toUpperCase();
+      const texto = [a.manzana, a.tipo_alerta, a.vecino_nombre, a.nombre, a.vecino_telefono, a.telefono, a.direccion]
+        .filter(Boolean).join(' ').toLocaleLowerCase('es-AR');
+      return (!estadoFiltro || estado === estadoFiltro) && (!q || texto.includes(q));
+    });
+
     tbody.innerHTML = '';
-    if (!alertas || alertas.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#9ca3af;">No hay alertas registradas.</td></tr>`;
+    if (visibles.length === 0) {
+      const mensaje = todos.length ? 'No hay alertas que coincidan con el filtro.' : 'No hay alertas registradas.';
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#9ca3af;">${mensaje}</td></tr>`;
       return;
     }
 
-    alertas.forEach(a => {
+    visibles.forEach(a => {
       const isCoaccion = a.tipo_alerta && a.tipo_alerta.toUpperCase().includes('COACCIÓN');
       const tr = document.createElement('tr');
       if (isCoaccion) tr.className = 'coaccion-row';
       const fechaStr = a.created_at ? new Date(a.created_at).toLocaleString('es-AR') : 'Sin fecha';
+      const estado = String(a.estado || 'PENDIENTE').toUpperCase();
 
       tr.innerHTML = `
-        <td>${fechaStr}</td>
+        <td>${escapeHTML(fechaStr)}</td>
         <td><strong>${escapeHTML(a.manzana || 'N/A')}</strong></td>
         <td><span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">${escapeHTML(a.tipo_alerta || 'SOS')}</span></td>
         <td><strong>${escapeHTML(a.vecino_nombre || a.nombre || 'Anónimo')}</strong><br><small style="color:#38bdf8;">📞 ${escapeHTML(a.vecino_telefono || a.telefono || 'Sin datos')}</small></td>
-        <td><strong>${escapeHTML(a.direccion || 'Domicilio no informado')}</strong><br>${a.maps_link ? `<a href="${escapeHTML(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Abrir mapa</a>` : (a.latitud && a.longitud ? `<a href="https://www.google.com/maps?q=${a.latitud},${a.longitud}" target="_blank" rel="noopener noreferrer">📍 Ver GPS</a>` : '<small>Sin ubicación GPS</small>')}</td>
+        <td><strong>${escapeHTML(a.direccion || 'Domicilio no informado')}</strong><br>${a.maps_link ? `<a href="${escapeHTML(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Abrir mapa</a>` : (a.latitud && a.longitud ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(a.latitud + ',' + a.longitud)}" target="_blank" rel="noopener noreferrer">📍 Ver GPS</a>` : '<small>Sin ubicación GPS</small>')}</td>
         <td><small style="color:#cbd5e1;">${escapeHTML(a.ficha_medica || 'Sin registros')}</small></td>
-        <td><span class="badge ${a.estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">${a.estado || 'PENDIENTE'}</span></td>
+        <td><span class="badge ${estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">${escapeHTML(estado)}</span></td>
         <td>
-          <select onchange="cambiarEstado('${a.id}', this.value)" style="padding:4px; font-size:0.8rem;">
-            <option value="PENDIENTE" ${a.estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
-            <option value="EN PROCESO" ${a.estado === 'EN PROCESO' ? 'selected' : ''}>EN PROCESO</option>
-            <option value="RESUELTA" ${a.estado === 'RESUELTA' ? 'selected' : ''}>RESUELTA</option>
+          <select onchange="cambiarEstado('${escapeHTML(a.id)}', this.value)" style="padding:4px; font-size:0.8rem;">
+            <option value="PENDIENTE" ${estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+            <option value="EN PROCESO" ${estado === 'EN PROCESO' ? 'selected' : ''}>EN PROCESO</option>
+            <option value="RESUELTA" ${estado === 'RESUELTA' ? 'selected' : ''}>RESUELTA</option>
           </select>
         </td>
       `;
       tbody.appendChild(tr);
     });
   }
+
+  document.getElementById('filtroAlertas').addEventListener('input', () => renderizarTablaAlertas(alertasCache));
+  document.getElementById('filtroEstado').addEventListener('change', () => renderizarTablaAlertas(alertasCache));
 
   // El navegador exige una interacción del operador para habilitar audio.
   let audioContext = null;
