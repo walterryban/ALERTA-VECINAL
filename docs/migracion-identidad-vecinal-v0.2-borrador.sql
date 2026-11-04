@@ -72,7 +72,7 @@ CREATE TABLE public.membresias_vecinales (
   rol text NOT NULL DEFAULT 'integrante'
     CHECK (rol IN ('titular', 'integrante', 'tutor')),
   estado text NOT NULL DEFAULT 'pendiente'
-    CHECK (estado IN ('activa', 'suspendida', 'revocada')),
+    CHECK (estado IN ('pendiente', 'activa', 'suspendida', 'revocada')),
   creada_at timestamptz NOT NULL DEFAULT pg_catalog.now(),
   aprobada_at timestamptz,
   aprobada_por uuid REFERENCES auth.users(id) ON DELETE RESTRICT,
@@ -367,7 +367,7 @@ BEGIN
     pg_catalog.rtrim(
       pg_catalog.replace(
         pg_catalog.encode(extensions.gen_random_bytes(32), 'base64'),
-        E'\\n', ''
+        E'\n', ''
       ), '='
     ), '+/', '-_'
   );
