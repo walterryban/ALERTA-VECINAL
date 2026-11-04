@@ -1,14 +1,18 @@
-# Administración de plataforma y municipalidades — Alerta Vecinal Pro
+# Administración de plataforma independiente y organizaciones — Alerta Vecinal Pro
 
 Estado: diseño y migración SQL en borrador para la rama `integracion-segura-2026-11-04`.
 No se ejecutó SQL en Supabase y no se modificó el acceso de producción.
+
+## Decisión de posicionamiento y gobierno
+
+Alerta Vecinal Pro se presenta como una **plataforma independiente**. La interfaz, los textos públicos y la consola no deben nombrar ni sugerir afiliación, respaldo o convenio con Villa Mercedes, San Luis ni otro organización mientras no exista un acuerdo formal. La arquitectura permite incorporar municipios y otras organizaciones más adelante, mediante altas controladas y aislamiento de datos. No se crea ni se asigna una municipalidad por defecto.
 
 ## Decisión de gobierno
 
 La plataforma tendrá dos planos administrativos separados:
 
 1. **Propietario de plataforma**: identidad nominativa del titular/desarrollador. Tiene alcance global para supervisar organizaciones, configuración, seguridad y auditoría. Su alta inicial se realiza exclusivamente por un administrador de base de datos mediante un procedimiento controlado; ningún administrador municipal puede crearlo, modificarlo ni revocarlo.
-2. **Administración municipal**: cada municipio administra sus propios operadores, roles y bajas. Sus permisos se limitan a su organización. No puede gestionar otros municipios, propietarios de plataforma ni configuración global.
+2. **Administración de organización**: cuando se incorpore un municipio u otra entidad mediante un acuerdo formal, su administrador gestiona sus propios operadores, roles y bajas. Sus permisos se limitan a su organización. No puede gestionar otras organizaciones, propietarios de plataforma ni configuración global.
 
 No se comparte una cuenta entre funcionarios. Cada persona utiliza una identidad propia de Supabase Auth y sus sesiones/MFA individuales.
 
