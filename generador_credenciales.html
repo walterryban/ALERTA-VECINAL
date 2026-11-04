@@ -38,9 +38,8 @@
     
     .qr-container { display: flex; justify-content: center; margin: 20px 0; }
     .mza-badge { background: #1e293b; color: #fff; font-size: 1.4rem; font-weight: bold; padding: 8px 16px; border-radius: 8px; display: inline-block; margin-bottom: 12px; }
-    .pin-box { background: #fef2f2; border: 2px dashed #ef4444; padding: 12px; border-radius: 8px; margin-top: 16px; }
-    .pin-box p { font-size: 0.85rem; color: #991b1b; font-weight: 600; }
-    .pin-box h2 { font-size: 1.8rem; color: #b91c1c; font-weight: 900; letter-spacing: 2px; }
+    .access-note { background: #eff6ff; border: 2px solid #bfdbfe; padding: 14px; border-radius: 10px; margin-top: 16px; }
+    .access-note p { font-size: 0.88rem; color: #1e40af; font-weight: 700; line-height: 1.5; }
 
     /* Ajustes para Impresión PDF / Papel */
     @media print {
@@ -68,11 +67,6 @@
       <input type="text" id="inputNombreMza" value="Manzana 12" placeholder="Ej: Manzana 12 - Barrio Sur" />
     </div>
 
-    <div class="form-group">
-      <label>PIN Asignado a la Manzana</label>
-      <input type="text" id="inputPinMza" value="3030" placeholder="Ej: 3030" />
-    </div>
-
     <button class="btn" onclick="generarCartel()">Generar Cartel de Manzana</button>
     <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir Cartel / Guardar PDF</button>
   </div>
@@ -92,9 +86,8 @@
 
     <div class="qr-container" id="qrcode"></div>
 
-    <div class="pin-box">
-      <p>CÓDIGO DE ACCESO (PIN DE MANZANA)</p>
-      <h2 id="displayPin">3030</h2>
+    <div class="access-note">
+      <p>Este QR solo abre la terminal ciudadana. El PIN de acceso debe entregarse por un canal privado y nunca publicarse en el cartel.</p>
     </div>
 
     <div style="margin-top:20px; font-size:0.75rem; color:#6b7280; text-align:center;">
@@ -111,35 +104,36 @@
   function generarCartel() {
     const urlBase = document.getElementById('urlBase').value.trim();
     const mza = document.getElementById('inputNombreMza').value.trim();
-    const pin = document.getElementById('inputPinMza').value.trim();
 
-    if (!urlBase || !mza || !pin) {
-      alert("Por favor completa la URL, la manzana y el PIN.");
+    if (!urlBase || !mza) {
+      alert("Por favor completa la URL y el nombre de la manzana.");
       return;
     }
 
-    // Construcción de la URL con el parámetro ?mza=
-    const urlConParametro = `${urlBase.endsWith('/') ? urlBase : urlBase + '/'}?mza=${encodeURIComponent(mza)}`;
+    let urlTerminal;
+    try {
+      const base = new URL(urlBase.endsWith('/') ? urlBase : urlBase + '/');
+      urlTerminal = new URL('terminal.html', base);
+      urlTerminal.searchParams.set('manzana', mza);
+    } catch (error) {
+      alert("Ingresá una URL válida de la aplicación.");
+      return;
+    }
 
-    // Actualizar Textos
     document.getElementById('displayMza').innerText = mza.toUpperCase();
-    document.getElementById('displayPin').innerText = pin;
-
-    // Generar el código QR dinámico
     const qrContainer = document.getElementById('qrcode');
     qrContainer.innerHTML = '';
 
     qrCodeInstance = new QRCode(qrContainer, {
-      text: urlConParametro,
+      text: urlTerminal.toString(),
       width: 200,
       height: 200,
-      colorDark : "#000000",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.H
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
     });
   }
 
-  // Generar al cargar por primera vez
   window.addEventListener('DOMContentLoaded', () => {
     generarCartel();
   });
