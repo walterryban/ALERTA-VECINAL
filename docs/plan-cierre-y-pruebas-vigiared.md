@@ -230,3 +230,12 @@ Se agregó `docs/inventario-compatibilidad-esquema-v0.1.md` (commit `eb237b7a171
 - Inspeccionar DDL en un Supabase aislado antes de preparar una migración ejecutable.
 
 Sin SQL ejecutado, sin cambios en Supabase y sin alteración de alertas/manzanas ficticias.
+
+
+### Inventario de compatibilidad y preparación de inspección
+
+- Inventario estático: `docs/inventario-compatibilidad-esquema-v0.1.md`.
+- Script de inspección ampliado, solo lectura: `docs/inspeccion-supabase-solo-lectura.sql`.
+- El script ahora incluye columnas de módulos nuevos, constraints, índices, RLS/policies, funciones, permisos EXECUTE, Realtime, triggers, vistas y grants de tablas.
+- Próximo paso: ejecutar ese script únicamente en un proyecto Supabase desechable/aislado y devolver los resultados sin datos personales. El proyecto Supabase compartido con Preview/Production no sirve para pruebas de escritura ni migraciones experimentales.
+- No ejecutar todavía ningún borrador de migración. No se hicieron cambios en Supabase.
