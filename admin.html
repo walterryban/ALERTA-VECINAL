@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alerta Vecinal Pro — Centro de Monitoreo Municipal</title>
+  <title>Alerta Vecinal Pro — Centro de Monitoreo</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -95,8 +95,8 @@
     <h2>CENTRO DE MONITOREO</h2>
     <p>Ingrese credenciales de operador autorizado</p>
     <div class="form-group">
-      <label>Correo Institucional</label>
-      <input type="email" id="loginEmail" placeholder="operador@sanluis.gob.ar" />
+      <label>Correo de acceso</label>
+      <input type="email" id="loginEmail" placeholder="nombre@organizacion.org" />
     </div>
     <div class="form-group">
       <label>Contraseña</label>
@@ -111,7 +111,7 @@
   <header>
     <div class="header-title">
       <h1>🚨 Alerta Vecinal Pro — Consola COM</h1>
-      <p>Centro de Operaciones y Monitoreo Municipal | San Luis / Villa Mercedes</p>
+      <p>Consola de operaciones para organizaciones autorizadas</p>
     </div>
     <div class="header-actions">
       <button class="btn-sound" id="activarSonidoBtn" type="button" aria-pressed="false">🔇 Activar sonido</button>
@@ -175,7 +175,7 @@
         <input type="text" id="nuevaManzanaPin" placeholder="Ej: 5678" maxlength="10" />
       </div>
       <div class="form-group" id="organizacionManzanaGroup">
-        <label>Municipalidad / Organización</label>
+        <label>Organización</label>
         <select id="nuevaManzanaOrganizacion"></select>
       </div>
       <button class="btn-success" id="crearManzanaBtn" onclick="agregarManzana()">➕ Crear Manzana</button>
