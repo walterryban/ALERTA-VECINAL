@@ -206,3 +206,14 @@ Hallazgos que bloquean el SQL integral:
 - Se reafirma que `vecinos` legado no es fuente de autorización y que no se deben emparejar datos ficticios.
 
 **Decisión técnica:** no escribir ni ejecutar todavía un SQL integral. Primero consolidar el contrato de permisos y verificar el DDL/privilegios reales en un Supabase desechable. No se modificó el proyecto Supabase compartido.
+
+
+### Contrato único de permisos y operaciones v0.1
+
+Se creó `docs/contrato-unico-permisos-operaciones-v0.1.md`. Consolida las fuentes de autoridad, la separación propietario/municipio/vecindario, la matriz de capacidades, los comandos lógicos por dominio, requisitos RLS/grants, auditoría y criterios de salida para SQL consolidado.
+
+**Regla reforzada:** no conceder UPDATE directo general a `alertas`; las transiciones serán RPC con campos permitidos, validación de estado, concurrencia y auditoría atómica. Las altas/modificaciones de manzanas, establecimientos y unidades también serán comandos de servidor, no INSERT/UPDATE libre desde navegador.
+
+Quedan marcadas decisiones de producto que requieren aprobación antes de abrir funciones sensibles: datos personales visibles por rol COM, acceso excepcional a datos médicos, recuperación/transferencia del propietario, titularidad de unidad, menores/tutores, retención y cardinalidad de manzana-organización.
+
+**Estado:** documento guardado; no se ejecutó SQL ni se modificó Supabase o producción.
