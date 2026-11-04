@@ -245,7 +245,7 @@
   async function cargarAlertas() {
     const { data, error } = await supabaseClient.from('alertas').select('*').order('created_at', { ascending: false });
     if (error) {
-      document.getElementById('tablaAlertasBody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
+      document.getElementById('tablaAlertasBody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ef4444;">Error al cargar: ${escapeHTML(error.message)}</td></tr>`;
       return;
     }
     alertasCache = data || [];
@@ -284,13 +284,21 @@
       if (isCoaccion) tr.className = 'coaccion-row';
       const fechaStr = a.created_at ? new Date(a.created_at).toLocaleString('es-AR') : 'Sin fecha';
       const estado = String(a.estado || 'PENDIENTE').toUpperCase();
+      const mapsHref = typeof a.maps_link === 'string' && /^https:\/\/www\.google\.com\/maps\?q=/i.test(a.maps_link)
+        ? a.maps_link
+        : (Number.isFinite(Number(a.latitud)) && Number.isFinite(Number(a.longitud)) && a.latitud !== null && a.longitud !== null
+          ? `https://www.google.com/maps?q=${encodeURIComponent(a.latitud + ',' + a.longitud)}`
+          : '');
+      const mapsCell = mapsHref
+        ? `<a href="${escapeHTML(mapsHref)}" target="_blank" rel="noopener noreferrer">📍 Abrir mapa</a>`
+        : '<small>Sin ubicación GPS</small>';
 
       tr.innerHTML = `
         <td>${escapeHTML(fechaStr)}</td>
         <td><strong>${escapeHTML(a.manzana || 'N/A')}</strong></td>
         <td><span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">${escapeHTML(a.tipo_alerta || 'SOS')}</span></td>
         <td><strong>${escapeHTML(a.vecino_nombre || a.nombre || 'Anónimo')}</strong><br><small style="color:#38bdf8;">📞 ${escapeHTML(a.vecino_telefono || a.telefono || 'Sin datos')}</small></td>
-        <td><strong>${escapeHTML(a.direccion || 'Domicilio no informado')}</strong><br>${a.maps_link ? `<a href="${escapeHTML(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Abrir mapa</a>` : (a.latitud && a.longitud ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(a.latitud + ',' + a.longitud)}" target="_blank" rel="noopener noreferrer">📍 Ver GPS</a>` : '<small>Sin ubicación GPS</small>')}</td>
+        <td><strong>${escapeHTML(a.direccion || 'Domicilio no informado')}</strong><br>${mapsCell}</td>
         <td><small style="color:#cbd5e1;">${escapeHTML(a.ficha_medica || 'Sin registros')}</small></td>
         <td><span class="badge ${estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">${escapeHTML(estado)}</span></td>
         <td>
