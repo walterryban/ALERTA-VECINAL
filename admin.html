@@ -183,7 +183,7 @@
           <tr>
             <th>ID</th>
             <th>Nombre de Manzana</th>
-            <th>PIN Autorizado</th>
+            <th>PIN de acceso</th>
             <th>Fecha de Creación</th>
             <th>Acciones</th>
           </tr>
@@ -204,20 +204,38 @@
   function escapeHTML(value) { return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
   let alertasCache = [];
 
-  // LOGIN
+  // LOGIN + AUTORIZACIÓN. Autenticarse no basta para entrar al COM.
   window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) mostrarDashboard();
+    if (session) {
+      const autorizado = await verificarOperadorHeredado();
+      if (autorizado) mostrarDashboard();
+    }
   });
+
+  async function verificarOperadorHeredado() {
+    const { data, error } = await supabaseClient.rpc('es_operador');
+    if (error || data !== true) {
+      await supabaseClient.auth.signOut();
+      document.getElementById('login-overlay').style.display = 'flex';
+      document.getElementById('app-dashboard').style.display = 'none';
+      alert('La cuenta está autenticada, pero no está autorizada para ingresar a la consola municipal. Solicite autorización al administrador.');
+      return false;
+    }
+    return true;
+  }
 
   async function iniciarSesion() {
     const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
+    const password = document.getElementById('loginPassword').value;
     if (!email || !password) { alert("Ingrese correo y contraseña."); return; }
 
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) alert("Acceso denegado: " + error.message);
-    else mostrarDashboard();
+    if (error) {
+      alert("Acceso denegado: " + error.message);
+      return;
+    }
+    if (await verificarOperadorHeredado()) mostrarDashboard();
   }
 
   async function cerrarSesion() {
@@ -397,7 +415,7 @@
     data.forEach(m => {
       const fecha = m.created_at ? new Date(m.created_at).toLocaleDateString('es-AR') : 'N/A';
       const nombreManzana = m.nombre_manzana || m.manzana || 'N/A';
-      const pinManzana = m.pin_autorizado || m.pin || 'N/A';
+      const pinProtegido = '••••••';
 
       // El QR es público: abre la terminal y preselecciona la manzana,
       // pero nunca transporta el PIN en la URL.
@@ -406,7 +424,7 @@
       tr.innerHTML = `
         <td>${escapeHTML(m.id)}</td>
         <td><strong>${escapeHTML(nombreManzana)}</strong></td>
-        <td style="color: var(--warning); font-weight: bold;">${escapeHTML(pinManzana)}</td>
+        <td style="color: var(--warning); font-weight: bold;">${pinProtegido}</td>
         <td>${escapeHTML(fecha)}</td>
         <td><button type="button" class="qr-row-button" style="background:#38bdf8; color:#000; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">📱 Ver QR público</button></td>
       `;
