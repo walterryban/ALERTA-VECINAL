@@ -236,7 +236,7 @@
         <td><span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">${escapeHTML(a.tipo_alerta || 'SOS')}</span></td>
         <td><strong>${escapeHTML(a.vecino_nombre || a.nombre || 'Anónimo')}</strong><br><small style="color:#38bdf8;">📞 ${escapeHTML(a.vecino_telefono || a.telefono || 'Sin datos')}</small></td>
         <td><strong>${escapeHTML(a.direccion || 'Domicilio no informado')}</strong><br>${a.maps_link ? `<a href="${escapeHTML(a.maps_link)}" target="_blank" rel="noopener noreferrer">📍 Abrir mapa</a>` : (a.latitud && a.longitud ? `<a href="https://www.google.com/maps?q=${a.latitud},${a.longitud}" target="_blank" rel="noopener noreferrer">📍 Ver GPS</a>` : '<small>Sin ubicación GPS</small>')}</td>
-        <td><small style="color:#cbd5e1;">${a.ficha_medica || 'Sin registros'}</small></td>
+        <td><small style="color:#cbd5e1;">${escapeHTML(a.ficha_medica || 'Sin registros')}</small></td>
         <td><span class="badge ${a.estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">${a.estado || 'PENDIENTE'}</span></td>
         <td>
           <select onchange="cambiarEstado('${a.id}', this.value)" style="padding:4px; font-size:0.8rem;">
