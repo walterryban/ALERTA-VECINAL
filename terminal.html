@@ -146,22 +146,21 @@
       $('validateBtn').disabled = true;
       setStatus('registerStatus', 'Verificando manzana y PIN…');
       try {
-        // Los nombres de columnas corresponden a la estructura actual confirmada.
-        const { data, error } = await db
-          .from('manzanas')
-          .select('id,nombre_manzana')
-          .ilike('nombre_manzana', manzana)
-          .eq('pin_autorizado', pin)
-          .maybeSingle();
+        // Validación mediante RPC SECURITY DEFINER: evita exigir SELECT
+        // directo sobre manzanas al visitante anónimo.
+        const { data, error } = await db.rpc('validar_acceso', {
+          p_manzana: manzana,
+          p_pin: pin
+        });
 
         if (error) throw error;
-        if (!data) {
+        if (!data || typeof data !== 'string') {
           setStatus('registerStatus', 'Acceso no validado. Revisá el nombre de la manzana y el PIN.');
           return;
         }
 
         vecinoActual = {
-          manzana: data.nombre_manzana,
+          manzana: data,
           nombre,
           telefono,
           direccion: $('direccion').value.trim(),
