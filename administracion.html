@@ -50,6 +50,12 @@ button.secondary{background:#263d59;color:white;border:1px solid #49617f}button.
       <div class="field" style="max-width:420px"><label for="organization">Organización / Municipalidad</label><select id="organization"></select></div>
     </div>
     <div id="contextMessage" class="notice hidden"></div>
+    <form id="createOrgForm" class="row hidden" style="margin-top:16px">
+      <div class="field"><label for="orgName">Nueva Municipalidad / organización</label><input id="orgName" maxlength="120" placeholder="Municipalidad de ..." required></div>
+      <div class="field"><label for="orgCode">Código único</label><input id="orgCode" maxlength="40" pattern="[a-z0-9][a-z0-9-]{1,39}" placeholder="municipio-ejemplo" required></div>
+      <button type="submit">Crear organización</button>
+    </form>
+    <div id="orgMessage" class="notice hidden"></div>
   </section>
 
   <section class="panel">
@@ -94,6 +100,7 @@ async function loadContext(){
   const {data,error}=await sb.rpc("obtener_contexto_administrativo");
   if(error||!data){$("login").classList.remove("hidden");notice("loginMessage","Tu cuenta no tiene un perfil administrativo habilitado o falta aplicar las migraciones RBAC.");return;}
   isOwner=data.es_propietario===true;
+  $("createOrgForm").classList.toggle("hidden",!isOwner);
   organizations=Array.isArray(data.organizaciones)?data.organizaciones:[];
   organizations=organizations.filter(o=>o.estado==="activa");
   if(!organizations.length){
@@ -168,6 +175,17 @@ $("inviteForm").addEventListener("submit",async e=>{
   finally{btn.disabled=false;}
 });
 $("refresh").addEventListener("click",loadMembers);
+$("createOrgForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const btn=e.submitter;btn.disabled=true;
+  try{
+    const result=await callAdmin({action:"create_organization",name:$("orgName").value.trim(),code:$("orgCode").value.trim().toLowerCase()});
+    notice("orgMessage",result.warning||("Organización creada: "+result.organization.nombre),result.warning?"warn":"good");
+    $("orgName").value="";$("orgCode").value="";
+    await loadContext();
+  }catch(err){notice("orgMessage",err.message,"warn");}
+  finally{btn.disabled=false;}
+});
 function configureRoles(){
   const roles=isOwner?["administrador_municipal","supervisor_municipal","operador_municipal","auditor_municipal"]:["supervisor_municipal","operador_municipal","auditor_municipal"];
   $("inviteRole").innerHTML=roles.map(r=>'<option value="'+r+'">'+r.replaceAll("_"," ")+'</option>').join("");
