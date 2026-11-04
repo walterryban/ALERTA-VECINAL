@@ -274,7 +274,7 @@
       const button = document.getElementById('activarSonidoBtn');
       button.setAttribute('aria-pressed', String(sonidoHabilitado));
       button.textContent = sonidoHabilitado ? '🔊 Sonido activado' : '🔇 Activar sonido';
-      if (sonidoHabilitado) reproducirTono(880, 0, 0.22);
+      if (sonidoHabilitado) reproducirSirena();
     } catch (error) {
       console.error('No se pudo activar el audio:', error);
       alert('No se pudo activar el sonido. Revisá los permisos del navegador.');
