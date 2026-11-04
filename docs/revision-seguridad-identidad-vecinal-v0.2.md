@@ -60,3 +60,11 @@ Estas comprobaciones son inspecciones de texto, no validación del parser de Pos
 ## Decisión
 
 El v0.2 es una base de diseño más coherente que los borradores v0.1, pero todavía no está listo para producción ni para conectar la terminal. El siguiente paso técnico debe ser construir pruebas automatizadas y ejecutar el SQL únicamente en un proyecto Supabase desechable, una vez que exista y se haya autorizado expresamente.
+
+## Correcciones adicionales — segunda revisión
+
+- El canje de invitación ahora exige que la unidad y su establecimiento sigan activos.
+- El rechazo de una solicitud ahora exige sesión válida y perfil activo del titular que actúa.
+- Se definió una matriz ampliada de 28 pruebas funcionales, 7 pruebas concurrentes y 8 verificaciones de privilegios en `docs/pruebas-identidad-vecinal-v0.2.md`.
+
+**Importante:** estos cambios son revisión estática adicional. No se ejecutó el SQL ni se demostró que compile. La matriz está pendiente de ejecución en un proyecto Supabase aislado.
