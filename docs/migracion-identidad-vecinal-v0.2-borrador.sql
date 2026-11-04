@@ -754,7 +754,8 @@ REVOKE ALL ON FUNCTION public.inicializar_titular_vecinal(uuid, uuid, text)
   FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.emitir_invitacion_vecinal(uuid, integer)
   FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.revocar_invitacion_vecinal(uuid)\n  FROM PUBLIC, anon;\nREVOKE ALL ON FUNCTION public.solicitar_ingreso_vecinal(text)
+REVOKE ALL ON FUNCTION public.revocar_invitacion_vecinal(uuid)
+  FROM PUBLIC, anon;\nREVOKE ALL ON FUNCTION public.solicitar_ingreso_vecinal(text)
   FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.aprobar_ingreso_vecinal(uuid)
   FROM PUBLIC, anon;
@@ -771,7 +772,8 @@ GRANT EXECUTE ON FUNCTION public.inicializar_titular_vecinal(uuid, uuid, text)
   TO service_role;
 GRANT EXECUTE ON FUNCTION public.emitir_invitacion_vecinal(uuid, integer)
   TO authenticated;
-GRANT EXECUTE ON FUNCTION public.revocar_invitacion_vecinal(uuid)\n  TO authenticated;\nGRANT EXECUTE ON FUNCTION public.solicitar_ingreso_vecinal(text)
+GRANT EXECUTE ON FUNCTION public.revocar_invitacion_vecinal(uuid)
+  TO authenticated;\nGRANT EXECUTE ON FUNCTION public.solicitar_ingreso_vecinal(text)
   TO authenticated;
 GRANT EXECUTE ON FUNCTION public.aprobar_ingreso_vecinal(uuid)
   TO authenticated;
