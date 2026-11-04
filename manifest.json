@@ -1,7 +1,7 @@
 {
   "name": "Alerta Vecinal Pro",
   "short_name": "Alerta Pro",
-  "start_url": "/",
+  "start_url": "/terminal.html",
   "display": "standalone",
   "background_color": "#09090b",
   "theme_color": "#d32f2f",
