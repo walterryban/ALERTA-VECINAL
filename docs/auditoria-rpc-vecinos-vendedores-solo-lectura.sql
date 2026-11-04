@@ -27,6 +27,7 @@ SELECT
 FROM pg_proc p
 JOIN pg_namespace n ON n.oid = p.pronamespace
 WHERE n.nspname IN ('public', 'auth', 'extensions')
+  AND p.prokind IN ('f', 'p')
   AND (
     p.prosecdef
     OR pg_get_functiondef(p.oid) ILIKE '%public.vecinos%'
@@ -42,7 +43,7 @@ SELECT
   n.nspname AS schema_name,
   p.proname AS function_name,
   pg_get_function_identity_arguments(p.oid) AS arguments,
-  r.rolname AS grantee,
+  CASE WHEN x.grantee = 0 THEN 'PUBLIC' ELSE r.rolname END AS grantee,
   x.privilege_type,
   x.is_grantable
 FROM pg_proc p
@@ -50,8 +51,9 @@ JOIN pg_namespace n ON n.oid = p.pronamespace
 CROSS JOIN LATERAL aclexplode(
   COALESCE(p.proacl, acldefault('f', p.proowner))
 ) AS x
-JOIN pg_roles r ON r.oid = x.grantee
+LEFT JOIN pg_roles r ON r.oid = x.grantee
 WHERE n.nspname = 'public'
+  AND p.prokind IN ('f', 'p')
   AND (
     p.prosecdef
     OR pg_get_functiondef(p.oid) ILIKE '%vecinos%'
