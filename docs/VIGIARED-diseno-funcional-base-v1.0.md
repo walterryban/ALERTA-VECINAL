@@ -27,11 +27,12 @@ La versión 1.0 constituye una base estable, no un diseño inmutable. Las solici
 ## 3. Teléfono e identidad
 
 - Cada vecino debe disponer de un teléfono inteligente compatible con cámara y conexión a Internet para el uso normal de la aplicación.
-- El correo electrónico es opcional; no se obliga a utilizar el correo de familiares.
+- Cada cuenta debe acreditar al menos un método de contacto: teléfono verificado o correo electrónico verificado. El correo propio verificado es una alternativa válida al teléfono; no se obliga a utilizar el correo de familiares.
 - Cada persona mantiene una cuenta individual. No se comparten cuentas ni se fusionan automáticamente identidades.
-- La verificación real del teléfono debe resolverse antes de declarar el número como verificado.
+- Un teléfono sólo se considera verificado cuando Supabase Auth confirma su verificación real; guardar un número en el perfil no alcanza.
+- Un correo sólo se considera verificado cuando Supabase Auth confirma su verificación real; guardar una dirección no alcanza.
 - SMS y WhatsApp se evaluarán como canales distintos. No se presupone gratuidad de mensajes salientes ni se habilitan proveedores pagos sin autorización.
-- Mientras no exista un mecanismo seguro y sostenible a costo cero, el alta real por teléfono queda como requisito técnico pendiente; los números de prueba solo sirven para desarrollo.
+- No se habilitan SMS ni WhatsApp pagos en esta etapa. La alternativa de correo verificado permite validar la cuenta sin obligar a contratar SMS.
 
 ## 4. Accesibilidad e inclusión
 
@@ -84,8 +85,8 @@ No se implementarán cambios que expongan datos, debiliten autenticación o cree
 1. Inspeccionar el esquema real de Supabase, RLS, políticas, funciones, triggers e índices, sin modificarlo.
 2. Diseñar la entidad de credenciales de domicilio y su generación automática.
 3. Diseñar RPC/Edge Function para validar PIN y crear solicitudes pendientes.
-4. Definir y probar el alta del primer responsable y de integrantes adicionales.
-5. Resolver autenticación telefónica individual y recuperación sin costos no autorizados.
+4. Diseñar y probar la aceptación explícita del primer responsable antes de activar su membresía; luego habilitar integrantes adicionales.
+5. Validar teléfono o correo electrónico verificado como métodos alternativos de contacto, sin activar canales pagos.
 6. Implementar la experiencia vecinal accesible.
 7. Integrar alertas y Centro de Monitoreo.
 8. Probar en entorno aislado con datos ficticios.
