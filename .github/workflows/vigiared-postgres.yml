@@ -1,0 +1,44 @@
+name: VIGIARED PostgreSQL migration checks
+
+on:
+  push:
+    branches:
+      - integracion-segura-2026-11-04
+    paths:
+      - 'supabase/migrations/20261105110000_vigiared_manzanas_domicilios_pin.sql'
+      - 'tests/postgres/**'
+      - '.github/workflows/vigiared-postgres.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vigiared_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d vigiared_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Apply isolated schema and migration
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d vigiared_test -v ON_ERROR_STOP=1 -f tests/postgres/vigiared-migration.sql
