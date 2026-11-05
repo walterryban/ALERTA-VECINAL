@@ -106,9 +106,9 @@ begin
   if not exists (
     select 1 from pg_class c
     join pg_namespace n on n.oid=c.relnamespace
-    where n.nspname='public' and c.relname='manzanas'
+    where n.nspname='public' and c.relname='manzanas_vigiared'
       and c.relrowsecurity and c.relforcerowsecurity
-  ) then raise exception 'RLS/ FORCE RLS faltante en manzanas'; end if;
+  ) then raise exception 'RLS/ FORCE RLS faltante en manzanas_vigiared'; end if;
 
   if not exists (
     select 1 from pg_class c
@@ -164,7 +164,7 @@ set role authenticated;
 select (public.crear_manzana(
  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
  'Manzana de prueba'
-)->>'manzana_id') as manzana_id \gset
+)->>'manzana_vigiared_id') as manzana_id \gset
 reset role;
 
 set role service_role;
@@ -183,7 +183,7 @@ select (public.crear_domicilio_con_responsable(
 )->>'unidad_id') as unidad_id \gset
 reset role;
 
-select public_id as manzana_public_id from public.manzanas where id=:'manzana_id'::uuid \gset
+select public_id as manzana_public_id from public.manzanas_vigiared where id=:'manzana_id'::uuid \gset
 
 select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
 set role authenticated;
