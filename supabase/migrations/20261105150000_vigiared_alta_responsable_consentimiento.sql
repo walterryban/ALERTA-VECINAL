@@ -173,7 +173,9 @@ declare
   v_email text;
   v_estado_membresia text;
 begin
-  if p_actor_user_id is null or p_actor_user_id <> auth.uid() then
+  -- La Edge Function valida el JWT con auth.getUser y transmite este UUID.
+  -- Esta RPC sólo admite service_role; el email confirmado debe coincidir con la invitación.
+  if p_actor_user_id is null or not exists(select 1 from auth.users where id=p_actor_user_id) then
     raise exception 'Identidad autenticada no válida';
   end if;
   if p_token_hmac !~ '^[0-9a-f]{64}$' or p_pin_hmac !~ '^[0-9a-f]{64}$' then
