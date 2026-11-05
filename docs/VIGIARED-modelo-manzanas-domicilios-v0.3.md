@@ -77,7 +77,7 @@ Se conserva sin cambios la decisión funcional aprobada:
 - El PIN se genera en servidor para cada unidad/domicilio y se almacena como HMAC con secreto servidor.
 - El QR abre la pantalla de incorporación y permite identificar la manzana.
 - El vecino introduce el PIN de su domicilio; el backend resuelve la unidad y crea una solicitud pendiente.
-- Cada persona usa cuenta individual. El teléfono es requisito para uso vecinal; correo opcional.
+- Cada persona usa cuenta individual. Para validar el acceso vecinal se acepta teléfono verificado o correo electrónico verificado; el teléfono sigue siendo el medio operativo recomendado para recibir alertas en el dispositivo.
 - Una membresía activa es la autorización real para consultar información o recibir alertas. El PIN sólo permite solicitar incorporación.
 - La aprobación de nuevos integrantes sigue el procedimiento de responsable/administrador autorizado.
 - Rotar el PIN no revoca membresías ya aprobadas.
