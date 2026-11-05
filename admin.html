@@ -554,7 +554,9 @@
     try {
       await navigator.clipboard.writeText(tokenInvitacionEnMemoria);
       tokenInvitacionEnMemoria = null;
-      mostrarResultadoInvitacion('Código copiado. Compartilo únicamente con el destinatario.');
+      const campoToken = document.getElementById('tokenInvitacionVisible');
+      if (campoToken) campoToken.value = '';
+      mostrarResultadoInvitacion('Código copiado y ocultado de esta pantalla. Compartilo únicamente con el destinatario.');
     } catch (_error) {
       mostrarResultadoInvitacion('No se pudo copiar automáticamente. Seleccioná el código visible y copialo manualmente.', true);
     }
