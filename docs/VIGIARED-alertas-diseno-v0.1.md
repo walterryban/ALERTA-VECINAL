@@ -11,7 +11,9 @@ Una persona con membresía activa genera una alerta desde su cuenta y domicilio.
 
 1. **Mensaje del vecino:** descripción breve de lo que sucede.
 2. **Ubicación GPS del teléfono:** latitud/longitud, sólo si el vecino concede permiso y el dispositivo entrega una posición válida.
-3. **Fotografía de la zona:** imagen que aporte contexto visual. La foto será opcional para no demorar una emergencia ni bloquear el envío cuando no haya cámara, conectividad o posibilidad segura de tomarla.
+3. **Mapa de ubicación:** representación cartográfica de las coordenadas, para que el Centro de Monitoreo identifique el punto reportado.
+4. **Vista de la zona mediante Google Street View:** referencia visual cuando Google disponga de cobertura para ese punto. Debe identificarse como imagen de referencia, no como fotografía en vivo ni prueba de que la escena siga igual.
+5. **Fotografía propia del vecino:** complemento opcional, nunca requisito para enviar una alerta.
 
 Los tres elementos, cuando estén disponibles, quedan asociados al mismo identificador de alerta. La alerta debe llegar:
 - Al Centro de Monitoreo de la organización correspondiente.
@@ -80,15 +82,19 @@ La tabla de destinatarios fija quién estaba autorizado al momento de crear la a
 7. El Centro de Monitoreo y los clientes vecinales autorizados actualizan su vista mediante Realtime protegido por RLS o canal privado. Debe probarse aislamiento antes de elegir la implementación final.
 8. Un operador autorizado cambia el estado mediante RPC; se registra actor, estado anterior/nuevo y hora en auditoría.
 
-## 5. Google Sheets y fuente de datos
+## 5. Google Maps, Street View y fuente de datos
 
-En el código y documentación revisados para esta etapa no se encontró evidencia de que Google Sheets sea el almacenamiento operativo actual de VIGIARED. La arquitectura documentada y el proyecto existente utilizan Supabase (Postgres, Auth y las funciones previstas).
+Se recupera como requisito funcional la experiencia probada en la aplicación original: al disponer de una ubicación GPS autorizada, el Centro de Monitoreo debe poder abrir/ver el mapa del punto y consultar la vista de la zona en Google Street View cuando exista cobertura.
 
-Por lo tanto:
-- Supabase debe seguir siendo la fuente oficial de alertas, membresías, ubicaciones y permisos.
-- No se debe usar una hoja de cálculo como mecanismo de autorización, distribución en tiempo real ni almacenamiento principal de fotografías.
-- Si posteriormente se confirma una integración con Google Sheets, podrá evaluarse sólo como exportación o reporte administrativo no sensible, sin credenciales, PIN, teléfonos, coordenadas precisas ni enlaces privados a fotografías.
-- No incorporar una dependencia de Google ni crear costes sin revisar primero el alcance y obtener autorización.
+Reglas de implementación:
+- Las coordenadas GPS de la alerta son el dato de ubicación reportado por el dispositivo; el mapa y Street View son representaciones/referencias visuales distintas.
+- La interfaz debe mostrar cuándo no hay GPS, cuándo Street View no tiene cobertura y cuándo el contenido de Google no puede cargarse.
+- Street View no es una cámara en vivo ni demuestra el estado actual del lugar. Mostrarlo como referencia visual con la atribución correspondiente.
+- Utilizar enlaces oficiales de Google Maps o las opciones oficiales de Maps Embed/Maps Platform que correspondan. Respetar atribución, condiciones de uso, restricciones de almacenamiento/caché y políticas aplicables; no descargar ni republicar imágenes de Google como archivos propios.
+- Antes de elegir una API, revisar si la experiencia original se puede conservar mediante enlaces o inserción oficial sin habilitar un servicio facturable. No activar APIs, claves con facturación ni servicios pagos sin verificar el coste y recibir autorización expresa.
+- Si no se puede cargar Google Maps/Street View, la alerta debe seguir mostrando las coordenadas y el domicilio registrado; la consulta externa es complementaria y nunca bloquea el envío.
+
+Supabase continúa siendo la fuente oficial de alertas, membresías, ubicaciones y permisos. En el código y documentación revisados para esta etapa no se encontró evidencia de que Google Sheets sea el almacenamiento operativo actual de VIGIARED. No se debe usar una hoja de cálculo como mecanismo de autorización, distribución en tiempo real ni almacenamiento principal de fotografías. Si luego se confirma una integración con Google Sheets, podrá evaluarse sólo como exportación o reporte administrativo no sensible, sin credenciales, PIN, teléfonos, coordenadas precisas ni enlaces privados a fotografías.
 
 ## 6. Entrega y límites de la primera versión
 
@@ -140,15 +146,16 @@ Por lo tanto:
 1. Todos los vecinos con membresía activa de la misma manzana reciben todas las alertas, sin excepción por tipo. Se excluyen membresías pendientes, suspendidas o revocadas.
 2. La alerta contiene un mensaje del vecino.
 3. La alerta incorpora ubicación GPS del vecino cuando autoriza y el dispositivo la proporciona.
-4. La alerta admite una fotografía de la zona, almacenada de forma privada.
-5. Supabase permanece como fuente oficial de datos; no asumir que Google Sheets es parte del sistema hasta verificarlo.
+4. El Centro de Monitoreo muestra el mapa de las coordenadas GPS y permite consultar Google Street View cuando haya cobertura, mediante integración oficial y respetando sus condiciones.
+5. La fotografía propia del vecino es opcional y, si se adjunta, se almacena de forma privada.
+6. Supabase permanece como fuente oficial de datos; no asumir que Google Sheets es parte del sistema hasta verificarlo.
 
 **Pendientes antes de SQL:**
-1. Confirmar si una fotografía debe ser obligatoria o, como se recomienda, opcional para no retrasar emergencias.
-2. Definir qué datos exactos ven los vecinos y cuáles quedan sólo para operadores autorizados.
-3. Definir si el estado `resuelta` lo puede cambiar sólo un operador o también el emisor.
-4. Probar Realtime y Storage con RLS en una base aislada.
+1. Definir qué datos exactos ven los vecinos y cuáles quedan sólo para operadores autorizados.
+2. Definir si el estado `resuelta` lo puede cambiar sólo un operador o también el emisor.
+3. Probar Realtime y Storage con RLS en una base aislada.
+4. Verificar qué mecanismo oficial de Google Maps/Street View utilizaba la aplicación original y si puede mantenerse sin costes; no habilitar APIs facturables sin autorización.
 5. Resolver la autenticación telefónica real sin coste antes de habilitar el alta vecinal productiva.
-6. Definir retención y borrado seguro de fotografías.
+6. Definir retención y borrado seguro de fotografías opcionales.
 
 **No ejecutar este documento como SQL.** Primero se aprueba el alcance, luego se construye una migración separada, pruebas automatizadas y revisión de seguridad.
