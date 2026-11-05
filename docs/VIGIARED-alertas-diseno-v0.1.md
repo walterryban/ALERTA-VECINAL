@@ -90,8 +90,10 @@ Reglas de implementación:
 - Las coordenadas GPS de la alerta son el dato de ubicación reportado por el dispositivo; el mapa y Street View son representaciones/referencias visuales distintas.
 - La interfaz debe mostrar cuándo no hay GPS, cuándo Street View no tiene cobertura y cuándo el contenido de Google no puede cargarse.
 - Street View no es una cámara en vivo ni demuestra el estado actual del lugar. Mostrarlo como referencia visual con la atribución correspondiente.
-- Utilizar enlaces oficiales de Google Maps o las opciones oficiales de Maps Embed/Maps Platform que correspondan. Respetar atribución, condiciones de uso, restricciones de almacenamiento/caché y políticas aplicables; no descargar ni republicar imágenes de Google como archivos propios.
-- Antes de elegir una API, revisar si la experiencia original se puede conservar mediante enlaces o inserción oficial sin habilitar un servicio facturable. No activar APIs, claves con facturación ni servicios pagos sin verificar el coste y recibir autorización expresa.
+- **Primera opción sin clave API:** construir enlaces oficiales de Google Maps URLs con coordenadas. Para el mapa: `https://www.google.com/maps/search/?api=1&query=LATITUD%2CLONGITUD`. Para Street View: `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=LATITUD%2CLONGITUD`. Estas URLs no requieren clave API y abren Google Maps en la app o navegador; Street View mostrará la panorámica más cercana disponible, si existe.
+- En la primera versión, los controles «Ver mapa» y «Ver Street View» pueden abrir esas vistas oficiales en otra pestaña/ventana. No prometer una fotografía incrustada dentro del panel hasta verificar la implementación original y las condiciones técnicas.
+- **No usar Street View Static API ni Maps Static API** para mostrar imágenes incrustadas en esta etapa: requieren clave y facturación habilitada y pueden generar cargos por solicitud.
+- Respetar atribución, condiciones de uso, restricciones de almacenamiento/caché y políticas aplicables; no descargar ni republicar imágenes de Google como archivos propios. No activar APIs, claves con facturación ni servicios pagos sin verificar el coste y recibir autorización expresa.
 - Si no se puede cargar Google Maps/Street View, la alerta debe seguir mostrando las coordenadas y el domicilio registrado; la consulta externa es complementaria y nunca bloquea el envío.
 
 Supabase continúa siendo la fuente oficial de alertas, membresías, ubicaciones y permisos. En el código y documentación revisados para esta etapa no se encontró evidencia de que Google Sheets sea el almacenamiento operativo actual de VIGIARED. No se debe usar una hoja de cálculo como mecanismo de autorización, distribución en tiempo real ni almacenamiento principal de fotografías. Si luego se confirma una integración con Google Sheets, podrá evaluarse sólo como exportación o reporte administrativo no sensible, sin credenciales, PIN, teléfonos, coordenadas precisas ni enlaces privados a fotografías.
@@ -154,7 +156,7 @@ Supabase continúa siendo la fuente oficial de alertas, membresías, ubicaciones
 1. Definir qué datos exactos ven los vecinos y cuáles quedan sólo para operadores autorizados.
 2. Definir si el estado `resuelta` lo puede cambiar sólo un operador o también el emisor.
 3. Probar Realtime y Storage con RLS en una base aislada.
-4. Verificar qué mecanismo oficial de Google Maps/Street View utilizaba la aplicación original y si puede mantenerse sin costes; no habilitar APIs facturables sin autorización.
+4. Recuperar el código original y comprobar si utilizaba Maps URLs o una API incrustada. La alternativa aprobada sin coste de API es abrir Maps/Street View mediante URLs oficiales; cualquier API facturable queda excluida sin autorización expresa.
 5. Resolver la autenticación telefónica real sin coste antes de habilitar el alta vecinal productiva.
 6. Definir retención y borrado seguro de fotografías opcionales.
 
