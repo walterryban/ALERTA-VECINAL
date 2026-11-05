@@ -1,6 +1,6 @@
 # VIGIARED — Modelo territorial de manzanas y domicilios v0.3
 
-**Estado:** decisión de arquitectura y revisión de compatibilidad. No es SQL ejecutable.  
+**Estado:** decisión de arquitectura y revisión de compatibilidad. No es SQL ejecutable. La migración y la Edge Function corregidas superaron pruebas aisladas en PostgreSQL 16; aún no se ejecutaron en Supabase compartido.  
 **Rama de corrección:** `fix/vigiared-territorial-model-v0-3`.  
 **Entorno:** no ejecutar cambios en Supabase compartido; no desplegar ni tocar producción.
 
@@ -10,19 +10,11 @@ Vincular cada domicilio/unidad a una manzana identificable y a una organización
 
 La relación debe ser por claves foráneas UUID, nunca por nombre de manzana, dirección o texto ingresado desde el navegador.
 
-## 2. Hallazgo crítico: colisión con la tabla heredada `public.manzanas`
+## 2. Hallazgo de inspección: no existe `public.manzanas` en el esquema consultado
 
-El proyecto original ya contiene una tabla heredada `public.manzanas` utilizada por la aplicación anterior. La documentación de la arquitectura original registra que su identificador es `bigint` y que el modelo previo vincula alertas por el campo textual `alertas.manzana`.
+En la inspección de solo lectura realizada sobre el proyecto Supabase compartido el 5 de noviembre de 2026, las consultas de columnas, RLS e índices no devolvieron una tabla `public.manzanas` ni `public.manzanas_vigiared`. Por lo tanto, no debemos afirmar que la tabla heredada está presente en este proyecto. Sí debemos mantener el nombre explícito `manzanas_vigiared` para evitar colisiones semánticas con código, documentación o versiones anteriores.
 
-La migración propuesta `supabase/migrations/20261105110000_vigiared_manzanas_domicilios_pin.sql` intenta ejecutar:
-
-```sql
-create table if not exists public.manzanas (...)
-```
-
-Esto NO adapta la tabla heredada si ya existe. PostgreSQL conserva la tabla existente, con columnas y tipos anteriores; las funciones posteriores que esperan `organizacion_id`, `public_id`, `estado` UUID y la clave única compuesta podrían fallar o referenciar un modelo incompatible.
-
-**Decisión de seguridad:** no reutilizar ni transformar automáticamente `public.manzanas` en esta etapa. Tampoco asociar alertas o domicilios ficticios históricos por nombre.
+La consulta de `pg_policies` devolvió `Success. No rows returned` para `organizaciones`, `unidades`, `manzanas` y `manzanas_vigiared`: no hay políticas RLS definidas para esas tablas en el esquema consultado. `organizaciones` y `unidades` sí tienen RLS habilitado y forzado. La migración propuesta mantiene acceso a través de funciones RPC controladas y no concede lectura directa de las tablas territoriales sensibles.
 
 ## 3. Nombre canónico nuevo
 
@@ -113,8 +105,8 @@ No usar `public.manzanas`, `alertas.manzana` ni coincidencias de texto como fuen
 
 Además de la colisión de nombres:
 
-- La función `crear_domicilio_con_responsable` inserta `created_by` en `public.unidades`; el inventario del esquema base consultado no documenta esa columna. Debe verificarse en DDL real antes de referenciarla.
-- La migración agrega `unidades.manzana_id`; la propuesta corregida usa `manzana_vigiared_id` para no confundir la relación nueva con la tabla heredada.
+- La inspección posterior confirmó que `public.unidades.created_by` sí existe; la migración puede utilizar esa columna.
+- La migración corregida agrega `unidades.manzana_vigiared_id`; no debe introducirse `manzana_id` como nombre alternativo.
 - La migración asume que la tabla `manzanas` nueva posee columnas y constraints que `CREATE TABLE IF NOT EXISTS` no agrega a una tabla preexistente.
 - No ejecutar parcialmente la migración para “ver qué pasa”: debe revisarse y ensayarse completa en una base desechable.
 
@@ -122,8 +114,8 @@ La migración actual queda **bloqueada y supersedida como borrador de diseño** 
 
 ## 8. Plan de implementación seguro
 
-1. La inspección de columnas, constraints, índices, RLS y triggers del proyecto compartido ya fue ejecutada en modo solo lectura; falta confirmar el resultado de `pg_policies`.
-2. La migración corregida se prepara en una rama aislada y se ensaya en PostgreSQL 16 efímero con datos sintéticos.
+1. La inspección de columnas, constraints, índices, RLS, triggers y `pg_policies` del proyecto compartido ya fue ejecutada en modo solo lectura; `pg_policies` no devolvió políticas para las tablas consultadas.
+2. La migración corregida está en una rama aislada y se ensayó en PostgreSQL 16 efímero con datos sintéticos.
 3. La prueba incluye la FK compuesta para rechazar asociaciones entre organizaciones distintas.
 4. Después se amplían las pruebas de QR público, PIN único por domicilio, rotación, solicitudes y límites de intentos.
 5. Se revisan selección de audiencia, múltiples manzanas y organizaciones, y deduplicación por usuario.
@@ -131,4 +123,4 @@ La migración actual queda **bloqueada y supersedida como borrador de diseño** 
 
 ## 9. Estado
 
-Este documento registra el modelo territorial y los hallazgos de compatibilidad confirmados. La corrección de la migración y de la Edge Function se está preparando en la rama `fix/vigiared-territorial-model-v0-3`. Los cambios permanecen fuera de Supabase real y producción; no se ejecutó SQL en el proyecto compartido, no se desplegó ninguna función y no se generaron costos.
+Este documento registra el modelo territorial y los hallazgos de compatibilidad confirmados. La corrección de la migración y de la Edge Function está en la rama `fix/vigiared-territorial-model-v0-3`. La prueba de CI del 5 de noviembre de 2026 cubrió el esquema aislado y el chequeo de tipos Deno; no representa una ejecución sobre Supabase real. Los cambios permanecen fuera de Supabase real y producción; no se ejecutó SQL en el proyecto compartido, no se desplegó ninguna función y no se generaron costos.
