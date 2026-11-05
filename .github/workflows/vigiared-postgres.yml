@@ -8,6 +8,7 @@ on:
     paths:
       - 'supabase/migrations/20261105110000_vigiared_manzanas_domicilios_pin.sql'
       - 'supabase/migrations/20261105130000_vigiared_consultas_gestion_segura.sql'
+      - 'supabase/migrations/20261105150000_vigiared_alta_responsable_consentimiento.sql'
       - 'supabase/functions/vigiared-pin/**'
       - 'admin.html'
       - 'tests/postgres/**'
