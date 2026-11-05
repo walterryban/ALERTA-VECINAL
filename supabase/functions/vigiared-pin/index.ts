@@ -189,10 +189,12 @@ Deno.serve(async (req) => {
 
     if (action === "solicitar_ingreso") {
       const user = userResult.user;
-      if (!user.phone || !user.phone_confirmed_at) {
+      const telefonoVerificado = Boolean(user.phone && user.phone_confirmed_at);
+      const correoVerificado = Boolean(user.email && user.email_confirmed_at);
+      if (!telefonoVerificado && !correoVerificado) {
         return response({
-          error: "Para solicitar el ingreso vecinal se requiere un teléfono verificado.",
-          codigo: "TELEFONO_NO_VERIFICADO",
+          error: "Para solicitar el ingreso vecinal se requiere un teléfono o correo electrónico verificado.",
+          codigo: "CONTACTO_NO_VERIFICADO",
         }, 403, corsHeaders);
       }
       const pin = typeof body.pin === "string" ? body.pin.trim() : "";
