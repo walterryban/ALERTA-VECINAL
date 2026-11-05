@@ -164,7 +164,7 @@ set role authenticated;
 select (public.crear_manzana(
  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
  'Manzana de prueba'
-)->>'manzana_id') as manzana_id \\gset
+)->>'manzana_id') as manzana_id \gset
 reset role;
 
 set role service_role;
@@ -180,7 +180,7 @@ select (public.crear_domicilio_con_responsable(
  '11111111-1111-4111-8111-111111111111',
  repeat('a',64),
  '11111111-1111-4111-8111-111111111111'
-)->>'unidad_id') as unidad_id \\gset
+)->>'unidad_id') as unidad_id \gset
 reset role;
 
 select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
@@ -194,7 +194,7 @@ reset role;
 
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 set role authenticated;
-select (public.listar_solicitudes_ingreso_pendientes(:'unidad_id'::uuid)->'solicitudes'->0->>'solicitud_id') as solicitud_id \\gset
+select (public.listar_solicitudes_ingreso_pendientes(:'unidad_id'::uuid)->'solicitudes'->0->>'solicitud_id') as solicitud_id \gset
 select public.resolver_solicitud_ingreso(:'solicitud_id'::uuid,true);
 reset role;
 
@@ -216,7 +216,7 @@ reset role;
 
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
 set role authenticated;
-select (public.listar_solicitudes_ingreso_pendientes(:'unidad_id'::uuid)->'solicitudes'->0->>'solicitud_id') as solicitud_reingreso_id \\gset
+select (public.listar_solicitudes_ingreso_pendientes(:'unidad_id'::uuid)->'solicitudes'->0->>'solicitud_id') as solicitud_reingreso_id \gset
 select public.resolver_solicitud_ingreso(:'solicitud_reingreso_id'::uuid,true);
 reset role;
 
