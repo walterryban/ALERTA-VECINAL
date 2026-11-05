@@ -157,7 +157,7 @@ begin
  if length(v_nombre)<1 or length(v_nombre)>150 then raise exception 'Identificación del domicilio inválida'; end if;
  if p_tipo not in ('vivienda','departamento','habitacion','comercio','establecimiento','otra') then raise exception 'Tipo de unidad inválido'; end if;
  if p_pin_hmac !~ '^[0-9a-f]{64}$' then raise exception 'Credencial inválida'; end if;
- if not exists(select 1 from auth.users u where u.id=p_responsable_user_id and nullif(u.phone,'') is not null and u.phone_confirmed_at is not null) then raise exception 'La cuenta responsable debe tener un teléfono verificado'; end if;
+ if not exists(select 1 from auth.users u where u.id=p_responsable_user_id and ((nullif(u.phone,'') is not null and u.phone_confirmed_at is not null) or (nullif(u.email,'') is not null and u.email_confirmed_at is not null))) then raise exception 'La cuenta responsable debe tener teléfono o correo verificado'; end if;
  if not exists(select 1 from public.manzanas_vigiared m where m.id=p_manzana_vigiared_id and m.organizacion_id=p_organizacion_id and m.estado='activa') then raise exception 'Manzana no disponible'; end if;
  insert into public.unidades(organizacion_id,manzana_vigiared_id,nombre,tipo,direccion,localidad,provincia,codigo_postal,estado,created_by)
  values(p_organizacion_id,p_manzana_vigiared_id,v_nombre,p_tipo,nullif(btrim(coalesce(p_direccion,'')),''),nullif(btrim(coalesce(p_localidad,'')),''),nullif(btrim(coalesce(p_provincia,'')),''),nullif(btrim(coalesce(p_codigo_postal,'')),''),'activa',p_actor_user_id)
@@ -215,20 +215,22 @@ declare
 begin
   if v_user is null then raise exception 'Autenticación requerida'; end if;
 
-  -- La verificación telefónica también se exige dentro de la RPC.
-  -- No basta con validarla en la Edge Function: la RPC es invocable por
-  -- cualquier sesión authenticated que tenga permiso EXECUTE.
+  -- Exige un método de contacto verificado dentro de la RPC:
+  -- teléfono o correo. No basta con validarlo sólo en la Edge Function.
   if not exists (
     select 1
     from auth.users u
     where u.id = v_user
-      and nullif(u.phone, '') is not null
-      and u.phone_confirmed_at is not null
+      and (
+        (nullif(u.phone, '') is not null and u.phone_confirmed_at is not null)
+        or
+        (nullif(u.email, '') is not null and u.email_confirmed_at is not null)
+      )
   ) then
     return jsonb_build_object(
       'ok', false,
-      'codigo', 'TELEFONO_NO_VERIFICADO',
-      'mensaje', 'Se requiere un teléfono verificado'
+      'codigo', 'CONTACTO_NO_VERIFICADO',
+      'mensaje', 'Se requiere un teléfono o correo electrónico verificado'
     );
   end if;
 
