@@ -9,6 +9,7 @@ on:
       - 'supabase/migrations/20261105110000_vigiared_manzanas_domicilios_pin.sql'
       - 'supabase/migrations/20261105130000_vigiared_consultas_gestion_segura.sql'
       - 'supabase/functions/vigiared-pin/**'
+      - 'admin.html'
       - 'tests/postgres/**'
       - '.github/workflows/vigiared-postgres.yml'
   workflow_dispatch:
@@ -42,6 +43,18 @@ jobs:
           deno-version: v2.x
       - name: Type-check VIGIARED PIN Edge Function
         run: deno check --no-lock --no-config supabase/functions/vigiared-pin/index.ts
+      - name: Check admin inline JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('admin.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>([\\s\\S]*?)</script>', html)
+          if not scripts:
+              raise SystemExit('No se encontró el script principal de admin.html')
+          Path('/tmp/vigiared-admin.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/vigiared-admin.js
       - name: Install PostgreSQL client
         run: |
           sudo apt-get update
