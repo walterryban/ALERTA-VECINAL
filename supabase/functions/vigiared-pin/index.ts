@@ -1,7 +1,8 @@
 // VIGIARED — Edge Function para PIN de domicilio
-// Variables: SUPABASE_URL, SUPABASE_ANON_KEY,
+// Variables: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
 // VIGIARED_PIN_HMAC_SECRET (secreto aleatorio de al menos 32 bytes).
-// No requiere ni debe utilizar SUPABASE_SERVICE_ROLE_KEY.
+// La clave privilegiada sólo se usa dentro de esta Edge Function para las RPC
+// de escritura de credenciales, que no aceptan llamadas desde authenticated.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -90,7 +91,12 @@ Deno.serve(async (req) => {
     if (action === "crear_domicilio") {
       const pin = randomPin();
       const digest = await pinHmac(pin);
-      const { data, error } = await supabase.rpc("crear_domicilio_con_responsable", {
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (!serviceRoleKey) throw new Error("Servicio privilegiado no configurado");
+      const privileged = createClient(url, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { data, error } = await privileged.rpc("crear_domicilio_con_responsable", {
         p_organizacion_id: body.organizacion_id,
         p_manzana_id: body.manzana_id,
         p_nombre: body.nombre,
@@ -101,6 +107,7 @@ Deno.serve(async (req) => {
         p_codigo_postal: body.codigo_postal ?? null,
         p_responsable_user_id: body.responsable_user_id,
         p_pin_hmac: digest,
+        p_actor_user_id: userResult.user.id,
       });
       if (error) return response({ error: "No se pudo registrar el domicilio" }, 400);
       // Entrega única del PIN. No registrar esta respuesta en logs.
@@ -110,9 +117,15 @@ Deno.serve(async (req) => {
     if (action === "rotar_pin") {
       const pin = randomPin();
       const digest = await pinHmac(pin);
-      const { data, error } = await supabase.rpc("rotar_pin_domicilio", {
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (!serviceRoleKey) throw new Error("Servicio privilegiado no configurado");
+      const privileged = createClient(url, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { data, error } = await privileged.rpc("rotar_pin_domicilio", {
         p_unidad_id: body.unidad_id,
         p_pin_hmac_nuevo: digest,
+        p_actor_user_id: userResult.user.id,
       });
       if (error) return response({ error: "No se pudo renovar el PIN" }, 400);
       return response({ ...data, pin_entrega_unica: pin });
