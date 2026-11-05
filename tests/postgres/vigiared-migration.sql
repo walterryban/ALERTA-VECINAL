@@ -148,4 +148,93 @@ begin
 end
 $assert$;
 
+
+-- Prueba funcional de alta, solicitud, aprobación y reingreso con usuarios ficticios.
+insert into auth.users(id,phone,phone_confirmed_at) values
+ ('11111111-1111-4111-8111-111111111111','+5491100000001',now()),
+ ('22222222-2222-4222-8222-222222222222','+5491100000002',now());
+
+insert into public.organizaciones(id,nombre,tipo,estado)
+values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','Organización QA','comunidad','activa');
+insert into public.propietarios_plataforma(user_id,activo)
+values ('11111111-1111-4111-8111-111111111111',true);
+
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+set role authenticated;
+select (public.crear_manzana(
+ 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+ 'Manzana de prueba'
+)->>'manzana_id') as manzana_id \\gset
+reset role;
+
+set role service_role;
+select (public.crear_domicilio_con_responsable(
+ 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+ :'manzana_id'::uuid,
+ 'Casa QA 1',
+ 'vivienda',
+ 'Calle de prueba 123',
+ 'Localidad QA',
+ 'Provincia QA',
+ null,
+ '11111111-1111-4111-8111-111111111111',
+ repeat('a',64),
+ '11111111-1111-4111-8111-111111111111'
+)->>'unidad_id') as unidad_id \\gset
+reset role;
+
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
+set role authenticated;
+select public.solicitar_ingreso_con_pin(
+ (select public_id from public.manzanas where id=:'manzana_id'::uuid),
+ repeat('a',64),
+ 'Solicitud de prueba'
+);
+reset role;
+
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+set role authenticated;
+select (public.listar_solicitudes_ingreso_pendientes(:'unidad_id'::uuid)->'solicitudes'->0->>'solicitud_id') as solicitud_id \\gset
+select public.resolver_solicitud_ingreso(:'solicitud_id'::uuid,true);
+reset role;
+
+-- Simula baja/revocación anterior y verifica que la nueva aprobación reactive
+-- el acceso con rol miembro, sin recuperar el rol responsable.
+update public.membresias_unidad
+set estado='revocada', updated_at=now()
+where unidad_id=:'unidad_id'::uuid
+  and user_id='22222222-2222-4222-8222-222222222222';
+
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
+set role authenticated;
+select public.solicitar_ingreso_con_pin(
+ (select public_id from public.manzanas where id=:'manzana_id'::uuid),
+ repeat('a',64),
+ 'Solicitud de reingreso'
+);
+reset role;
+
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+set role authenticated;
+select (public.listar_solicitudes_ingreso_pendientes(:'unidad_id'::uuid)->'solicitudes'->0->>'solicitud_id') as solicitud_reingreso_id \\gset
+select public.resolver_solicitud_ingreso(:'solicitud_reingreso_id'::uuid,true);
+reset role;
+
+do $functional_assert$
+begin
+ if not exists (
+  select 1 from public.membresias_unidad
+  where unidad_id=:'unidad_id'::uuid
+    and user_id='22222222-2222-4222-8222-222222222222'
+    and rol='miembro' and estado='activa'
+ ) then raise exception 'El reingreso no reactivó la membresía como miembro'; end if;
+ if not exists (
+  select 1 from public.membresias_unidad
+  where unidad_id=:'unidad_id'::uuid
+    and user_id='11111111-1111-4111-8111-111111111111'
+    and rol='responsable' and estado='activa'
+ ) then raise exception 'Se perdió el responsable original'; end if;
+end
+$functional_assert$;
+
 select 'OK: migración aplicada y verificaciones de permisos/RLS superadas' as resultado;
