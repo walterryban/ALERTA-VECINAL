@@ -75,6 +75,40 @@
 | S-08 | Membresía suspendida vuelve a solicitar ingreso y responsable aprueba | Se reactiva como `miembro` |
 | S-09 | Membresía ya activa intenta volver a ingresar | No duplica ni modifica la membresía |
 
+
+## Revisión adicional de Edge Function (05-11-2026)
+
+La Edge Function `vigiared-pin` se endureció antes de cualquier despliegue:
+
+- CORS ya no usa `*`: exige coincidencia exacta con `VIGIARED_ALLOWED_ORIGINS` para solicitudes de navegador.
+- Respuestas con `Cache-Control: no-store` y `Pragma: no-cache`, especialmente importante para la entrega única del PIN.
+- Verificación de método, tipo de contenido, tamaño máximo del cuerpo, JSON y formato de identificadores.
+- Validación de sesión mediante `auth.getUser(accessToken)`.
+- La clave `service_role` sólo se utiliza dentro de la Edge Function para RPC privilegiadas; el actor se deriva del usuario autenticado y la base vuelve a validar su rol.
+- El PIN sólo se devuelve una vez al crear o rotar; el HMAC y los secretos no se devuelven ni se escriben en auditoría.
+
+### Variables requeridas antes de desplegar
+
+Configurar en el entorno de Edge Functions, nunca en el frontend ni en Git:
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `VIGIARED_PIN_HMAC_SECRET` (mínimo 32 bytes aleatorios)
+- `VIGIARED_ALLOWED_ORIGINS` (orígenes exactos separados por coma; sin comodines)
+
+No se deben inventar ni fijar dominios hasta decidir cuáles serán los orígenes oficiales. Mientras la lista esté vacía, las solicitudes de navegador se rechazan por diseño. Las llamadas server-to-server sin cabecera Origin siguen siendo posibles.
+
+### Casos pendientes de prueba antes de despliegue
+
+- CORS: origen autorizado aceptado; origen no listado y lista vacía rechazados.
+- PIN de alta/rotación: respuesta no cacheable y entrega única; nunca en logs, QR, URL ni auditoría.
+- Solicitudes malformadas, JSON inválido, contenido no JSON y cuerpo mayor al límite rechazados.
+- Acciones privilegiadas desde usuario sin rol organizacional rechazadas por la RPC.
+- Verificación telefónica real sigue pendiente; no habilitar el acceso vecinal productivo hasta contar con un método autorizado y sostenible sin costo.
+- El límite de intentos actual es por usuario y manzana. Antes de producción hay que reforzarlo contra abuso distribuido entre múltiples cuentas, sin introducir costes ni recopilar datos innecesarios.
+
+La CI ahora ejecuta `deno check` sobre la Edge Function además de las pruebas PostgreSQL aisladas. No implica despliegue ni uso de secretos reales.
+
 ## Criterio de aprobación
 
 No ejecutar en producción hasta que todos los casos funcionales y de seguridad aplicables pasen en un entorno aislado, el SQL haya sido validado por el motor PostgreSQL y se haya revisado la integración de Edge Function. No activar SMS/WhatsApp pagos ni iniciar pruebas con usuarios reales sin autorización.
