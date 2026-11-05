@@ -94,21 +94,21 @@
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN VIGIARED -->
 <div id="login-overlay">
   <div class="login-card">
-    <h2>CENTRO DE MONITOREO</h2>
-    <p>Ingrese credenciales de operador autorizado</p>
+    <h2>VIGIARED</h2>
+    <p>Plataforma independiente de prevención y respuesta comunitaria.<br>Acceso seguro al Centro de Operaciones.</p>
     <div class="form-group">
-      <label>Correo de acceso</label>
-      <input type="email" id="loginEmail" placeholder="nombre@organizacion.org" />
+      <label for="loginEmail">Correo electrónico</label>
+      <input type="email" id="loginEmail" placeholder="Ingresá tu correo electrónico" autocomplete="username" />
     </div>
     <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" />
+      <label for="loginPassword">Contraseña</label>
+      <input type="password" id="loginPassword" placeholder="Ingresá tu contraseña" autocomplete="current-password" />
     </div>
-    <button class="btn-primary" onclick="iniciarSesion()">Ingresar a la Consola</button>
-    <button class="btn-link" type="button" onclick="solicitarRecuperacion()">Olvidé mi contraseña</button>
+    <button class="btn-primary" onclick="iniciarSesion()">Ingresar a VIGIARED</button>
+    <button class="btn-link" type="button" onclick="solicitarRecuperacion()">¿Olvidaste tu contraseña?</button>
   </div>
 </div>
 
