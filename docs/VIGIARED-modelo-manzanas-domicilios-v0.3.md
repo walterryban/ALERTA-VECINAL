@@ -1,7 +1,7 @@
 # VIGIARED — Modelo territorial de manzanas y domicilios v0.3
 
 **Estado:** decisión de arquitectura y revisión de compatibilidad. No es SQL ejecutable.  
-**Rama:** integracion-segura-2026-11-04.  
+**Rama de corrección:** `fix/vigiared-territorial-model-v0-3`.  
 **Entorno:** no ejecutar cambios en Supabase compartido; no desplegar ni tocar producción.
 
 ## 1. Objetivo
