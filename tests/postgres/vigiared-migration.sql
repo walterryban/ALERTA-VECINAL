@@ -269,4 +269,29 @@ begin
 end
 $check$;
 
+
+-- Las organizaciones suspendidas/inactivas no admiten nuevas manzanas.
+insert into public.organizaciones(id,nombre,tipo,estado)
+values ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','Organización inactiva QA','comunidad','suspendida');
+
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+set role authenticated;
+do $inactive_org$
+begin
+  begin
+    perform public.crear_manzana(
+      'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+      'No debe crearse'
+    );
+  exception when others then
+    if sqlerrm = 'Organización no disponible' then
+      return;
+    end if;
+    raise;
+  end;
+  raise exception 'Se permitió crear una manzana en una organización suspendida';
+end
+$inactive_org$;
+reset role;
+
 select 'OK: migración aplicada y verificaciones de permisos/RLS superadas' as resultado;
