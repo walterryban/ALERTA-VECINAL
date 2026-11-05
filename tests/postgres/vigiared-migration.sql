@@ -223,6 +223,7 @@ insert into public.manzanas_vigiared(id,organizacion_id,nombre)
 values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc',
         'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
         'Manzana de otra organización');
+\ir vigiared-management-rpc.sql
 
 do $tenant_guard$
 declare
