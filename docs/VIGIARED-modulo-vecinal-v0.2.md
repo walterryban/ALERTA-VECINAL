@@ -25,7 +25,7 @@
 4. El PIN legible se devuelve una sola vez en la respuesta para que el administrador lo entregue al responsable por un canal controlado.
 5. El QR contiene solamente el `public_id` de la manzana.
 6. Un vecino autenticado con teléfono verificado envía el PIN; la Edge Function calcula HMAC y la RPC crea una solicitud pendiente.
-7. El responsable activo o el administrador de la organización aprueba o rechaza la solicitud.
+7. El responsable activo o el administrador de la organización consulta las solicitudes pendientes mediante una RPC limitada al domicilio autorizado y aprueba o rechaza la solicitud.
 8. La aprobación crea una membresía individual con rol `miembro`.
 
 ## Secretos y configuración
@@ -38,7 +38,7 @@ Configurar `VIGIARED_PIN_HMAC_SECRET` como secreto de Edge Function: valor aleat
 - El primer responsable debe ser una cuenta Auth existente; su designación queda bajo autorización administrativa y auditoría.
 - El PIN se entrega una sola vez en la respuesta de creación/rotación. La interfaz debe advertir al operador que lo copie o imprima en el momento y no lo guarde en capturas ni chats inseguros.
 - El QR todavía no genera una imagen; la respuesta de crear manzana devuelve el identificador público para que la interfaz lo codifique como QR.
-- No se conceden permisos directos sobre las tablas nuevas. Las operaciones pasan por RPC con `SECURITY DEFINER`.
+- No se conceden permisos directos sobre las tablas nuevas. Las operaciones pasan por RPC con `SECURITY DEFINER`. Las RPC administrativas que persisten HMAC sólo pueden ejecutarse con `service_role` desde la Edge Function; las RPC de consulta/aprobación usan `authenticated` y verifican el actor dentro de la base.
 - No se activan SMS, WhatsApp, proveedores pagos ni despliegue automático.
 
 ## Revisión necesaria antes de ejecutar
