@@ -98,6 +98,7 @@ create table public.auditoria (
 );
 
 \ir ../../supabase/migrations/20261105110000_vigiared_manzanas_domicilios_pin.sql
+\ir ../../supabase/migrations/20261105130000_vigiared_consultas_gestion_segura.sql
 
 do $assert$
 declare
