@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#081426">
+<title>VIGIARED — Demostración interactiva</title>
+<style>
+:root{color-scheme:dark;--bg:#081426;--panel:#10223b;--panel2:#142b49;--line:#29415f;--text:#f5f8fc;--muted:#a9bbd0;--cyan:#58d5f5;--red:#ff5364;--green:#64d6a1;--amber:#f5bd58}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 12% 0%,#17385c 0,transparent 42%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.shell{width:min(1180px,calc(100% - 32px));margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0;border-bottom:1px solid #ffffff20}.brand{font-weight:900;letter-spacing:.05em}.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.13em}.demo-tag{border:1px solid #f5bd5880;background:#f5bd5818;color:#ffdc9b;border-radius:99px;padding:8px 12px;font-size:12px;font-weight:850}.intro{padding:28px 0 18px}.intro h1{font-size:clamp(1.8rem,4vw,2.7rem);margin:0 0 8px}.intro p{color:var(--muted);line-height:1.6;max-width:760px;margin:0}.notice{margin:16px 0;padding:13px 15px;border:1px solid #f5bd5855;border-radius:13px;background:#f5bd5812;color:#ffdfaa;font-size:13px;line-height:1.55}.switch{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.switch button,.btn{border:1px solid #426282;border-radius:11px;padding:12px 16px;font:inherit;font-weight:800;cursor:pointer}.switch button{background:#102b48;color:#cfe9ff}.switch button.active{background:var(--cyan);color:#08243a;border-color:var(--cyan)}.layout{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(360px,1.1fr);gap:16px;align-items:start}.card{background:linear-gradient(150deg,#142d49,#0e2037);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 16px 45px #0003}.card h2{margin:0 0 8px;font-size:1.25rem}.muted{color:var(--muted);font-size:.9rem;line-height:1.55}.field{display:grid;gap:7px;margin:14px 0}.field label{font-size:.82rem;font-weight:750;color:#d7e5f4}.field input,.field select{width:100%;min-height:48px;padding:11px 13px;border-radius:10px;border:1px solid #3b5877;background:#07182a;color:white;font:inherit}.field input:focus,.field select:focus{outline:2px solid var(--cyan);outline-offset:1px}.btn{width:100%;background:var(--cyan);color:#08243a;border:0;margin-top:8px}.btn.danger{background:var(--red);color:#fff}.btn.secondary{background:#183653;color:#e8f5ff;border:1px solid #3b6487}.mini{font-size:12px;color:#9eb3ca;line-height:1.5}.status{min-height:22px;color:#aeeaff;font-size:13px;margin-top:12px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}.kpi{padding:13px;border:1px solid #ffffff18;border-radius:12px;background:#ffffff08}.kpi span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;font-weight:800}.kpi strong{display:block;font-size:1.55rem;margin-top:4px}.alert{border:1px solid #ef667577;background:#ef667514;border-left:5px solid var(--red);padding:13px;border-radius:11px;margin:10px 0}.alert strong{display:block}.alert small{color:var(--muted)}.empty{border:1px dashed #54708e;border-radius:12px;padding:22px;text-align:center;color:var(--muted);font-size:13px}.hidden{display:none!important}.foot{padding:22px 0 35px;text-align:center;color:#8298b2;font-size:12px}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#f5bd5820;color:#ffdc9b;font-size:11px;font-weight:850}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.kpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:390px){.card{padding:16px}.kpi strong{font-size:1.25rem}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top"><div class="brand">🛡️ VIGIARED<small>TECNOLOGÍA QUE CONECTA Y PROTEGE</small></div><span class="demo-tag">MODO DEMOSTRACIÓN · DATOS FICTICIOS</span></header>
+<section class="intro"><h1>Una comunidad conectada, una respuesta coordinada.</h1><p>Recorrido demostrativo del ingreso vecinal y del Centro de Monitoreo. Permite visualizar cómo una alerta generada desde un domicilio aparece en la consola de seguimiento.</p></section>
+<div class="notice"><strong>Importante:</strong> esta demostración funciona localmente en el navegador. No autentica usuarios, no consulta Supabase, no envía alertas reales ni contacta servicios de emergencia. Todos los datos son ficticios.</div>
+<nav class="switch" aria-label="Elegir vista"><button class="active" id="neighborTab" type="button">🏘️ Vista vecinal</button><button id="monitorTab" type="button">🖥️ Centro de Monitoreo</button></nav>
+<div class="layout">
+<section class="card" id="neighborView">
+<span class="pill">SIMULACIÓN VECINAL</span><h2 style="margin-top:10px">Acceso a tu comunidad</h2>
+<p class="muted">En el producto, el vecino escanea el QR de su manzana e ingresa el PIN único de su domicilio. Aquí simulamos ese paso para recorrer el flujo.</p>
+<div class="field"><label for="community">Comunidad / manzana</label><input id="community" value="Manzana Demo 01" readonly></div>
+<div class="field"><label for="pin">PIN de domicilio de demostración</label><input id="pin" inputmode="numeric" maxlength="10" placeholder="Ingresá el PIN de prueba" autocomplete="off"></div>
+<p class="mini">PIN ficticio para esta presentación: <strong>246810</strong>. En el sistema real, el PIN será generado de forma segura por el servidor y no estará incluido en el QR.</p>
+<div class="field"><label for="resident">Nombre de demostración</label><input id="resident" value="Vecino de prueba"></div>
+<div class="field"><label for="address">Domicilio de demostración</label><input id="address" value="Calle Ejemplo 123 · Manzana Demo 01"></div>
+<button class="btn secondary" id="validateBtn" type="button">Validar acceso de demostración</button>
+<div class="status" id="accessStatus" role="status" aria-live="polite"></div>
+<div id="alertForm" class="hidden">
+<div style="height:1px;background:#29415f;margin:18px 0"></div><h2>Enviar una alerta de prueba</h2><p class="muted">Seleccioná un motivo. La alerta aparecerá en el panel de monitoreo de esta misma demostración.</p>
+<div class="field"><label for="alertType">Tipo de alerta</label><select id="alertType"><option value="EMERGENCIA">Emergencia</option><option value="ASISTENCIA">Solicitud de asistencia</option><option value="ROBO">Robo / situación sospechosa</option><option value="COACCIÓN">Coacción</option></select></div>
+<button class="btn danger" id="sendAlertBtn" type="button">🚨 Enviar alerta simulada</button>
+</div>
+</section>
+<section class="card" id="monitorView">
+<span class="pill">CONSOLA DE ORGANIZACIÓN</span><h2 style="margin-top:10px">Centro de Monitoreo</h2><p class="muted">Vista resumida de alertas recibidas, con domicilio y estado de atención. En producción, la visibilidad dependerá de los permisos de cada organización.</p>
+<div class="kpis"><div class="kpi"><span>Recibidas</span><strong id="totalCount">0</strong></div><div class="kpi"><span>Pendientes</span><strong id="pendingCount" style="color:var(--amber)">0</strong></div><div class="kpi"><span>Atendidas</span><strong id="resolvedCount" style="color:var(--green)">0</strong></div></div>
+<div id="alertsList"><div class="empty">Todavía no hay alertas en esta demostración.<br>Validá el acceso vecinal y enviá una alerta de prueba.</div></div>
+<p class="mini" style="margin-top:14px">La consola real incorporará perfiles de operador, permisos por organización, auditoría y actualización del estado de cada evento.</p>
+</section>
+</div>
+<footer class="foot">VIGIARED · Plataforma independiente · Presentación funcional ilustrativa</footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);let authorized=false;let alerts=[];
+function setView(view){const n=view==="neighbor";$("neighborTab").classList.toggle("active",n);$("monitorTab").classList.toggle("active",!n);$("neighborView").classList.toggle("hidden",!n);$("monitorView").classList.toggle("hidden",n)}
+$("neighborTab").addEventListener("click",()=>setView("neighbor"));$("monitorTab").addEventListener("click",()=>setView("monitor"));
+$("validateBtn").addEventListener("click",()=>{if($("pin").value.trim()!=="246810"){$("accessStatus").textContent="No se pudo validar el PIN de demostración. Revisá el código e intentá nuevamente.";authorized=false;$("alertForm").classList.add("hidden");return}authorized=true;$("accessStatus").textContent="Acceso de demostración validado. Ya podés enviar una alerta ficticia.";$("alertForm").classList.remove("hidden")});
+$("sendAlertBtn").addEventListener("click",()=>{if(!authorized)return;const type=$("alertType").value;alerts.unshift({id:Date.now(),type,name:$("resident").value.trim()||"Vecino de prueba",address:$("address").value.trim()||"Domicilio de demostración",time:new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}),status:"PENDIENTE"});render();$("accessStatus").textContent="Alerta simulada recibida por el Centro de Monitoreo.";setView("monitor")});
+function render(){$("totalCount").textContent=alerts.length;$("pendingCount").textContent=alerts.filter(a=>a.status==="PENDIENTE").length;$("resolvedCount").textContent=alerts.filter(a=>a.status==="ATENDIDA").length;if(!alerts.length){$("alertsList").innerHTML='<div class="empty">Todavía no hay alertas en esta demostración.</div>';return}$("alertsList").innerHTML=alerts.map(a=>'<article class="alert"><small>'+a.time+' · '+a.status+'</small><strong>'+escapeHtml(a.type)+'</strong><div style="margin:6px 0;color:#d8e7f7">'+escapeHtml(a.name)+'</div><small>📍 '+escapeHtml(a.address)+'</small><button class="btn secondary" style="margin-top:10px;padding:9px" data-id="'+a.id+'">'+(a.status==="PENDIENTE"?"Marcar como atendida":"Atendida")+'</button></article>').join("");document.querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click",()=>{const a=alerts.find(x=>String(x.id)===b.dataset.id);if(a){a.status="ATENDIDA";render()}}))}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+</script>
+</body></html>
