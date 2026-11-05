@@ -14,7 +14,9 @@ create schema auth;
 create table auth.users (
   id uuid primary key,
   phone text,
-  phone_confirmed_at timestamptz
+  phone_confirmed_at timestamptz,
+  email text,
+  email_confirmed_at timestamptz
 );
 create or replace function auth.uid()
 returns uuid language sql stable
@@ -180,9 +182,9 @@ $assert$;
 
 
 -- Prueba funcional de alta, solicitud, aprobación y reingreso con usuarios ficticios.
-insert into auth.users(id,phone,phone_confirmed_at) values
- ('11111111-1111-4111-8111-111111111111','+5491100000001',now()),
- ('22222222-2222-4222-8222-222222222222','+5491100000002',now());
+insert into auth.users(id,phone,phone_confirmed_at,email,email_confirmed_at) values
+ ('11111111-1111-4111-8111-111111111111','+5491100000001',now(),'responsable@vigiared.test',now()),
+ ('22222222-2222-4222-8222-222222222222',null,null,'vecino@vigiared.test',now());
 
 insert into public.organizaciones(id,nombre,tipo,estado)
 values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','Organización QA','comunidad','activa');
