@@ -88,6 +88,14 @@
     /* FORMULARIO MANZANAS */
     .card-form { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #1f2937; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
     .card-form .form-group { margin-bottom: 0; flex: 1; min-width: 200px; }
+    .entity-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; margin-top:14px; }
+    .entity-card { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:16px; min-width:0; }
+    .entity-card h3 { color:#f8fafc; font-size:1rem; margin-bottom:8px; overflow-wrap:anywhere; }
+    .entity-card p { color:#cbd5e1; font-size:.85rem; line-height:1.5; overflow-wrap:anywhere; }
+    .entity-card code { color:#7dd3fc; overflow-wrap:anywhere; }
+    .section-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:16px 0 8px; }
+    .section-heading h2 { font-size:1.05rem; color:#e2e8f0; }
+    .muted-note { color:#94a3b8; font-size:.85rem; line-height:1.5; }
     .btn-success { background: var(--success); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-success:hover { background: #16a34a; }
   </style>
@@ -175,6 +183,9 @@
       <span>Gestión de organizaciones</span>
       <p style="color:#cbd5e1;margin-top:8px;line-height:1.5;">Desde esta cuenta de propietario podés dar de alta organizaciones. La administración de operadores, unidades y permisos se incorporará mediante funciones específicas con controles de autorización en el servidor.</p>
     </div>
+    <div class="section-heading"><h2>Organizaciones activas</h2><span id="cantidadOrganizaciones" class="badge badge-success">0</span></div>
+    <p class="muted-note">Vista global del propietario, alimentada por el contexto autorizado de Supabase.</p>
+    <div id="listaOrganizaciones" class="entity-grid" aria-live="polite"></div>
     <div class="stat-card" style="margin-top:16px;">
       <span>Alcance de esta versión</span>
       <p style="color:#cbd5e1;margin-top:8px;line-height:1.5;">Esta etapa permite iniciar sesión con Supabase, verificar el rol de propietario y crear organizaciones mediante la función segura crear_organizacion(). No utiliza PIN compartidos ni realiza lecturas o escrituras directas sobre tablas protegidas.</p>
@@ -346,7 +357,38 @@
   function mostrarDashboard() {
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-dashboard').style.display = 'block';
-    document.getElementById('sesionRol').textContent = 'Propietario de plataforma';
+    document.getElementById('sesionRol').textContent = 'Propietario global';
+    renderizarOrganizaciones();
+  }
+
+  function renderizarOrganizaciones() {
+    const organizaciones = Array.isArray(contextoUsuario?.organizaciones) ? contextoUsuario.organizaciones : [];
+    const lista = document.getElementById('listaOrganizaciones');
+    const contador = document.getElementById('cantidadOrganizaciones');
+    if (!lista || !contador) return;
+    contador.textContent = String(organizaciones.length);
+    if (organizaciones.length === 0) {
+      lista.innerHTML = '<article class="entity-card"><h3>Sin organizaciones activas</h3><p>Las organizaciones que crees aparecerán aquí.</p></article>';
+      return;
+    }
+    lista.innerHTML = organizaciones.map(function(org) {
+      return '<article class="entity-card">' +
+        '<h3>' + escapeHTML(org.nombre || 'Organización sin nombre') + '</h3>' +
+        '<p>Tipo: ' + escapeHTML(org.tipo || '—') + '</p>' +
+        '<p>Rol: ' + escapeHTML(org.rol || '—') + '</p>' +
+        '<p>Estado: ' + escapeHTML(org.estado || '—') + '</p>' +
+        '<p style="margin-top:8px"><code>' + escapeHTML(org.organizacion_id || '') + '</code></p>' +
+      '</article>';
+    }).join('');
+  }
+
+  async function actualizarContextoUsuario() {
+    const { data, error } = await supabaseClient.rpc('obtener_contexto_usuario');
+    if (error || !data) throw new Error(error?.message || 'No se pudo actualizar el contexto.');
+    contextoUsuario = data;
+    esPropietarioPlataforma = data.es_propietario_plataforma === true;
+    if (!esPropietarioPlataforma) throw new Error('La sesión ya no tiene permisos de propietario global.');
+    renderizarOrganizaciones();
   }
 
   function cambiarPestana(idPestana, btn) {
@@ -389,6 +431,11 @@
 
     document.getElementById('nuevaOrganizacionNombre').value = '';
     resultado.innerHTML = '<span>Organización creada correctamente</span><strong style="display:block;margin-top:8px;font-size:1.25rem;color:#86efac;">' + escapeHTML(data.nombre || nombre) + '</strong><p style="color:#cbd5e1;margin-top:6px;">Tipo: ' + escapeHTML(data.tipo || tipo) + '</p><p style="color:#cbd5e1;margin-top:6px;">Identificador: <code>' + escapeHTML(data.organizacion_id || '') + '</code></p><p style="color:#9ca3af;margin-top:8px;">El alta fue procesada por el backend y registrada en auditoría.</p>';
+    try {
+      await actualizarContextoUsuario();
+    } catch (e) {
+      resultado.innerHTML += '<p style="color:#fbbf24;margin-top:8px;">La organización se creó, pero no se pudo actualizar la lista: ' + escapeHTML(e.message) + '</p>';
+    }
   }
 
   function escapeHTML(value) {
