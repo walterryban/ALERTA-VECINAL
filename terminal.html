@@ -114,7 +114,7 @@
   async function createAccount() {
     if (!MODULE_READY) return setStatus('Módulo aún no habilitado: no se crearán cuentas en esta etapa.', true);
     const { email, password } = getCredentials();
-    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || password.length < 8) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 8) {
       return setStatus('Ingresá un correo válido y una contraseña de al menos 8 caracteres.', true);
     }
     setBusy(true);
@@ -149,7 +149,7 @@
       body: { action: 'aceptar_invitacion_responsable', token }
     });
     setBusy(false);
-    if (error || !data || data.ok !== true || !/^\\d{10}$/.test(data.pin_entrega_unica || '')) {
+    if (error || !data || data.ok !== true || !/^\d{10}$/.test(data.pin_entrega_unica || '')) {
       return setStatus('No se pudo aceptar la invitación. Puede haber vencido, sido revocada o no corresponder a este correo.', true);
     }
     document.getElementById('invite').value = '';
