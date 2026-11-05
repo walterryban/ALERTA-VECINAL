@@ -30,7 +30,7 @@
 
 ## Secretos y configuración
 
-Configurar `VIGIARED_PIN_HMAC_SECRET` como secreto de Edge Function: valor aleatorio de al menos 32 bytes. No guardarlo en el repositorio, SQL, navegador ni logs. `SUPABASE_URL` y `SUPABASE_ANON_KEY` son las variables públicas estándar de Supabase. La función no usa service role.
+Configurar `VIGIARED_PIN_HMAC_SECRET` como secreto de Edge Function: valor aleatorio de al menos 32 bytes. No guardarlo en el repositorio, SQL, navegador ni logs. `SUPABASE_URL` y `SUPABASE_ANON_KEY` son las variables públicas estándar de Supabase. `SUPABASE_SERVICE_ROLE_KEY` es un secreto privilegiado que sólo puede existir en el entorno servidor de la Edge Function.
 
 ## Limitaciones deliberadas de esta primera entrega
 
