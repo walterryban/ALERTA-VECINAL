@@ -183,10 +183,12 @@ select (public.crear_domicilio_con_responsable(
 )->>'unidad_id') as unidad_id \gset
 reset role;
 
+select public_id as manzana_public_id from public.manzanas where id=:'manzana_id'::uuid \\gset
+
 select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
 set role authenticated;
 select public.solicitar_ingreso_con_pin(
- (select public_id from public.manzanas where id=:'manzana_id'::uuid),
+  :'manzana_public_id'::uuid,
  repeat('a',64),
  'Solicitud de prueba'
 );
@@ -208,7 +210,7 @@ where unidad_id=:'unidad_id'::uuid
 select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
 set role authenticated;
 select public.solicitar_ingreso_con_pin(
- (select public_id from public.manzanas where id=:'manzana_id'::uuid),
+  :'manzana_public_id'::uuid,
  repeat('a',64),
  'Solicitud de reingreso'
 );
