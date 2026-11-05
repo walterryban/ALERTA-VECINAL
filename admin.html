@@ -106,6 +106,7 @@
   </div>
 </div>
 
+
 <!-- DASHBOARD -->
 <div class="container" id="app-dashboard" style="display:none;">
   <header>
@@ -114,200 +115,148 @@
       <p>Consola de operaciones para organizaciones autorizadas</p>
     </div>
     <div class="header-actions">
-      <button class="btn-sound" id="activarSonidoBtn" type="button" aria-pressed="false">🔇 Activar sonido</button>
+      <span id="sesionRol" class="badge badge-success">Propietario de plataforma</span>
       <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
   </header>
-
-  <!-- PESTAÑAS -->
   <div class="tabs">
     <button class="tab-btn active" onclick="cambiarPestana('alertas', this)">🚨 Alertas en Vivo</button>
-    <button class="tab-btn" onclick="cambiarPestana('manzanas', this)">🗺️ Gestión de Manzanas</button>
+    <button class="tab-btn" onclick="cambiarPestana('organizaciones', this)">🏢 Organizaciones</button>
   </div>
-
-  <!-- CONTENIDO: ALERTAS -->
-  <div id="tab-alertas" class="tab-content active">
-    <div class="stats-grid" aria-label="Resumen de alertas">
-      <div class="stat-card"><span>Total de alertas</span><strong id="statTotal">0</strong></div>
-      <div class="stat-card pending"><span>Pendientes</span><strong id="statPending">0</strong></div>
-      <div class="stat-card progressing"><span>En proceso</span><strong id="statProgress">0</strong></div>
-      <div class="stat-card resolved"><span>Resueltas</span><strong id="statResolved">0</strong></div>
+  <section id="tab-alertas" class="tab-content active">
+    <div class="stat-card" style="margin-bottom:16px;">
+      <span>Módulo de alertas</span>
+      <strong style="font-size:1.25rem;">Backend en preparación</strong>
+      <p style="color:#cbd5e1;margin-top:10px;line-height:1.5;">La consola visual se conserva, pero la recepción, difusión a miembros autorizados, ubicación y actualización de estados se habilitarán cuando estén listas las funciones y tablas seguras de alertas. No se consultan tablas heredadas ni se muestran datos ficticios.</p>
     </div>
-    <div class="alert-filters">
-      <input id="filtroAlertas" type="search" placeholder="Buscar por manzana, vecino, teléfono o domicilio…" aria-label="Buscar alertas">
-      <select id="filtroEstado" aria-label="Filtrar por estado">
-        <option value="">Todos los estados</option>
-        <option value="PENDIENTE">Pendientes</option>
-        <option value="EN PROCESO">En proceso</option>
-        <option value="RESUELTA">Resueltas</option>
-      </select>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha / Hora</th>
-            <th>Manzana</th>
-            <th>Tipo Alerta</th>
-            <th>Vecino / Teléfono</th>
-            <th>Domicilio / GPS</th>
-            <th>Ficha Médica</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tablaAlertasBody">
-          <tr><td colspan="8" style="text-align:center; color:#9ca3af;">Cargando eventos en tiempo real...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- CONTENIDO: MANZANAS -->
-  <div id="tab-manzanas" class="tab-content">
-    <div class="card-form">
+  </section>
+  <section id="tab-organizaciones" class="tab-content">
+    <div class="card-form" style="align-items:flex-end;">
       <div class="form-group">
-        <label>Nombre de la Manzana / Zona</label>
-        <input type="text" id="nuevaManzanaNombre" placeholder="Ej: MANZANA B" />
+        <label for="nuevaOrganizacionNombre">Nombre de la organización</label>
+        <input id="nuevaOrganizacionNombre" type="text" minlength="2" maxlength="150" placeholder="Ej.: Comunidad Centro" autocomplete="organization">
       </div>
       <div class="form-group">
-        <label>PIN de Acceso</label>
-        <input type="text" id="nuevaManzanaPin" placeholder="Ej: 5678" maxlength="10" />
+        <label for="nuevaOrganizacionTipo">Tipo de organización</label>
+        <select id="nuevaOrganizacionTipo">
+          <option value="comunidad">Comunidad</option>
+          <option value="municipio">Municipio</option>
+          <option value="consorcio">Consorcio</option>
+          <option value="empresa">Empresa</option>
+          <option value="otra">Otra</option>
+        </select>
       </div>
-      <div class="form-group" id="organizacionManzanaGroup">
-        <label>Organización</label>
-        <select id="nuevaManzanaOrganizacion"></select>
-      </div>
-      <button class="btn-success" id="crearManzanaBtn" onclick="agregarManzana()">➕ Crear Manzana</button>
+      <button class="btn-success" id="crearOrganizacionBtn" type="button" onclick="crearOrganizacion()">➕ Crear organización</button>
     </div>
-
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre de Manzana</th>
-            <th>PIN de acceso</th>
-            <th>Fecha de Creación</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tablaManzanasBody">
-          <tr><td colspan="5" style="text-align:center; color:#9ca3af;">Cargando manzanas...</td></tr>
-        </tbody>
-      </table>
+    <div id="resultadoOrganizacion" class="stat-card" aria-live="polite">
+      <span>Gestión de organizaciones</span>
+      <p style="color:#cbd5e1;margin-top:8px;line-height:1.5;">Desde esta cuenta de propietario podés dar de alta organizaciones. La administración de operadores, unidades y permisos se incorporará mediante funciones específicas con controles de autorización en el servidor.</p>
     </div>
-  </div>
+    <div class="stat-card" style="margin-top:16px;">
+      <span>Alcance de esta versión</span>
+      <p style="color:#cbd5e1;margin-top:8px;line-height:1.5;">Esta etapa permite iniciar sesión con Supabase, verificar el rol de propietario y crear organizaciones mediante la función segura crear_organizacion(). No utiliza PIN compartidos ni realiza lecturas o escrituras directas sobre tablas protegidas.</p>
+    </div>
+  </section>
 </div>
 
 <script>
-  const SUPABASE_URL = "https://wwirxlwgsswkzqiwqkux.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_udTmjDidXlwFaOwEpeEKug_u4BtdXeB";
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Proyecto Supabase VIGIARED. La publishable key es pública; nunca incluir service_role en el navegador.
+  const SUPABASE_URL = "https://efypppkjuwpzfssgpbkq.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_5nYG3oHIfbMFW_ddEUT9EA_PnQLVdIm";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
 
-  function escapeHTML(value) { return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
-  let alertasCache = [];
-  let contextoAdministrativo = null;
-  let organizacionesAdministrativas = [];
+  let contextoUsuario = null;
   let esPropietarioPlataforma = false;
-  let puedeGestionarManzanas = true;
-  let puedeActualizarAlertas = true;
 
-  // LOGIN + AUTORIZACIÓN. Autenticarse no basta para entrar al COM.
   window.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    if (error) {
+      mostrarErrorLogin('No se pudo recuperar la sesión: ' + error.message);
+      return;
+    }
     if (session) {
-      const autorizado = await verificarOperadorHeredado();
+      const autorizado = await verificarAcceso();
       if (autorizado) mostrarDashboard();
     }
   });
 
-  async function verificarOperadorHeredado() {
-    // Autenticación y autorización son controles distintos.
-    // No se permite fallback a public.operadores: ese esquema heredado no
-    // ofrece aislamiento por organización y podría dar acceso global.
-    contextoAdministrativo = null;
-    esPropietarioPlataforma = false;
-    organizacionesAdministrativas = [];
-    puedeGestionarManzanas = false;
-    puedeActualizarAlertas = false;
+  function mostrarErrorLogin(mensaje) {
+    const anterior = document.getElementById('loginError');
+    if (anterior) anterior.remove();
+    const p = document.createElement('p');
+    p.id = 'loginError';
+    p.setAttribute('role', 'alert');
+    p.style.cssText = 'color:#fca5a5;margin-top:14px;font-size:.9rem;line-height:1.4;';
+    p.textContent = mensaje;
+    document.querySelector('.login-card').appendChild(p);
+  }
 
-    const { data: contexto, error } = await supabaseClient.rpc('obtener_contexto_administrativo');
-    if (error || !contexto) {
+  async function verificarAcceso() {
+    const { data, error } = await supabaseClient.rpc('obtener_contexto_usuario');
+    if (error || !data) {
       await supabaseClient.auth.signOut();
       document.getElementById('login-overlay').style.display = 'flex';
       document.getElementById('app-dashboard').style.display = 'none';
-      alert('El acceso administrativo todavía no está habilitado. Se requiere aplicar y verificar el esquema RBAC antes de ingresar al Centro de Operaciones.');
+      mostrarErrorLogin('No se pudo verificar el contexto de acceso. ' + (error?.message || 'Respuesta vacía.'));
       return false;
     }
 
-    contextoAdministrativo = contexto;
-    esPropietarioPlataforma = contexto.es_propietario === true;
-    organizacionesAdministrativas = Array.isArray(contexto.organizaciones)
-      ? contexto.organizaciones.filter(o => o.estado === 'activa')
-      : [];
-    const roles = organizacionesAdministrativas.map(o => o.rol).filter(Boolean);
-    const autorizado = esPropietarioPlataforma || roles.some(r =>
-      ['administrador_municipal','supervisor_municipal','operador_municipal','auditor_municipal'].includes(r)
-    );
-    puedeGestionarManzanas = esPropietarioPlataforma || roles.includes('administrador_municipal');
-    puedeActualizarAlertas = esPropietarioPlataforma || roles.some(r =>
-      ['administrador_municipal','supervisor_municipal','operador_municipal'].includes(r)
-    );
+    contextoUsuario = data;
+    esPropietarioPlataforma = data.es_propietario_plataforma === true;
 
-    if (autorizado) return true;
-    await supabaseClient.auth.signOut();
-    document.getElementById('login-overlay').style.display = 'flex';
-    document.getElementById('app-dashboard').style.display = 'none';
-    alert('La cuenta está autenticada, pero no tiene un rol RBAC activo para ingresar al Centro de Operaciones.');
-    return false;
-  }
-
-  function configurarAlcanceAdministrativo() {
-    const tabManzanas = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.textContent.includes('Gestión de Manzanas'));
-    if (tabManzanas) tabManzanas.style.display = puedeGestionarManzanas ? '' : 'none';
-    const formManzanas = document.querySelector('#tab-manzanas .card-form');
-    if (formManzanas) formManzanas.style.display = puedeGestionarManzanas ? 'flex' : 'none';
-    const selector = document.getElementById('nuevaManzanaOrganizacion');
-    if (selector) {
-      selector.innerHTML = organizacionesAdministrativas.map(o =>
-        '<option value="' + escapeHTML(o.id) + '">' + escapeHTML(o.nombre) + '</option>'
-      ).join('');
-      selector.disabled = !esPropietarioPlataforma && organizacionesAdministrativas.length <= 1;
-      if (!contextoAdministrativo) {
-        document.getElementById('organizacionManzanaGroup').style.display = 'none';
-      }
+    // Acceso temporal deliberadamente restringido al propietario global.
+    // Los roles de organización se habilitarán después de validar sus constraints
+    // y las funciones RBAC correspondientes en el servidor.
+    if (!esPropietarioPlataforma) {
+      await supabaseClient.auth.signOut();
+      document.getElementById('login-overlay').style.display = 'flex';
+      document.getElementById('app-dashboard').style.display = 'none';
+      mostrarErrorLogin('La cuenta está autenticada, pero todavía no tiene habilitado el acceso administrativo en esta etapa.');
+      return false;
     }
+    return true;
   }
 
   async function iniciarSesion() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
-    if (!email || !password) { alert("Ingrese correo y contraseña."); return; }
-
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) {
-      alert("Acceso denegado: " + error.message);
+    if (!email || !password) {
+      mostrarErrorLogin('Ingresá correo y contraseña.');
       return;
     }
-    if (await verificarOperadorHeredado()) mostrarDashboard();
+    const boton = document.querySelector('.btn-primary');
+    boton.disabled = true;
+    boton.textContent = 'Verificando…';
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      mostrarErrorLogin('No se pudo iniciar sesión: ' + error.message);
+      boton.disabled = false;
+      boton.textContent = 'Ingresar a la Consola';
+      return;
+    }
+    const autorizado = await verificarAcceso();
+    if (autorizado) mostrarDashboard();
+    boton.disabled = false;
+    boton.textContent = 'Ingresar a la Consola';
   }
 
   async function cerrarSesion() {
-    await supabaseClient.auth.signOut();
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) {
+      alert('No se pudo cerrar la sesión: ' + error.message);
+      return;
+    }
     location.reload();
   }
 
   function mostrarDashboard() {
-    configurarAlcanceAdministrativo();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-dashboard').style.display = 'block';
-    cargarAlertas();
-    escucharAlertasEnTiempoReal();
-    cargarManzanas();
+    document.getElementById('sesionRol').textContent = 'Propietario de plataforma';
   }
 
-  // NAVEGACIÓN DE PESTAÑAS
   function cambiarPestana(idPestana, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -315,224 +264,43 @@
     document.getElementById('tab-' + idPestana).classList.add('active');
   }
 
-  // --- LÓGICA DE ALERTAS ---
-  async function cargarAlertas() {
-    const { data, error } = await supabaseClient.from('alertas').select('*').order('created_at', { ascending: false });
-    if (error) {
-      document.getElementById('tablaAlertasBody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ef4444;">Error al cargar: ${escapeHTML(error.message)}</td></tr>`;
+  async function crearOrganizacion() {
+    if (!esPropietarioPlataforma) {
+      alert('Acción no autorizada.');
       return;
     }
-    alertasCache = data || [];
-    renderizarTablaAlertas(alertasCache);
-  }
-
-  function renderizarTablaAlertas(alertas) {
-    const tbody = document.getElementById('tablaAlertasBody');
-    const todos = alertas || [];
-    const contar = estado => todos.filter(a => String(a.estado || 'PENDIENTE').toUpperCase() === estado).length;
-
-    document.getElementById('statTotal').textContent = String(todos.length);
-    document.getElementById('statPending').textContent = String(contar('PENDIENTE'));
-    document.getElementById('statProgress').textContent = String(contar('EN PROCESO'));
-    document.getElementById('statResolved').textContent = String(contar('RESUELTA'));
-
-    const q = (document.getElementById('filtroAlertas').value || '').trim().toLocaleLowerCase('es-AR');
-    const estadoFiltro = document.getElementById('filtroEstado').value;
-    const visibles = todos.filter(a => {
-      const estado = String(a.estado || 'PENDIENTE').toUpperCase();
-      const texto = [a.manzana, a.tipo_alerta, a.vecino_nombre, a.nombre, a.vecino_telefono, a.telefono, a.direccion]
-        .filter(Boolean).join(' ').toLocaleLowerCase('es-AR');
-      return (!estadoFiltro || estado === estadoFiltro) && (!q || texto.includes(q));
+    const nombre = document.getElementById('nuevaOrganizacionNombre').value.trim();
+    const tipo = document.getElementById('nuevaOrganizacionTipo').value;
+    if (nombre.length < 2 || nombre.length > 150) {
+      alert('El nombre debe tener entre 2 y 150 caracteres.');
+      return;
+    }
+    const boton = document.getElementById('crearOrganizacionBtn');
+    const resultado = document.getElementById('resultadoOrganizacion');
+    boton.disabled = true;
+    boton.textContent = 'Creando…';
+    const { data, error } = await supabaseClient.rpc('crear_organizacion', {
+      p_nombre: nombre,
+      p_tipo: tipo
     });
-
-    tbody.innerHTML = '';
-    if (visibles.length === 0) {
-      const mensaje = todos.length ? 'No hay alertas que coincidan con el filtro.' : 'No hay alertas registradas.';
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#9ca3af;">${mensaje}</td></tr>`;
-      return;
-    }
-
-    visibles.forEach(a => {
-      const isCoaccion = a.tipo_alerta && a.tipo_alerta.toUpperCase().includes('COACCIÓN');
-      const tr = document.createElement('tr');
-      if (isCoaccion) tr.className = 'coaccion-row';
-      const fechaStr = a.created_at ? new Date(a.created_at).toLocaleString('es-AR') : 'Sin fecha';
-      const estado = String(a.estado || 'PENDIENTE').toUpperCase();
-      const mapsHref = typeof a.maps_link === 'string' && /^https:\/\/www\.google\.com\/maps\?q=/i.test(a.maps_link)
-        ? a.maps_link
-        : (Number.isFinite(Number(a.latitud)) && Number.isFinite(Number(a.longitud)) && a.latitud !== null && a.longitud !== null
-          ? `https://www.google.com/maps?q=${encodeURIComponent(a.latitud + ',' + a.longitud)}`
-          : '');
-      const mapsCell = mapsHref
-        ? `<a href="${escapeHTML(mapsHref)}" target="_blank" rel="noopener noreferrer">📍 Abrir mapa</a>`
-        : '<small>Sin ubicación GPS</small>';
-
-      tr.innerHTML = `
-        <td>${escapeHTML(fechaStr)}</td>
-        <td><strong>${escapeHTML(a.manzana || 'N/A')}</strong></td>
-        <td><span class="badge ${isCoaccion ? 'badge-coaccion' : 'badge-danger'}">${escapeHTML(a.tipo_alerta || 'SOS')}</span></td>
-        <td><strong>${escapeHTML(a.vecino_nombre || a.nombre || 'Anónimo')}</strong><br><small style="color:#38bdf8;">📞 ${escapeHTML(a.vecino_telefono || a.telefono || 'Sin datos')}</small></td>
-        <td><strong>${escapeHTML(a.direccion || 'Domicilio no informado')}</strong><br>${mapsCell}</td>
-        <td><small style="color:#cbd5e1;">${escapeHTML(a.ficha_medica || 'Sin registros')}</small></td>
-        <td><span class="badge ${estado === 'RESUELTA' ? 'badge-success' : 'badge-warning'}">${escapeHTML(estado)}</span></td>
-        <td>
-          ${puedeActualizarAlertas ? `<select onchange="cambiarEstado('${escapeHTML(a.id)}', this.value)" style="padding:4px; font-size:0.8rem;">
-            <option value="PENDIENTE" ${estado === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
-            <option value="EN PROCESO" ${estado === 'EN PROCESO' ? 'selected' : ''}>EN PROCESO</option>
-            <option value="RESUELTA" ${estado === 'RESUELTA' ? 'selected' : ''}>RESUELTA</option>
-          </select>` : '<small>Solo lectura</small>'}
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  document.getElementById('filtroAlertas').addEventListener('input', () => renderizarTablaAlertas(alertasCache));
-  document.getElementById('filtroEstado').addEventListener('change', () => renderizarTablaAlertas(alertasCache));
-
-  // El navegador exige una interacción del operador para habilitar audio.
-  let audioContext = null;
-  let sonidoHabilitado = false;
-
-  async function activarSonido() {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) {
-      alert('Este navegador no permite activar el sonido de alertas.');
-      return;
-    }
-    try {
-      audioContext = audioContext || new AudioContextClass();
-      await audioContext.resume();
-      sonidoHabilitado = audioContext.state === 'running';
-      const button = document.getElementById('activarSonidoBtn');
-      button.setAttribute('aria-pressed', String(sonidoHabilitado));
-      button.textContent = sonidoHabilitado ? '🔊 Sonido activado' : '🔇 Activar sonido';
-      if (sonidoHabilitado) reproducirSirena();
-    } catch (error) {
-      console.error('No se pudo activar el audio:', error);
-      alert('No se pudo activar el sonido. Revisá los permisos del navegador.');
-    }
-  }
-
-  function reproducirTono(frecuencia, inicio, duracion) {
-    if (!sonidoHabilitado || !audioContext) return;
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    const startAt = audioContext.currentTime + inicio;
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(frecuencia, startAt);
-    gain.gain.setValueAtTime(0.0001, startAt);
-    gain.gain.exponentialRampToValueAtTime(0.18, startAt + 0.025);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duracion);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(startAt);
-    oscillator.stop(startAt + duracion + 0.02);
-  }
-
-  function reproducirSirena() {
-    if (!sonidoHabilitado || !audioContext) return;
-    [880, 660, 880, 660].forEach((frecuencia, index) => {
-      reproducirTono(frecuencia, index * 0.24, 0.19);
-    });
-  }
-
-  document.getElementById('activarSonidoBtn').addEventListener('click', activarSonido);
-
-  function escucharAlertasEnTiempoReal() {
-    supabaseClient.channel('db-alertas').on('postgres_changes', { event: 'INSERT', table: 'alertas', schema: 'public' }, () => {
-      cargarAlertas();
-      reproducirSirena();
-    }).subscribe();
-  }
-  async function cambiarEstado(id, nuevoEstado) {
-    const { error } = await supabaseClient.from('alertas').update({ estado: nuevoEstado }).eq('id', id);
-    if (error) alert("Error: " + error.message);
-    cargarAlertas();
-  }
-
-  // --- LÓGICA DE MANZANAS ---
-  async function cargarManzanas() {
-    const { data, error } = await supabaseClient.from('manzanas').select('*').order('id', { ascending: true });
-    
-    if (error) {
-      document.getElementById('tablaManzanasBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ef4444;">Error al cargar: ${error.message}</td></tr>`;
-      return;
-    }
-
-    const tbody = document.getElementById('tablaManzanasBody');
-    tbody.innerHTML = '';
-    
-    if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#9ca3af;">No hay manzanas registradas aún.</td></tr>`;
-      return;
-    }
-
-    data.forEach(m => {
-      const fecha = m.created_at ? new Date(m.created_at).toLocaleDateString('es-AR') : 'N/A';
-      const nombreManzana = m.nombre_manzana || m.manzana || 'N/A';
-      const pinProtegido = '••••••';
-
-      // El QR es público: abre la terminal y preselecciona la manzana,
-      // pero nunca transporta el PIN en la URL.
-      const urlTerminal = `terminal.html?manzana=${encodeURIComponent(nombreManzana)}`;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${escapeHTML(m.id)}</td>
-        <td><strong>${escapeHTML(nombreManzana)}</strong></td>
-        <td style="color: var(--warning); font-weight: bold;">${pinProtegido}</td>
-        <td>${escapeHTML(fecha)}</td>
-        <td><button type="button" class="qr-row-button" style="background:#38bdf8; color:#000; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">📱 Ver QR público</button></td>
-      `;
-      tr.querySelector('.qr-row-button').addEventListener('click', () => verQR(urlTerminal, nombreManzana));
-      tbody.appendChild(tr);
-    });
-  }
-
-  async function agregarManzana() {
-    const nombre = document.getElementById('nuevaManzanaNombre').value.trim().toUpperCase();
-    const pin = document.getElementById('nuevaManzanaPin').value.trim();
-
-    if (!nombre || !pin) {
-      alert("Por favor, complete el nombre de la manzana y el PIN.");
-      return;
-    }
-
-    const nuevaManzana = {
-      nombre_manzana: nombre,
-      pin_autorizado: pin
-    };
-    const organizacionId = document.getElementById('nuevaManzanaOrganizacion')?.value;
-    if (contextoAdministrativo) {
-      if (!organizacionId) { alert('Seleccioná una organización activa.'); return; }
-      nuevaManzana.organizacion_id = organizacionId;
-    }
-    const { error } = await supabaseClient.from('manzanas').insert([nuevaManzana]);
+    boton.disabled = false;
+    boton.textContent = '➕ Crear organización';
 
     if (error) {
-      alert("Error al crear la manzana: " + error.message);
-    } else {
-      alert("✅ ¡Manzana creada con éxito!");
-      document.getElementById('nuevaManzanaNombre').value = '';
-      document.getElementById('nuevaManzanaPin').value = '';
-      cargarManzanas();
+      resultado.innerHTML = '<span> No se pudo crear la organización</span><p style="color:#fca5a5;margin-top:8px;">' + escapeHTML(error.message) + '</p>';
+      return;
     }
+    if (!data || data.ok !== true) {
+      resultado.innerHTML = '<span>Respuesta inesperada</span><p style="color:#fca5a5;margin-top:8px;">El servidor no confirmó la creación.</p>';
+      return;
+    }
+
+    document.getElementById('nuevaOrganizacionNombre').value = '';
+    resultado.innerHTML = '<span>Organización creada correctamente</span><strong style="display:block;margin-top:8px;font-size:1.25rem;color:#86efac;">' + escapeHTML(data.nombre || nombre) + '</strong><p style="color:#cbd5e1;margin-top:6px;">Tipo: ' + escapeHTML(data.tipo || tipo) + '</p><p style="color:#cbd5e1;margin-top:6px;">Identificador: <code>' + escapeHTML(data.organizacion_id || '') + '</code></p><p style="color:#9ca3af;margin-top:8px;">El alta fue procesada por el backend y registrada en auditoría.</p>';
   }
 
-  // --- GENERADOR DE QR ---
-  function verQR(url, nombre) {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-    const modalHtml = `
-      <div id="qr-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:9999;">
-        <div style="background:#1e293b; padding:30px; border-radius:12px; text-align:center; border:2px solid #38bdf8; position:relative;">
-          <h3 style="color:#38bdf8; margin-bottom:15px;">QR público de acceso: ${escapeHTML(nombre)}</h3>
-          <img src="${qrUrl}" alt="Código QR" style="border-radius:8px; background:white; padding:10px; width:250px; height:250px;" />
-          <p style="color:#94a3b8; font-size:0.8rem; margin-top:15px; max-width:250px;">Este QR abrirá la Terminal Vecinal con los datos de esta manzana.</p>
-          <button onclick="document.getElementById('qr-modal').remove()" style="margin-top:20px; background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">Cerrar</button>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  function escapeHTML(value) {
+    return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   }
 </script>
 </body>
