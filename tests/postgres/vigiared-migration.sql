@@ -183,7 +183,7 @@ select (public.crear_domicilio_con_responsable(
 )->>'unidad_id') as unidad_id \gset
 reset role;
 
-select public_id as manzana_public_id from public.manzanas where id=:'manzana_id'::uuid \\gset
+select public_id as manzana_public_id from public.manzanas where id=:'manzana_id'::uuid \gset
 
 select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
 set role authenticated;
