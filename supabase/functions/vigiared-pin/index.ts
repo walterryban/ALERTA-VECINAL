@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "crear_domicilio") {
-      const requiredUuids = [body.organizacion_id, body.manzana_id, body.responsable_user_id];
+      const requiredUuids = [body.organizacion_id, body.manzana_vigiared_id, body.responsable_user_id];
       if (!requiredUuids.every(isUuid)) return response({ error: "Datos incompletos" }, 400, corsHeaders);
       const nombre = boundedText(body.nombre, 150);
       const tipo = boundedText(body.tipo, 32);
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
       });
       const { data, error } = await privileged.rpc("crear_domicilio_con_responsable", {
         p_organizacion_id: body.organizacion_id,
-        p_manzana_id: body.manzana_id,
+        p_manzana_vigiared_id: body.manzana_vigiared_id,
         p_nombre: nombre,
         p_tipo: tipo,
         p_direccion: direccion,
