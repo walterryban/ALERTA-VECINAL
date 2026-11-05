@@ -356,14 +356,17 @@ select (public.crear_invitacion_responsable(
 )->>'invitacion_id') as invitacion_id \gset
 reset role;
 
+select set_config('test.unidad_invitada_id', :'unidad_invitada_id', false);
+select set_config('test.invitacion_id', :'invitacion_id', false);
+
 do $pending_guard$
 begin
   if exists(select 1 from public.membresias_unidad
-    where unidad_id=:'unidad_invitada_id'::uuid and rol='responsable' and estado='activa') then
+    where unidad_id=current_setting('test.unidad_invitada_id')::uuid and rol='responsable' and estado='activa') then
     raise exception 'El domicilio pendiente no debe tener responsable activo';
   end if;
   if exists(select 1 from public.credenciales_domicilio
-    where unidad_id=:'unidad_invitada_id'::uuid and estado='activa') then
+    where unidad_id=current_setting('test.unidad_invitada_id')::uuid and estado='activa') then
     raise exception 'No se debe emitir PIN antes de aceptar la invitación';
   end if;
 end
@@ -382,18 +385,18 @@ reset role;
 do $accepted_guard$
 begin
   if not exists(select 1 from public.membresias_unidad
-    where unidad_id=:'unidad_invitada_id'::uuid
+    where unidad_id=current_setting('test.unidad_invitada_id')::uuid
       and user_id='22222222-2222-4222-8222-222222222222'
       and rol='responsable' and estado='activa') then
     raise exception 'La aceptación no activó el rol responsable';
   end if;
   if not exists(select 1 from public.credenciales_domicilio
-    where unidad_id=:'unidad_invitada_id'::uuid
+    where unidad_id=current_setting('test.unidad_invitada_id')::uuid
       and pin_hmac=repeat('d',64) and estado='activa') then
     raise exception 'La aceptación no creó la credencial PIN';
   end if;
   if not exists(select 1 from public.invitaciones_responsable
-    where id=:'invitacion_id'::uuid and estado='aceptada'
+    where id=current_setting('test.invitacion_id')::uuid and estado='aceptada'
       and aceptada_por='22222222-2222-4222-8222-222222222222') then
     raise exception 'La invitación no quedó consumida por el destinatario';
   end if;
