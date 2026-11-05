@@ -182,9 +182,13 @@ begin
     raise exception 'Credencial inválida';
   end if;
   if not exists (
-    select 1 from auth.users u where u.id = p_responsable_user_id
+    select 1
+    from auth.users u
+    where u.id = p_responsable_user_id
+      and nullif(u.phone, '') is not null
+      and u.phone_confirmed_at is not null
   ) then
-    raise exception 'La cuenta responsable no existe';
+    raise exception 'La cuenta responsable debe tener un teléfono verificado';
   end if;
   if not exists (
     select 1 from public.manzanas m
@@ -278,6 +282,10 @@ begin
   return jsonb_build_object('ok', true);
 end;
 $$;
+
+create unique index if not exists solicitudes_ingreso_pendiente_uidx
+  on public.solicitudes_ingreso (unidad_id, user_id)
+  where estado = 'pendiente';
 
 create or replace function public.solicitar_ingreso_con_pin(
   p_manzana_public_id uuid,
@@ -390,10 +398,6 @@ begin
 end;
 $$;
 
-create unique index if not exists solicitudes_ingreso_pendiente_uidx
-  on public.solicitudes_ingreso (unidad_id, user_id)
-  where estado = 'pendiente';
-
 create or replace function public.resolver_solicitud_ingreso(
   p_solicitud_id uuid,
   p_aprobar boolean
@@ -461,9 +465,7 @@ begin
 end;
 $$;
 
--- Índice requerido por la prevención de solicitudes pendientes duplicadas.
--- El índice se crea antes de la función en despliegue real; se declara arriba
--- también para documentar su dependencia. CREATE INDEX IF NOT EXISTS es idempotente.
+-- Los índices de unicidad se crean antes de las RPC que los utilizan.
 
 revoke all on function public.crear_manzana(uuid,text)
   from public, anon, authenticated, service_role;
