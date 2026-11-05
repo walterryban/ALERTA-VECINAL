@@ -153,6 +153,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="cambiarPestana('alertas', this)">🚨 Alertas en Vivo</button>
     <button class="tab-btn" onclick="cambiarPestana('organizaciones', this)">🏢 Organizaciones</button>
+    <button class="tab-btn" onclick="cambiarPestana('unidades', this)">🏘️ Unidades</button>
   </div>
   <section id="tab-alertas" class="tab-content active">
     <div class="stat-card" style="margin-bottom:16px;">
@@ -190,6 +191,11 @@
       <span>Alcance de esta versión</span>
       <p style="color:#cbd5e1;margin-top:8px;line-height:1.5;">Esta etapa permite iniciar sesión con Supabase, verificar el rol de propietario y crear organizaciones mediante la función segura crear_organizacion(). No utiliza PIN compartidos ni realiza lecturas o escrituras directas sobre tablas protegidas.</p>
     </div>
+  </section>
+  <section id="tab-unidades" class="tab-content">
+    <div class="section-heading"><h2>Unidades activas</h2><span id="cantidadUnidades" class="badge badge-success">0</span></div>
+    <p class="muted-note">Vista global del propietario sobre las unidades activas de todas las organizaciones.</p>
+    <div id="listaUnidades" class="entity-grid" aria-live="polite"></div>
   </section>
 </div>
 
@@ -359,6 +365,7 @@
     document.getElementById('app-dashboard').style.display = 'block';
     document.getElementById('sesionRol').textContent = 'Propietario global';
     renderizarOrganizaciones();
+    renderizarUnidades();
   }
 
   function renderizarOrganizaciones() {
@@ -389,6 +396,29 @@
     esPropietarioPlataforma = data.es_propietario_plataforma === true;
     if (!esPropietarioPlataforma) throw new Error('La sesión ya no tiene permisos de propietario global.');
     renderizarOrganizaciones();
+    renderizarUnidades();
+  }
+
+  function renderizarUnidades() {
+    const unidades = Array.isArray(contextoUsuario?.unidades) ? contextoUsuario.unidades : [];
+    const lista = document.getElementById('listaUnidades');
+    const contador = document.getElementById('cantidadUnidades');
+    if (!lista || !contador) return;
+    contador.textContent = String(unidades.length);
+    if (unidades.length === 0) {
+      lista.innerHTML = '<article class="entity-card"><h3>Sin unidades activas</h3><p>Las unidades aparecerán aquí cuando se creen dentro de las organizaciones.</p></article>';
+      return;
+    }
+    lista.innerHTML = unidades.map(function(unidad) {
+      return '<article class="entity-card">' +
+        '<h3>' + escapeHTML(unidad.nombre || 'Unidad sin nombre') + '</h3>' +
+        '<p>Organización: ' + escapeHTML(unidad.organizacion_nombre || '—') + '</p>' +
+        '<p>Tipo: ' + escapeHTML(unidad.tipo || '—') + '</p>' +
+        '<p>Rol: ' + escapeHTML(unidad.rol || '—') + '</p>' +
+        '<p>Estado: ' + escapeHTML(unidad.estado || '—') + '</p>' +
+        '<p style="margin-top:8px"><code>' + escapeHTML(unidad.unidad_id || '') + '</code></p>' +
+      '</article>';
+    }).join('');
   }
 
   function cambiarPestana(idPestana, btn) {
