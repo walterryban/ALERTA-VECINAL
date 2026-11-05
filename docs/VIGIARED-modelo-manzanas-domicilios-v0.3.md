@@ -122,14 +122,13 @@ La migración actual queda **bloqueada y supersedida como borrador de diseño** 
 
 ## 8. Plan de implementación seguro
 
-1. Confirmar con una consulta de solo lectura el DDL exacto de `unidades` y la tabla heredada `manzanas` en el proyecto compartido; no consultar ni exportar datos personales.
-2. Crear una base Supabase/PostgreSQL aislada con el esquema v0.1 y datos completamente sintéticos.
-3. Preparar migración nueva y aditiva para `manzanas_vigiared`, `unidades.manzana_vigiared_id`, credenciales y constraints.
-4. Ejecutar pruebas de FK compuesta: una unidad no puede vincularse a una manzana de otra organización.
-5. Probar QR público, PIN único por domicilio, rotación y solicitudes pendientes.
-6. Probar selección de audiencia con múltiples manzanas y organizaciones, incluyendo membresías duplicadas por usuario.
-7. Sólo después revisar la migración con el usuario y solicitar autorización separada antes de tocar el proyecto Supabase compartido.
+1. La inspección de columnas, constraints, índices, RLS y triggers del proyecto compartido ya fue ejecutada en modo solo lectura; falta confirmar el resultado de `pg_policies`.
+2. La migración corregida se prepara en una rama aislada y se ensaya en PostgreSQL 16 efímero con datos sintéticos.
+3. La prueba incluye la FK compuesta para rechazar asociaciones entre organizaciones distintas.
+4. Después se amplían las pruebas de QR público, PIN único por domicilio, rotación, solicitudes y límites de intentos.
+5. Se revisan selección de audiencia, múltiples manzanas y organizaciones, y deduplicación por usuario.
+6. Sólo después de superar pruebas y revisar el diff se solicitará autorización separada antes de tocar el proyecto Supabase compartido.
 
 ## 9. Estado
 
-Este documento fija el modelo territorial propuesto y detecta un bloqueo real en la migración anterior. No se modificó código de aplicación, no se ejecutó SQL, no se cambiaron tablas ni datos, no se desplegó ninguna función y no se generaron costos.
+Este documento registra el modelo territorial y los hallazgos de compatibilidad confirmados. La corrección de la migración y de la Edge Function se está preparando en la rama `fix/vigiared-territorial-model-v0-3`. Los cambios permanecen fuera de Supabase real y producción; no se ejecutó SQL en el proyecto compartido, no se desplegó ninguna función y no se generaron costos.
