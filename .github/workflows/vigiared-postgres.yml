@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - integracion-segura-2026-11-04
+      - fix/vigiared-territorial-model-v0-3
     paths:
       - 'supabase/migrations/20261105110000_vigiared_manzanas_domicilios_pin.sql'
       - 'supabase/functions/vigiared-pin/**'
