@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
     if (action === "crear_invitacion_responsable") {
       if (!isUuid(body.unidad_id)) return response({ error: "Datos incompletos" }, 400, corsHeaders);
       const email = boundedText(body.email_destino, 254);
-      if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return response({ error: "Correo destinatario no válido" }, 400, corsHeaders);
       }
       const token = randomInvitationToken();
