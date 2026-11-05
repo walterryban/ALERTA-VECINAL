@@ -117,6 +117,35 @@ begin
       and c.relrowsecurity and c.relforcerowsecurity
   ) then raise exception 'RLS/ FORCE RLS faltante en credenciales_domicilio'; end if;
 
+  if not exists (
+    select 1 from pg_class c
+    join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relname='intentos_pin'
+      and c.relrowsecurity and c.relforcerowsecurity
+  ) then raise exception 'RLS/ FORCE RLS faltante en intentos_pin'; end if;
+
+  if exists (
+    select 1 from pg_policies
+    where schemaname='public'
+      and tablename in ('manzanas_vigiared','credenciales_domicilio','intentos_pin')
+  ) then raise exception 'No se esperan políticas directas: acceso exclusivamente por RPC'; end if;
+
+  if has_table_privilege('anon','public.manzanas_vigiared','SELECT')
+     or has_table_privilege('authenticated','public.manzanas_vigiared','SELECT')
+     or has_table_privilege('service_role','public.manzanas_vigiared','SELECT')
+  then raise exception 'Acceso SELECT directo no autorizado a manzanas_vigiared'; end if;
+  if has_table_privilege('anon','public.credenciales_domicilio','SELECT')
+     or has_table_privilege('authenticated','public.credenciales_domicilio','SELECT')
+     or has_table_privilege('service_role','public.credenciales_domicilio','SELECT')
+  then raise exception 'Acceso SELECT directo no autorizado a credenciales_domicilio'; end if;
+  if has_table_privilege('anon','public.intentos_pin','SELECT')
+     or has_table_privilege('authenticated','public.intentos_pin','SELECT')
+     or has_table_privilege('service_role','public.intentos_pin','SELECT')
+  then raise exception 'Acceso SELECT directo no autorizado a intentos_pin'; end if;
+
+  if has_function_privilege('anon','public.crear_manzana(uuid,text)','EXECUTE')
+  then raise exception 'anon no debe crear manzanas'; end if;
+
   if has_function_privilege('authenticated',
     'public.crear_domicilio_con_responsable(uuid,uuid,text,text,text,text,text,text,uuid,text,uuid)',
     'EXECUTE') then raise exception 'authenticated no debe ejecutar alta de domicilio'; end if;
