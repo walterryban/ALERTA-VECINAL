@@ -11,6 +11,7 @@ on:
       - 'supabase/migrations/20261105150000_vigiared_alta_responsable_consentimiento.sql'
       - 'supabase/functions/vigiared-pin/**'
       - 'admin.html'
+      - 'terminal.html'
       - 'tests/postgres/**'
       - '.github/workflows/vigiared-postgres.yml'
   workflow_dispatch:
@@ -56,6 +57,18 @@ jobs:
           Path('/tmp/vigiared-admin.js').write_text(scripts[-1], encoding='utf-8')
           PY
           node --check /tmp/vigiared-admin.js
+      - name: Check terminal inline JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('terminal.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script[^>]*>(.*?)</script>', html, flags=re.S)
+          if not scripts:
+              raise SystemExit('No se encontró el script de terminal.html')
+          Path('/tmp/vigiared-terminal.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/vigiared-terminal.js
       - name: Install PostgreSQL client
         run: |
           sudo apt-get update
