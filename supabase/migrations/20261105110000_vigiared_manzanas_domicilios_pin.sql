@@ -359,21 +359,21 @@ begin
   limit 1;
 
   if v_unidad_id is null then
-    insert into public.intentos_pin
+    insert into public.intentos_pin as ip
       (user_id, manzana_id, intentos, ventana_desde, bloqueado_hasta, updated_at)
     values (v_user, v_manzana_id, 1, now(), null, now())
     on conflict (user_id, manzana_id) do update
     set intentos = case
-          when public.intentos_pin.ventana_desde < now() - interval '15 minutes' then 1
-          else least(public.intentos_pin.intentos + 1, 5)
+          when ip.ventana_desde < now() - interval '15 minutes' then 1
+          else least(ip.intentos + 1, 5)
         end,
         ventana_desde = case
-          when public.intentos_pin.ventana_desde < now() - interval '15 minutes' then now()
-          else public.intentos_pin.ventana_desde
+          when ip.ventana_desde < now() - interval '15 minutes' then now()
+          else ip.ventana_desde
         end,
         bloqueado_hasta = case
-          when public.intentos_pin.ventana_desde < now() - interval '15 minutes' then null
-          when public.intentos_pin.intentos + 1 >= 5 then now() + interval '15 minutes'
+          when ip.ventana_desde < now() - interval '15 minutes' then null
+          when ip.intentos + 1 >= 5 then now() + interval '15 minutes'
           else null
         end,
         updated_at = now();
