@@ -7,6 +7,7 @@
   <meta name="description" content="Acceso individual a VIGIARED.">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <title>VIGIARED — Acceso Vecinal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{color-scheme:dark;--bg:#081426;--panel:#10233c;--panel2:#0b1c31;--line:#294663;--text:#f3f8ff;--muted:#a8bad0;--cyan:#58d5f5;--blue:#2466b1;--red:#ef6675}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px 16px;display:grid;place-items:center;background:radial-gradient(ellipse at 50% -10%,#1e4c72 0,transparent 48%),var(--bg);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text)}
@@ -33,7 +34,7 @@
 
     <div class="notice" role="status">
       <span class="i">🔒</span>
-      <span><strong>Estamos preparando el nuevo acceso seguro.</strong><br>Esta versión de desarrollo ya no solicita ni valida PIN compartidos de manzana. El alta, la autenticación y las alertas todavía no están habilitadas para uso real.</span>
+      <span><strong>Acceso vecinal en preparación.</strong><br>El circuito nuevo utiliza una cuenta individual y una invitación de un solo uso. El PIN del domicilio sólo se emite después de aceptar la invitación.</span>
     </div>
 
     <div class="divider"></div>
@@ -43,21 +44,22 @@
     </div>
     <div class="field">
       <label for="password">Contraseña</label>
-      <input id="password" type="password" autocomplete="current-password" placeholder="Contraseña individual" disabled>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Contraseña individual" minlength="8">
     </div>
     <div class="actions">
-      <button class="btn primary" id="loginBtn" type="button" disabled>Ingresar</button>
-      <button class="btn secondary" id="createBtn" type="button" disabled>Crear cuenta</button>
+      <button class="btn primary" id="loginBtn" type="button">Ingresar</button>
+      <button class="btn secondary" id="createBtn" type="button">Crear cuenta</button>
     </div>
-    <p class="small">La conexión con Supabase Auth se habilitará cuando exista un proyecto de pruebas aislado y estén listas las funciones de identidad y membresía. No ingreses aquí contraseñas reales.</p>
+    <p class="small">Usá tu propia cuenta. La cuenta debe tener el correo electrónico verificado para aceptar la invitación. No compartas tu contraseña.</p>
 
     <div class="divider"></div>
     <div class="eyebrow">¿Tenés una invitación?</div>
     <div class="field">
       <label for="invite">Código de invitación</label>
-      <input id="invite" type="text" autocomplete="off" placeholder="Código de un solo uso" disabled>
+      <input id="invite" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64" placeholder="Pegá aquí el código que recibiste">
     </div>
-    <button class="btn secondary" type="button" disabled>Solicitar incorporación</button>
+    <button class="btn secondary" id="acceptBtn" type="button">Leer y aceptar invitación</button>
+    <div id="pinResult" hidden></div>
     <div class="status" id="status" role="status" aria-live="polite"></div>
   </section>
 
@@ -69,13 +71,124 @@
   <footer class="foot">VIGIARED · Plataforma independiente · Módulo en desarrollo</footer>
 </main>
 <script>
-  // La autenticación y las RPC se mantienen deshabilitadas hasta contar con
-  // un proyecto Supabase aislado y migraciones revisadas. No se realizan
-  // llamadas a la base compartida ni se envían alertas desde esta pantalla.
+  // Habilitar únicamente después de aplicar migraciones y desplegar Edge Function
+  // en un entorno de pruebas aprobado. No habilitar contra producción por defecto.
   const MODULE_READY = false;
-  document.getElementById('status').textContent = MODULE_READY
-    ? ''
-    : 'Acceso de prueba deshabilitado: falta completar y verificar el backend de identidad.';
+  const SUPABASE_URL = "https://efypppkjuwpzfssgpbkq.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_5nYG3oHIfbMFW_ddEUT9EA_PnQLVdIm";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+
+  const statusBox = document.getElementById('status');
+  const loginBtn = document.getElementById('loginBtn');
+  const createBtn = document.getElementById('createBtn');
+  const acceptBtn = document.getElementById('acceptBtn');
+  const pinResult = document.getElementById('pinResult');
+
+  function setStatus(message, isError = false) {
+    statusBox.textContent = message;
+    statusBox.style.color = isError ? '#ff9da8' : '#aeeaff';
+  }
+  function setBusy(busy) {
+    [loginBtn, createBtn, acceptBtn].forEach(button => button.disabled = busy || !MODULE_READY);
+  }
+  function getCredentials() {
+    return {
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value
+    };
+  }
+
+  async function login() {
+    if (!MODULE_READY) return setStatus('Módulo aún no habilitado: falta desplegar y verificar el backend en un entorno de pruebas.', true);
+    const { email, password } = getCredentials();
+    if (!email || !password) return setStatus('Ingresá correo y contraseña.', true);
+    setBusy(true);
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    setBusy(false);
+    if (error) return setStatus('No se pudo iniciar sesión. Revisá tus datos y la verificación del correo.', true);
+    setStatus('Sesión iniciada. Ya podés presentar tu invitación personal.');
+  }
+
+  async function createAccount() {
+    if (!MODULE_READY) return setStatus('Módulo aún no habilitado: no se crearán cuentas en esta etapa.', true);
+    const { email, password } = getCredentials();
+    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || password.length < 8) {
+      return setStatus('Ingresá un correo válido y una contraseña de al menos 8 caracteres.', true);
+    }
+    setBusy(true);
+    const { data, error } = await supabaseClient.auth.signUp({
+      email, password,
+      options: { emailRedirectTo: window.location.origin + '/terminal.html' }
+    });
+    setBusy(false);
+    if (error) return setStatus('No se pudo crear la cuenta. Verificá los datos e intentá nuevamente.', true);
+    if (data.session) setStatus('Cuenta creada. Si tu correo requiere confirmación, revisá tu bandeja de entrada.');
+    else setStatus('Cuenta iniciada. Revisá tu correo y confirmá la dirección antes de aceptar la invitación.');
+  }
+
+  async function acceptInvitation() {
+    if (!MODULE_READY) return setStatus('Módulo aún no habilitado: la aceptación no está conectada al backend de pruebas.', true);
+    const token = document.getElementById('invite').value.trim();
+    if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return setStatus('El código no tiene el formato esperado. Revisá que esté completo.', true);
+    setBusy(true);
+    pinResult.hidden = true;
+    pinResult.replaceChildren();
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+    const user = sessionData?.session?.user;
+    if (sessionError || !user) {
+      setBusy(false);
+      return setStatus('Primero iniciá sesión con la cuenta individual destinataria de la invitación.', true);
+    }
+    if (!user.email || !user.email_confirmed_at) {
+      setBusy(false);
+      return setStatus('Primero verificá el correo de esta cuenta. La invitación sólo puede aceptarse desde el correo destinatario.', true);
+    }
+    const { data, error } = await supabaseClient.functions.invoke('vigiared-pin', {
+      body: { action: 'aceptar_invitacion_responsable', token }
+    });
+    setBusy(false);
+    if (error || !data || data.ok !== true || !/^\\d{10}$/.test(data.pin_entrega_unica || '')) {
+      return setStatus('No se pudo aceptar la invitación. Puede haber vencido, sido revocada o no corresponder a este correo.', true);
+    }
+    document.getElementById('invite').value = '';
+    document.getElementById('invite').disabled = true;
+    acceptBtn.disabled = true;
+    const heading = document.createElement('h3');
+    heading.textContent = 'Responsabilidad aceptada';
+    heading.style.margin = '18px 0 8px';
+    const info = document.createElement('p');
+    info.textContent = 'Este es el PIN único de tu domicilio. Guardalo ahora; VIGIARED no volverá a mostrarlo.';
+    info.className = 'small';
+    const pin = document.createElement('p');
+    pin.textContent = data.pin_entrega_unica;
+    pin.setAttribute('aria-label', 'PIN de diez dígitos del domicilio');
+    pin.style.cssText = 'font-size:2rem;letter-spacing:.22em;font-weight:900;text-align:center;padding:18px;margin:12px 0;background:#07182a;border:1px solid #58d5f5;border-radius:12px;color:#fff;';
+    const hide = document.createElement('button');
+    hide.type = 'button';
+    hide.className = 'btn secondary';
+    hide.textContent = 'Ya guardé mi PIN';
+    hide.addEventListener('click', () => {
+      pin.textContent = '••••••••••';
+      hide.disabled = true;
+      info.textContent = 'PIN oculto. Si lo perdés, solicitá su rotación a una persona autorizada.';
+    }, { once: true });
+    pinResult.append(heading, info, pin, hide);
+    pinResult.hidden = false;
+    setStatus('La invitación fue aceptada y tu membresía de responsable quedó activa.');
+  }
+
+  loginBtn.addEventListener('click', login);
+  createBtn.addEventListener('click', createAccount);
+  acceptBtn.addEventListener('click', acceptInvitation);
+  document.getElementById('password').addEventListener('keydown', event => {
+    if (event.key === 'Enter') login();
+  });
+  if (!MODULE_READY) {
+    setBusy(true);
+    setStatus('Interfaz integrada, pero protegida: se habilitará después de desplegar y probar migraciones y Edge Function en un entorno de pruebas aprobado.');
+  }
 </script>
 </body>
 </html>
