@@ -42,7 +42,8 @@
 
 - Confirmar RLS ENABLED y FORCE en las tres tablas nuevas.
 - Confirmar que anon y authenticated no tienen SELECT/INSERT/UPDATE/DELETE directos sobre las tablas nuevas.
-- Confirmar que sólo las RPC previstas tienen EXECUTE para authenticated.
+- Confirmar que `crear_domicilio_con_responsable` y `rotar_pin_domicilio` NO tienen EXECUTE para `authenticated` y sí para `service_role`.
+- Confirmar que `crear_manzana`, `solicitar_ingreso_con_pin`, `resolver_solicitud_ingreso` y `listar_solicitudes_ingreso_pendientes` tienen sólo los permisos previstos para `authenticated`.
 - Confirmar que la función helper interna no es invocable directamente.
 - Probar aislamiento entre dos organizaciones.
 - Comprobar que ningún PIN ni HMAC aparece en logs, auditoría, URL o QR.
@@ -59,6 +60,20 @@
 5. Resolver una verificación telefónica real y sostenible sin costo antes de habilitar el ingreso vecinal.
 6. Incorporar consultas seguras para que responsables vean solicitudes pendientes y puedan resolverlas.
 7. Revisar accesibilidad WCAG 2.2 AA del flujo QR/PIN y probarlo con usuarios.
+
+## Casos añadidos tras revisión de seguridad
+
+| ID | Caso | Resultado esperado |
+|---|---|---|
+| S-01 | Usuario `authenticated` invoca directamente RPC de alta de domicilio | Denegado por permisos EXECUTE |
+| S-02 | Usuario `authenticated` invoca directamente RPC de rotación de PIN | Denegado por permisos EXECUTE |
+| S-03 | Edge Function llama RPC privilegiada con actor administrador válido | Operación permitida y auditada |
+| S-04 | Edge Function intenta alta con actor sin rol autorizado | RPC rechaza; no crea registros |
+| S-05 | Responsable consulta solicitudes de su domicilio | Devuelve sólo solicitudes pendientes y datos mínimos |
+| S-06 | Vecino o responsable de otro domicilio consulta solicitudes | Denegado |
+| S-07 | Membresía revocada vuelve a solicitar ingreso y responsable aprueba | Se reactiva como `miembro` |
+| S-08 | Membresía suspendida vuelve a solicitar ingreso y responsable aprueba | Se reactiva como `miembro` |
+| S-09 | Membresía ya activa intenta volver a ingresar | No duplica ni modifica la membresía |
 
 ## Criterio de aprobación
 
