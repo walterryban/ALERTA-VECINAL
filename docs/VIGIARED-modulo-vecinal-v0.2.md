@@ -55,18 +55,18 @@ La migración v0.4 separa el registro del domicilio de la asignación del respon
 
 La acción anterior `crear_domicilio`, que asignaba directamente un `responsable_user_id`, queda rechazada por la Edge Function con `FLUJO_RESPONSABLE_ACTUALIZADO`. No debe utilizarse.
 
-**Límite actual:** la interfaz del panel para registrar domicilios, copiar/entregar la invitación y aceptar la responsabilidad todavía debe implementarse. Estas operaciones existen en la capa SQL/Edge Function de la rama, sujetas a CI; no están desplegadas en Supabase real.
+**Estado de interfaz en rama:** `admin.html` ya incorpora selección de manzana, registro de domicilio pendiente y generación/copia manual del token de invitación; después de copiarlo, el código se borra de la pantalla. `terminal.html` incorpora creación de cuenta, inicio de sesión, ingreso del token y aceptación desde la cuenta individual. Tras aceptar, muestra el PIN una sola vez y permite ocultarlo. La constante `MODULE_READY` permanece en `false`: no se habilitan autenticación, alta ni aceptación hasta desplegar y verificar migraciones, secretos y Edge Function en un entorno de pruebas aprobado. No están desplegados en Supabase real.
 
 ## Revisión necesaria antes de ejecutar
 
 1. Validar sintaxis y orden de creación de índices/funciones en una base aislada.
 2. Confirmar que el esquema y las firmas de funciones v0.1 coinciden con el proyecto.
 3. Revisar política de bloqueo y concurrencia, especialmente intentos simultáneos.
-4. Implementar y probar invitación/aceptación del primer responsable: identidad destinataria, vencimiento, uso único, revocación y auditoría.
-4. Probar aislamiento entre organizaciones, privilegios y cuentas sin teléfono confirmado.
-5. Probar rotación: PIN anterior no funciona y membresías existentes permanecen.
-6. Revisar la entrega única del PIN en la interfaz y la ausencia de logs sensibles.
-7. Corregir cualquier hallazgo antes de aplicar la migración.
+4. Probar invitación/aceptación desde las dos interfaces: identidad destinataria, vencimiento, uso único, revocación y auditoría.
+5. Probar aislamiento entre organizaciones, privilegios y cuentas sin correo verificado.
+6. Probar rotación: PIN anterior no funciona y membresías existentes permanecen.
+7. Revisar la entrega única del token y PIN, su ocultamiento y la ausencia de logs sensibles.
+8. Corregir cualquier hallazgo antes de aplicar la migración.
 
 ## Nota de seguridad
 
