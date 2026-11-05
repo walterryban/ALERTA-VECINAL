@@ -67,11 +67,12 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     if (!url || !anonKey) throw new Error("Configuración de Supabase incompleta");
 
+    const accessToken = authorization.slice("Bearer ".length);
     const supabase = createClient(url, anonKey, {
       global: { headers: { Authorization: authorization } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: userResult, error: userError } = await supabase.auth.getUser();
+    const { data: userResult, error: userError } = await supabase.auth.getUser(accessToken);
     if (userError || !userResult.user) return response({ error: "Sesión inválida" }, 401);
 
     const body = await req.json();
