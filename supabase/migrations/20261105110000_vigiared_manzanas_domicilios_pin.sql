@@ -368,6 +368,8 @@ revoke all on function public.solicitar_ingreso_con_pin(uuid,text,text)
   from public, anon, service_role;
 revoke all on function public.resolver_solicitud_ingreso(uuid,boolean)
   from public, anon, service_role;
+revoke all on function public.listar_solicitudes_ingreso_pendientes(uuid)
+  from public, anon, service_role;
 
 grant execute on function public.crear_manzana(uuid,text) to authenticated;
 grant execute on function public.crear_domicilio_con_responsable(uuid,uuid,text,text,text,text,text,text,uuid,text,uuid) to service_role;
