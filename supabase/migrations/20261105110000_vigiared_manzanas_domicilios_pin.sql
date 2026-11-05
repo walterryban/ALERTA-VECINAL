@@ -352,6 +352,11 @@ begin
  if auth.uid() is null then raise exception 'Autenticación requerida'; end if;
  select * into v_s from public.solicitudes_ingreso where id=p_solicitud_id for update;
  if not found or v_s.estado<>'pendiente' or v_s.unidad_id is null then raise exception 'Solicitud no disponible'; end if;
+ if not exists (
+   select 1 from public.unidades u
+   join public.organizaciones o on o.id=u.organizacion_id
+   where u.id=v_s.unidad_id and u.estado='activa' and o.estado='activa'
+ ) then raise exception 'Domicilio u organización no disponibles'; end if;
  v_autorizado:=public._vigiared_puede_administrar_org(v_s.organizacion_id,auth.uid()) or exists(select 1 from public.membresias_unidad mu where mu.unidad_id=v_s.unidad_id and mu.user_id=auth.uid() and mu.rol='responsable' and mu.estado='activa');
  if not v_autorizado then raise exception 'No autorizado'; end if;
  if p_aprobar then
