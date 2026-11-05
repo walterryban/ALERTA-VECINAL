@@ -40,6 +40,7 @@ Nombre lógico propuesto: `crear_alerta_vecinal_v2`.
 - `p_tipo_alerta`: valor de catálogo cerrado y validado en servidor.
 - `p_id_solicitud`: UUID idempotente generado para un intento lógico.
 - `p_lat`, `p_lng`: opcionales, validados como par, rango geográfico y precisión razonable.
+- `p_precision_m`: opcional; precisión reportada por el dispositivo, validada como número finito y rango permitido.
 - `p_ubicacion_compartida`: confirmación explícita cuando se adjuntan coordenadas.
 - `p_referencia`: opcional, longitud limitada y sin permitir HTML; definir si realmente es necesaria.
 
@@ -88,7 +89,10 @@ Debe contener:
 - Referencia a manzana/organización derivadas.
 - Domicilio declarado, separado de coordenadas del dispositivo.
 - Contacto y datos médicos solo si la finalidad lo requiere y con control de acceso reforzado.
-- Coordenadas opcionales, consentimiento y fuente de ubicación.
+- Coordenadas opcionales, consentimiento, precisión y fuente de ubicación (`gps_dispositivo` u otra fuente admitida).
+- Domicilio/unidad registrada como referencia separada del punto GPS del teléfono.
+- La vista cartográfica y el acceso a Street View se construyen desde las coordenadas válidas; no se almacenan imágenes de Google ni se presentan como evidencia fotográfica.
+- Si se adjunta fotografía propia, referencia privada a Storage y metadatos controlados; nunca URL pública permanente.
 - Clave idempotente y actor creador.
 
 No duplicar datos personales en difusión. Si se conserva compatibilidad temporal con `public.alertas`, definir una transición versionada y evitar dos fuentes de verdad.
@@ -194,6 +198,12 @@ Además de AL-01 a AL-26 de `revision-alertas-com-v0.2.md`, añadir:
 | AL-38 | Evento push inspeccionado | Solo código genérico, hora aproximada y deep-link |
 | AL-39 | Filtros COM manipulados para organización ajena | Cero datos ajenos |
 | AL-40 | Actualización concurrente de estado | Una transición gana; otra revalida estado y falla o devuelve idempotencia |
+| AL-41 | GPS autorizado y válido | Guarda coordenadas, precisión y consentimiento; el COM puede abrir mapa y Street View con URLs oficiales |
+| AL-42 | Usuario niega permiso GPS | La alerta se envía sin coordenadas y conserva domicilio/unidad como referencia |
+| AL-43 | GPS fuera de rango, parcial o inválido | Servidor rechaza coordenadas inválidas sin bloquear el envío textual cuando se omite ubicación |
+| AL-44 | Google Maps/Street View no disponible o sin cobertura | La alerta y su difusión siguen funcionando; COM conserva domicilio y coordenadas |
+| AL-45 | Vista Street View presentada al operador | Se identifica como referencia visual de Google, no como imagen en vivo ni prueba del estado actual |
+| AL-46 | Foto propia omitida o falla su carga | La alerta textual con GPS/domicilio puede completarse sin foto |
 
 Todas las pruebas se ejecutan en Supabase desechable con cuentas, domicilios, organizaciones y alertas sintéticas.
 
@@ -203,10 +213,22 @@ Todas las pruebas se ejecutan en Supabase desechable con cuentas, domicilios, or
 2. Decidir si una alerta se guarda en `public.alertas` o en tabla nueva privada; no mantener dos fuentes activas.
 3. Definir catálogo de tipos y mapeo con los botones actuales de la terminal.
 4. Definir permiso separado para ficha médica y si se elimina de la primera versión.
-5. Aprobar retención por categoría y texto legal/consentimiento para GPS.
+5. Aprobar retención por categoría y texto legal/consentimiento para GPS y fotografías propias opcionales.
 6. Definir proveedor Push y secreto de cifrado; no configurar hasta disponer de entorno aislado.
 7. Implementar inbox seguro de solicitudes para titulares, transferencia de titularidad y recuperación de cuenta antes de apertura pública.
 
-## 11. Estado
+## 11. Ubicación visual en Centro de Monitoreo (criterio incorporado)
+
+- El GPS del dispositivo, con permiso explícito, es el dato de ubicación reportado; el domicilio de la unidad es una referencia administrativa distinta.
+- El Centro de Monitoreo dispondrá de acciones para abrir Google Maps y Street View en el punto reportado mediante Google Maps URLs oficiales. Ejemplos de patrón (sustituir por coordenadas validadas):
+  - Mapa: `https://www.google.com/maps/search/?api=1&query=LATITUD%2CLONGITUD`
+  - Street View: `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=LATITUD%2CLONGITUD`
+- Esta primera alternativa no requiere clave de API; abre la app o web de Google Maps. Street View muestra la panorámica disponible más cercana si hay cobertura; no se garantiza una imagen para cada coordenada.
+- No utilizar Maps Static API ni Street View Static API en esta etapa: requieren configuración de API/facturación y quedan excluidas sin revisión de coste y autorización expresa.
+- No descargar, almacenar ni republicar las imágenes de Google como archivos propios. Respetar atribución, condiciones y políticas de Google.
+- Si no hay GPS, el operador ve el domicilio registrado y un estado claro «Ubicación GPS no compartida». Si Google no tiene cobertura, se mantiene disponible el resto del detalle de alerta.
+- La fotografía propia del vecino es opcional y nunca bloquea el envío de una alerta.
+
+## 12. Estado
 
 Este documento es una especificación, no SQL ejecutable. No se modificaron las tablas actuales, no se ejecutaron migraciones, no se desplegó worker ni se conectó el frontend. Los datos ficticios actuales permanecen intactos.
