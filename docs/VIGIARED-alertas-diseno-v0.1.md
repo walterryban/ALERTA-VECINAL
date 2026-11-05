@@ -99,7 +99,7 @@ La tabla de destinatarios sirve para fijar quién estaba autorizado al momento d
 
 ## 8. Decisiones que deben validarse antes de SQL
 
-1. Confirmar la regla de distribución inicial: todos los miembros activos de la misma manzana reciben la alerta, sin excepción por tipo.
+1. **DECISIÓN APROBADA:** todos los vecinos con membresía activa de la misma manzana reciben toda alerta, sin excepción por tipo. Se excluyen membresías pendientes, suspendidas o revocadas. Si una persona tiene más de una membresía en esa manzana, recibe una sola notificación por alerta.
 2. Definir qué datos exactos ven los vecinos y qué datos quedan sólo para operadores autorizados.
 3. Definir si el estado `resuelta` lo puede cambiar sólo un operador o también el emisor.
 4. Probar la estrategia Realtime con RLS en una base aislada.
