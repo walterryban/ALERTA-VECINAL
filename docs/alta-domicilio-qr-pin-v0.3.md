@@ -2,7 +2,7 @@
 
 **Estado:** decisión funcional y propuesta técnica para revisión. No ejecutar SQL ni desplegar.
 **Ámbito:** incorporación de vecinos a una vivienda dentro de una manzana/comunidad.
-**Presupuesto:** diseño compatible con desarrollo inicial de costo cero; no presupone SMS, WhatsApp ni servicios pagos.
+**Presupuesto:** diseño compatible con desarrollo inicial de costo cero; no presupone SMS, WhatsApp ni servicios pagos. **Requisito de acceso vecinal:** cada vecino debe disponer de un teléfono; el correo electrónico es opcional.
 
 ## 1. Decisión funcional que recupera el flujo original
 
@@ -29,7 +29,7 @@ No se deben importar ni reutilizar PIN de la aplicación heredada. Los registros
 2. La pantalla muestra la comunidad/manzana identificada, sin revelar datos privados de otros domicilios.
 3. La persona ingresa el PIN de su vivienda.
 4. VIGIARED valida el PIN en el servidor y determina la unidad asociada.
-5. La persona se autentica o crea su cuenta individual por un método de acceso habilitado.
+5. La persona debe disponer de un teléfono como requisito indispensable de uso. El correo electrónico es opcional. Se autentica o crea su cuenta individual mediante un método telefónico que se habilitará cuando exista una verificación segura y sostenible a costo cero; el PIN de domicilio no sustituye la autenticación de la persona.
 6. El backend crea una solicitud pendiente de membresía para esa cuenta y ese domicilio.
 7. El primer titular se habilita solamente después de una verificación independiente y auditable por un procedimiento autorizado. El QR y el PIN por sí solos nunca asignan la titularidad.
 8. Una vez que exista un titular activo, las solicitudes de otros integrantes de esa vivienda se aprueban o rechazan por un titular activo de la misma unidad.
@@ -64,9 +64,9 @@ El PIN no sustituye la autenticación individual. No debe permitir consultar ale
 - No mostrar el domicilio exacto antes de validar el PIN, salvo la información mínima necesaria para que la persona reconozca la manzana.
 - Interfaz con tipografía ampliable, alto contraste, etiquetas para lectores de pantalla, navegación por teclado y botones grandes.
 - Campo PIN con opción de mostrar/ocultar, pegado permitido, lectura accesible y mensajes de error claros.
-- No exigir correo electrónico prestado ni recopilar diagnósticos médicos.
+- No exigir correo electrónico ni correo prestado: el teléfono es obligatorio para el uso vecinal y el correo es opcional. No recopilar diagnósticos médicos.
 - Ofrecer instrucciones impresas simples para personas mayores y personas con discapacidad.
-- El canal WhatsApp/SMS será opcional y se evaluará por costo; no forma parte del requisito para que el flujo QR + PIN funcione.
+- El teléfono es obligatorio para el uso vecinal; el correo es opcional. Los canales de verificación (SMS/WhatsApp) se evaluarán por costo y viabilidad. El QR + PIN identifica manzana y domicilio, pero no reemplaza la autenticación individual.
 
 ## 7. Compatibilidad con identidad individual v0.2
 
@@ -80,7 +80,7 @@ La documentación v0.2 que afirma que el QR nunca se acompaña de un PIN de domi
 2. Diseñar tabla/entidad de credenciales de domicilio vinculada a una unidad, con hash/HMAC, estado, emisión, vencimiento opcional y rotación.
 3. Diseñar RPC/Edge Function para validar el PIN y crear una solicitud pendiente sin revelar si otros domicilios existen.
 4. Definir el procedimiento verificable de alta del primer titular.
-5. Resolver cómo se autentica individualmente una persona mayor que no tiene correo electrónico ni teléfono verificado. El PIN de vivienda no puede hacerse pasar por una prueba de identidad personal. Evaluar alternativas realmente gratuitas antes de elegir proveedor o habilitar Phone.
+5. Resolver cómo autenticar individualmente a una persona que tiene teléfono pero no correo electrónico. El teléfono es requisito indispensable para el uso vecinal; el correo es opcional. El PIN de vivienda no puede hacerse pasar por prueba de identidad personal. Evaluar una verificación telefónica realmente gratuita antes de habilitar Phone; no activar SMS/WhatsApp pagos ni asumir que un mensaje entrante equivale automáticamente a una identidad verificada.
 6. Definir aprobación de integrantes adicionales, recuperación de cuenta y transferencia de titularidad.
 7. Crear pruebas automatizadas de fuerza bruta, concurrencia, PIN revocado, PIN repetido, aislamiento entre domicilios y solicitudes duplicadas.
 8. Ensayar en un proyecto Supabase aislado y con domicilios ficticios antes de integrar la terminal.
