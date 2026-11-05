@@ -115,6 +115,12 @@ begin
   if not public._vigiared_puede_administrar_org(p_organizacion_id, auth.uid()) then
     raise exception 'No autorizado para administrar esta organización';
   end if;
+  if not exists (
+    select 1 from public.organizaciones o
+    where o.id = p_organizacion_id and o.estado = 'activa'
+  ) then
+    raise exception 'Organización no disponible';
+  end if;
   if length(v_nombre) < 2 or length(v_nombre) > 120 then
     raise exception 'Nombre de manzana inválido';
   end if;
@@ -147,6 +153,7 @@ declare v_unidad_id uuid; v_nombre text:=btrim(coalesce(p_nombre,''));
 begin
  if p_actor_user_id is null or not exists(select 1 from auth.users u where u.id=p_actor_user_id) then raise exception 'Actor no válido'; end if;
  if not public._vigiared_puede_administrar_org(p_organizacion_id,p_actor_user_id) then raise exception 'No autorizado para administrar esta organización'; end if;
+ if not exists(select 1 from public.organizaciones o where o.id=p_organizacion_id and o.estado='activa') then raise exception 'Organización no disponible'; end if;
  if length(v_nombre)<1 or length(v_nombre)>150 then raise exception 'Identificación del domicilio inválida'; end if;
  if p_tipo not in ('vivienda','departamento','habitacion','comercio','establecimiento','otra') then raise exception 'Tipo de unidad inválido'; end if;
  if p_pin_hmac !~ '^[0-9a-f]{64}$' then raise exception 'Credencial inválida'; end if;
@@ -170,7 +177,10 @@ declare v_org uuid; v_autorizado boolean;
 begin
  if p_actor_user_id is null or not exists(select 1 from auth.users u where u.id=p_actor_user_id) then raise exception 'Actor no válido'; end if;
  if p_pin_hmac_nuevo !~ '^[0-9a-f]{64}$' then raise exception 'Credencial inválida'; end if;
- select u.organizacion_id into v_org from public.unidades u where u.id=p_unidad_id and u.estado='activa';
+ select u.organizacion_id into v_org
+ from public.unidades u
+ join public.organizaciones o on o.id=u.organizacion_id and o.estado='activa'
+ where u.id=p_unidad_id and u.estado='activa';
  if v_org is null then raise exception 'Domicilio no disponible'; end if;
  v_autorizado:=public._vigiared_puede_administrar_org(v_org,p_actor_user_id) or exists(select 1 from public.membresias_unidad mu where mu.unidad_id=p_unidad_id and mu.user_id=p_actor_user_id and mu.rol='responsable' and mu.estado='activa');
  if not v_autorizado then raise exception 'No autorizado'; end if;
@@ -228,6 +238,7 @@ begin
 
   select m.id, m.organizacion_id into v_manzana_vigiared_id, v_org
   from public.manzanas_vigiared m
+  join public.organizaciones o on o.id = m.organizacion_id and o.estado = 'activa'
   where m.public_id = p_manzana_public_id and m.estado = 'activa';
 
   if v_manzana_vigiared_id is null then
@@ -320,7 +331,10 @@ returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_org uuid; v_solicitudes jsonb;
 begin
  if auth.uid() is null then raise exception 'Autenticación requerida'; end if;
- select u.organizacion_id into v_org from public.unidades u where u.id=p_unidad_id and u.estado='activa';
+ select u.organizacion_id into v_org
+ from public.unidades u
+ join public.organizaciones o on o.id=u.organizacion_id and o.estado='activa'
+ where u.id=p_unidad_id and u.estado='activa';
  if v_org is null then raise exception 'Domicilio no disponible'; end if;
  if not public._vigiared_puede_administrar_org(v_org,auth.uid()) and not exists(select 1 from public.membresias_unidad mu where mu.unidad_id=p_unidad_id and mu.user_id=auth.uid() and mu.rol='responsable' and mu.estado='activa') then raise exception 'No autorizado'; end if;
  select coalesce(jsonb_agg(jsonb_build_object('solicitud_id',s.id,'nombre',coalesce(nullif(btrim(p.nombre_completo),''),'Vecino'),'mensaje',s.mensaje,'creada_at',s.created_at) order by s.created_at),'[]'::jsonb)
