@@ -73,23 +73,50 @@
 </head>
 <body>
 
-<!-- LOGIN -->
+
+<!-- LOGIN VIGIARED -->
 <div id="login-overlay">
   <div class="login-card">
-    <h2>CENTRO DE MONITOREO</h2>
-    <p>Ingrese credenciales de operador autorizado</p>
+    <h2>CENTRO DE MONITOREO VIGIARED</h2>
+
+    <p>
+      Acceso seguro para el propietario de la plataforma
+      y usuarios autorizados de organizaciones.
+    </p>
+
     <div class="form-group">
-      <label>Correo Institucional</label>
-      <input type="email" id="loginEmail" placeholder="operador@sanluis.gob.ar" />
+      <label for="loginEmail">Correo electrónico</label>
+      <input
+        type="email"
+        id="loginEmail"
+        placeholder="Ingresá tu correo electrónico"
+        autocomplete="username"
+      />
     </div>
+
     <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" />
+      <label for="loginPassword">Contraseña</label>
+      <input
+        type="password"
+        id="loginPassword"
+        placeholder="Ingresá tu contraseña"
+        autocomplete="current-password"
+      />
     </div>
-    <button class="btn-primary" onclick="iniciarSesion()">Ingresar a la Consola</button>
+
+    <button class="btn-primary" onclick="iniciarSesion()">
+      Ingresar al Centro de Monitoreo
+    </button>
+
+    <button
+      type="button"
+      class="btn-secondary"
+      onclick="solicitarRecuperacion()"
+    >
+      ¿Olvidaste tu contraseña?
+    </button>
   </div>
 </div>
-
 <!-- DASHBOARD -->
 <div class="container" id="app-dashboard" style="display:none;">
   <header>
