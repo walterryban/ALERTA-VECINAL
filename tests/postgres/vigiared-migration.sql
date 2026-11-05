@@ -185,6 +185,34 @@ reset role;
 
 select public_id as manzana_public_id from public.manzanas_vigiared where id=:'manzana_id'::uuid \gset
 
+-- Verifica aislamiento territorial: una unidad de la organización A no puede
+-- asociarse a una manzana perteneciente a la organización B.
+insert into public.organizaciones(id,nombre,tipo,estado)
+values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','Organización QA B','comunidad','activa');
+insert into public.manzanas_vigiared(id,organizacion_id,nombre)
+values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+        'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        'Manzana de otra organización');
+
+do $tenant_guard$
+declare
+  v_unidad_id uuid;
+  v_rechazada boolean := false;
+begin
+  select id into v_unidad_id from public.unidades where nombre='Casa QA 1';
+  begin
+    update public.unidades
+       set manzana_vigiared_id='cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+     where id=v_unidad_id;
+  exception when foreign_key_violation then
+    v_rechazada := true;
+  end;
+  if not v_rechazada then
+    raise exception 'La FK compuesta permitió asociar una unidad a otra organización';
+  end if;
+end
+$tenant_guard$;
+
 select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
 set role authenticated;
 select public.solicitar_ingreso_con_pin(
