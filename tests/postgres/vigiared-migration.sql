@@ -439,3 +439,23 @@ end
 $privilege_guard$;
 
 select 'OK: flujo de invitación y aceptación explícita verificado' as resultado;
+
+
+do $invitation_rls_guard$
+begin
+  if not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relname='invitaciones_responsable'
+      and c.relrowsecurity and c.relforcerowsecurity) then
+    raise exception 'La tabla de invitaciones debe tener RLS y FORCE RLS';
+  end if;
+  if has_table_privilege('anon','public.invitaciones_responsable','SELECT')
+    or has_table_privilege('authenticated','public.invitaciones_responsable','SELECT')
+    or has_table_privilege('service_role','public.invitaciones_responsable','SELECT') then
+    raise exception 'No debe existir SELECT directo sobre invitaciones';
+  end if;
+  if exists(select 1 from pg_policies where schemaname='public'
+    and tablename='invitaciones_responsable') then
+    raise exception 'La tabla de invitaciones no debe exponer políticas directas';
+  end if;
+end
+$invitation_rls_guard$;
