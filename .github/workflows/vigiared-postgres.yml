@@ -7,6 +7,7 @@ on:
       - fix/vigiared-territorial-model-v0-3
     paths:
       - 'supabase/migrations/20261105110000_vigiared_manzanas_domicilios_pin.sql'
+      - 'supabase/migrations/20261105130000_vigiared_consultas_gestion_segura.sql'
       - 'supabase/functions/vigiared-pin/**'
       - 'tests/postgres/**'
       - '.github/workflows/vigiared-postgres.yml'
