@@ -101,6 +101,7 @@ create table public.auditoria (
 
 \ir ../../supabase/migrations/20261105110000_vigiared_manzanas_domicilios_pin.sql
 \ir ../../supabase/migrations/20261105130000_vigiared_consultas_gestion_segura.sql
+\ir ../../supabase/migrations/20261105150000_vigiared_alta_responsable_consentimiento.sql
 
 do $assert$
 declare
@@ -328,3 +329,110 @@ $inactive_org$;
 reset role;
 
 select 'OK: migración aplicada y verificaciones de permisos/RLS superadas' as resultado;
+
+
+-- Prueba del flujo nuevo: domicilio pendiente, invitación y aceptación explícita.
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+set role authenticated;
+select (public.crear_domicilio_pendiente(
+ 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+ :'manzana_id'::uuid,
+ 'Casa con invitación QA',
+ 'vivienda',
+ 'Calle invitación 456',
+ 'Localidad QA',
+ 'Provincia QA',
+ null
+)->>'unidad_id') as unidad_invitada_id \gset
+reset role;
+
+set role service_role;
+select (public.crear_invitacion_responsable(
+ :'unidad_invitada_id'::uuid,
+ 'vecino@vigiared.test',
+ repeat('c',64),
+ now()+interval '1 day',
+ '11111111-1111-4111-8111-111111111111'
+)->>'invitacion_id') as invitacion_id \gset
+reset role;
+
+do $pending_guard$
+begin
+  if exists(select 1 from public.membresias_unidad
+    where unidad_id=:'unidad_invitada_id'::uuid and rol='responsable' and estado='activa') then
+    raise exception 'El domicilio pendiente no debe tener responsable activo';
+  end if;
+  if exists(select 1 from public.credenciales_domicilio
+    where unidad_id=:'unidad_invitada_id'::uuid and estado='activa') then
+    raise exception 'No se debe emitir PIN antes de aceptar la invitación';
+  end if;
+end
+$pending_guard$;
+
+-- El correo confirmado coincide: aceptación crea responsable y credencial.
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
+set role service_role;
+select public.aceptar_invitacion_responsable(
+ repeat('c',64),
+ '22222222-2222-4222-8222-222222222222',
+ repeat('d',64)
+);
+reset role;
+
+do $accepted_guard$
+begin
+  if not exists(select 1 from public.membresias_unidad
+    where unidad_id=:'unidad_invitada_id'::uuid
+      and user_id='22222222-2222-4222-8222-222222222222'
+      and rol='responsable' and estado='activa') then
+    raise exception 'La aceptación no activó el rol responsable';
+  end if;
+  if not exists(select 1 from public.credenciales_domicilio
+    where unidad_id=:'unidad_invitada_id'::uuid
+      and pin_hmac=repeat('d',64) and estado='activa') then
+    raise exception 'La aceptación no creó la credencial PIN';
+  end if;
+  if not exists(select 1 from public.invitaciones_responsable
+    where id=:'invitacion_id'::uuid and estado='aceptada'
+      and aceptada_por='22222222-2222-4222-8222-222222222222') then
+    raise exception 'La invitación no quedó consumida por el destinatario';
+  end if;
+end
+$accepted_guard$;
+
+-- El token consumido no puede reutilizarse.
+do $replay_guard$
+begin
+  begin
+    perform public.aceptar_invitacion_responsable(
+      repeat('c',64),
+      '22222222-2222-4222-8222-222222222222',
+      repeat('e',64)
+    );
+  exception when others then
+    if sqlerrm='Invitación no válida o no disponible' then return; end if;
+    raise;
+  end;
+  raise exception 'Se permitió reutilizar una invitación ya aceptada';
+end
+$replay_guard$;
+
+-- El nuevo flujo no permite que authenticated llame RPCs privilegiadas.
+do $privilege_guard$
+begin
+  if has_function_privilege('authenticated',
+    'public.aceptar_invitacion_responsable(text,uuid,text)','EXECUTE') then
+    raise exception 'authenticated no debe ejecutar directamente la aceptación privilegiada';
+  end if;
+  if has_function_privilege('anon',
+    'public.aceptar_invitacion_responsable(text,uuid,text)','EXECUTE') then
+    raise exception 'anon no debe aceptar invitaciones';
+  end if;
+  if not has_function_privilege('service_role',
+    'public.aceptar_invitacion_responsable(text,uuid,text)','EXECUTE') then
+    raise exception 'service_role debe ejecutar aceptación desde Edge Function';
+  end if;
+end
+$privilege_guard$;
+
+select 'OK: flujo de invitación y aceptación explícita verificado' as resultado;
