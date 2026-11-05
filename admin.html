@@ -145,6 +145,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="cambiarPestana('alertas', this)">🚨 Alertas en Vivo</button>
     <button class="tab-btn" onclick="cambiarPestana('organizaciones', this)">🏢 Organizaciones</button>
+    <button class="tab-btn" onclick="cambiarPestana('manzanas', this)">🧭 Manzanas</button>
   </div>
   <section id="tab-alertas" class="tab-content active">
     <div class="stat-card" style="margin-bottom:16px;">
@@ -178,6 +179,35 @@
     <div class="stat-card" style="margin-top:16px;">
       <span>Alcance de esta versión</span>
       <p style="color:#cbd5e1;margin-top:8px;line-height:1.5;">Esta etapa permite iniciar sesión con Supabase, verificar el rol de propietario y crear organizaciones mediante la función segura crear_organizacion(). No utiliza PIN compartidos ni realiza lecturas o escrituras directas sobre tablas protegidas.</p>
+    </div>
+  </section>
+  <section id="tab-manzanas" class="tab-content">
+    <div class="stat-card" style="margin-bottom:16px;">
+      <span>Gestión territorial</span>
+      <p style="color:#cbd5e1;margin-top:8px;line-height:1.5;">Seleccioná una organización para consultar sus manzanas o crear una nueva. El servidor verifica los permisos en cada operación.</p>
+    </div>
+    <div class="card-form">
+      <div class="form-group">
+        <label for="organizacionManzanas">Organización</label>
+        <select id="organizacionManzanas" aria-label="Seleccionar organización" onchange="cargarManzanas()">
+          <option value="">Cargando organizaciones…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="nuevaManzanaNombre">Nombre de la manzana o zona</label>
+        <input id="nuevaManzanaNombre" type="text" minlength="2" maxlength="120" placeholder="Ej.: Manzana 12">
+      </div>
+      <button class="btn-success" id="crearManzanaBtn" type="button" onclick="crearManzana()">➕ Crear manzana</button>
+    </div>
+    <div id="resultadoManzanas" class="stat-card" aria-live="polite">
+      <span>Manzanas registradas</span>
+      <p style="color:#cbd5e1;margin-top:8px;">Seleccioná una organización.</p>
+    </div>
+    <div class="table-container" style="margin-top:16px;">
+      <table>
+        <thead><tr><th>Manzana</th><th>Estado</th><th>Domicilios activos</th><th>Identificador QR</th></tr></thead>
+        <tbody id="tablaManzanas"><tr><td colspan="4" style="color:#9ca3af;">Sin organización seleccionada.</td></tr></tbody>
+      </table>
     </div>
   </section>
 </div>
@@ -347,6 +377,97 @@
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-dashboard').style.display = 'block';
     document.getElementById('sesionRol').textContent = 'Propietario de plataforma';
+    cargarOrganizacionesGestionables();
+  }
+
+  let organizacionesGestionables = [];
+
+  async function cargarOrganizacionesGestionables() {
+    const selector = document.getElementById('organizacionManzanas');
+    selector.innerHTML = '<option value="">Cargando…</option>';
+    const { data, error } = await supabaseClient.rpc('listar_organizaciones_gestionables');
+    if (error || !data || data.ok !== true) {
+      selector.innerHTML = '<option value="">No disponible</option>';
+      mostrarEstadoManzanas('No se pudieron cargar las organizaciones: ' + (error?.message || 'respuesta inválida'), true);
+      return;
+    }
+    organizacionesGestionables = Array.isArray(data.organizaciones) ? data.organizaciones : [];
+    selector.innerHTML = '<option value="">Seleccioná una organización</option>' +
+      organizacionesGestionables.map(o =>
+        '<option value="' + escapeHTML(o.organizacion_id) + '">' +
+        escapeHTML(o.nombre) + ' · ' + escapeHTML(o.estado) + '</option>'
+      ).join('');
+    if (organizacionesGestionables.length === 1) {
+      selector.value = organizacionesGestionables[0].organizacion_id;
+      await cargarManzanas();
+    }
+  }
+
+  async function cargarManzanas() {
+    const orgId = document.getElementById('organizacionManzanas').value;
+    const tbody = document.getElementById('tablaManzanas');
+    if (!orgId) {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:#9ca3af;">Sin organización seleccionada.</td></tr>';
+      mostrarEstadoManzanas('Seleccioná una organización para ver sus manzanas.');
+      return;
+    }
+    tbody.innerHTML = '<tr><td colspan="4">Consultando…</td></tr>';
+    const { data, error } = await supabaseClient.rpc('listar_manzanas_organizacion', {
+      p_organizacion_id: orgId
+    });
+    if (error || !data || data.ok !== true) {
+      tbody.innerHTML = '<tr><td colspan="4">No se pudo consultar la información.</td></tr>';
+      mostrarEstadoManzanas('No se pudieron cargar las manzanas: ' + (error?.message || 'respuesta inválida'), true);
+      return;
+    }
+    const manzanas = Array.isArray(data.manzanas) ? data.manzanas : [];
+    if (!manzanas.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:#9ca3af;">Todavía no hay manzanas registradas.</td></tr>';
+    } else {
+      tbody.innerHTML = manzanas.map(m => '<tr>' +
+        '<td><strong>' + escapeHTML(m.nombre) + '</strong></td>' +
+        '<td>' + escapeHTML(m.estado) + '</td>' +
+        '<td>' + Number(m.domicilios_activos || 0) + '</td>' +
+        '<td><code>' + escapeHTML(m.qr_public_id) + '</code></td>' +
+        '</tr>').join('');
+    }
+    mostrarEstadoManzanas(manzanas.length + (manzanas.length === 1 ? ' manzana registrada.' : ' manzanas registradas.'));
+  }
+
+  function mostrarEstadoManzanas(mensaje, esError = false) {
+    const box = document.getElementById('resultadoManzanas');
+    box.innerHTML = '<span>Gestión de manzanas</span><p style="color:' +
+      (esError ? '#fca5a5' : '#cbd5e1') + ';margin-top:8px;line-height:1.5;">' +
+      escapeHTML(mensaje) + '</p>';
+  }
+
+  async function crearManzana() {
+    const orgId = document.getElementById('organizacionManzanas').value;
+    const nombre = document.getElementById('nuevaManzanaNombre').value.trim();
+    if (!orgId) {
+      mostrarEstadoManzanas('Primero seleccioná una organización.', true);
+      return;
+    }
+    if (nombre.length < 2 || nombre.length > 120) {
+      mostrarEstadoManzanas('El nombre debe tener entre 2 y 120 caracteres.', true);
+      return;
+    }
+    const boton = document.getElementById('crearManzanaBtn');
+    boton.disabled = true;
+    boton.textContent = 'Creando…';
+    const { data, error } = await supabaseClient.rpc('crear_manzana', {
+      p_organizacion_id: orgId,
+      p_nombre: nombre
+    });
+    boton.disabled = false;
+    boton.textContent = '➕ Crear manzana';
+    if (error || !data || data.ok !== true) {
+      mostrarEstadoManzanas('No se pudo crear la manzana: ' + (error?.message || 'respuesta inválida'), true);
+      return;
+    }
+    document.getElementById('nuevaManzanaNombre').value = '';
+    mostrarEstadoManzanas('Manzana creada: ' + (data.nombre || nombre) + '. Identificador QR: ' + (data.qr_public_id || 'generado'));
+    await cargarManzanas();
   }
 
   function cambiarPestana(idPestana, btn) {
