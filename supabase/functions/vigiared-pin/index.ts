@@ -14,7 +14,7 @@ const baseHeaders = {
   "Pragma": "no-cache",
 };
 
-function corsFor(req: Request): HeadersInit | null {
+function corsFor(req: Request): Record<string, string> | null {
   const origin = req.headers.get("Origin");
   if (!origin) return baseHeaders; // llamadas server-to-server
   const configured = (Deno.env.get("VIGIARED_ALLOWED_ORIGINS") ?? "")
@@ -23,7 +23,7 @@ function corsFor(req: Request): HeadersInit | null {
   return { ...baseHeaders, "Access-Control-Allow-Origin": origin };
 }
 
-function response(body: unknown, status = 200, headers: HeadersInit = baseHeaders) {
+function response(body: unknown, status = 200, headers: Record<string, string> = baseHeaders) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...headers, "Content-Type": "application/json; charset=utf-8" },
