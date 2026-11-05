@@ -28,17 +28,17 @@ begin
   if not exists (
     select 1 from pg_constraint
     where conrelid = 'public.unidades'::regclass
-      and conname = 'unidades_organizacion_manzana_fkey'
+      and conname = 'unidades_organizacion_manzana_vigiared_fkey'
   ) then
     alter table public.unidades
-      add constraint unidades_organizacion_manzana_fkey
+      add constraint unidades_organizacion_manzana_vigiared_fkey
       foreign key (organizacion_id, manzana_vigiared_id)
       references public.manzanas_vigiared (organizacion_id, id)
       on delete restrict;
   end if;
 end $$;
 
-create index if not exists unidades_manzana_estado_idx
+create index if not exists unidades_manzana_vigiared_estado_idx
   on public.unidades (manzana_vigiared_id, estado);
 
 create table if not exists public.credenciales_domicilio (
