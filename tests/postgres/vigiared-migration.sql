@@ -220,21 +220,23 @@ select (public.listar_solicitudes_ingreso_pendientes(:'unidad_id'::uuid)->'solic
 select public.resolver_solicitud_ingreso(:'solicitud_reingreso_id'::uuid,true);
 reset role;
 
-do $functional_assert$
+do $check$
 begin
- if not exists (
-  select 1 from public.membresias_unidad
-  where unidad_id=:'unidad_id'::uuid
-    and user_id='22222222-2222-4222-8222-222222222222'
-    and rol='miembro' and estado='activa'
- ) then raise exception 'El reingreso no reactivó la membresía como miembro'; end if;
- if not exists (
-  select 1 from public.membresias_unidad
-  where unidad_id=:'unidad_id'::uuid
-    and user_id='11111111-1111-4111-8111-111111111111'
-    and rol='responsable' and estado='activa'
- ) then raise exception 'Se perdió el responsable original'; end if;
+  if not exists (
+    select 1 from public.membresias_unidad mu
+    join public.unidades u on u.id = mu.unidad_id
+    where u.nombre = 'Casa QA 1'
+      and mu.user_id = '22222222-2222-4222-8222-222222222222'
+      and mu.rol = 'miembro' and mu.estado = 'activa'
+  ) then raise exception 'El reingreso no reactivó la membresía como miembro'; end if;
+  if not exists (
+    select 1 from public.membresias_unidad mu
+    join public.unidades u on u.id = mu.unidad_id
+    where u.nombre = 'Casa QA 1'
+      and mu.user_id = '11111111-1111-4111-8111-111111111111'
+      and mu.rol = 'responsable' and mu.estado = 'activa'
+  ) then raise exception 'Se perdió el responsable original'; end if;
 end
-$functional_assert$;
+$check$;
 
 select 'OK: migración aplicada y verificaciones de permisos/RLS superadas' as resultado;
