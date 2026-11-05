@@ -209,6 +209,25 @@
         <tbody id="tablaManzanas"><tr><td colspan="4" style="color:#9ca3af;">Sin organización seleccionada.</td></tr></tbody>
       </table>
     </div>
+
+    <div class="stat-card" style="margin-top:20px;">
+      <span>Alta de domicilio y responsable</span>
+      <p style="color:#cbd5e1;margin-top:8px;line-height:1.5;">Registrá primero el domicilio. Luego generá una invitación para el correo del futuro responsable. El PIN sólo se genera cuando esa persona acepta.</p>
+    </div>
+    <div class="card-form">
+      <div class="form-group"><label for="domicilioManzana">Manzana</label><select id="domicilioManzana"><option value="">Seleccioná una manzana</option></select></div>
+      <div class="form-group"><label for="domicilioNombre">Identificación del domicilio</label><input id="domicilioNombre" maxlength="150" placeholder="Ej.: Casa 12, Depto. 2B"></div>
+      <div class="form-group"><label for="domicilioTipo">Tipo</label><select id="domicilioTipo"><option value="vivienda">Vivienda</option><option value="departamento">Departamento</option><option value="habitacion">Habitación</option><option value="comercio">Comercio</option><option value="establecimiento">Establecimiento</option><option value="otra">Otra</option></select></div>
+      <div class="form-group"><label for="domicilioDireccion">Dirección (opcional)</label><input id="domicilioDireccion" maxlength="200" placeholder="Calle y número"></div>
+      <div class="form-group"><label for="domicilioLocalidad">Localidad (opcional)</label><input id="domicilioLocalidad" maxlength="120"></div>
+      <button class="btn-success" id="crearDomicilioBtn" type="button" onclick="crearDomicilioPendiente()">Registrar domicilio</button>
+    </div>
+    <div id="resultadoDomicilio" class="stat-card" aria-live="polite"><span>Registro de domicilio</span><p style="color:#cbd5e1;margin-top:8px;">Seleccioná una manzana.</p></div>
+    <div class="card-form">
+      <div class="form-group"><label for="emailResponsable">Correo del futuro responsable</label><input id="emailResponsable" type="email" maxlength="254" autocomplete="email" placeholder="persona@correo.com"></div>
+      <button class="btn-success" id="crearInvitacionBtn" type="button" onclick="crearInvitacionResponsable()" disabled>Generar invitación</button>
+    </div>
+    <div id="resultadoInvitacion" class="stat-card" aria-live="polite"><span>Invitación</span><p style="color:#cbd5e1;margin-top:8px;">Primero registrá un domicilio.</p></div>
   </section>
 </div>
 
@@ -381,6 +400,9 @@
   }
 
   let organizacionesGestionables = [];
+  let manzanasDisponibles = [];
+  let domicilioPendienteActual = null;
+  let tokenInvitacionEnMemoria = null;
 
   async function cargarOrganizacionesGestionables() {
     const selector = document.getElementById('organizacionManzanas');
@@ -421,6 +443,12 @@
       return;
     }
     const manzanas = Array.isArray(data.manzanas) ? data.manzanas : [];
+    manzanasDisponibles = manzanas;
+    const domicilioSelector = document.getElementById('domicilioManzana');
+    const selectedBlock = domicilioSelector.value;
+    domicilioSelector.innerHTML = '<option value="">Seleccioná una manzana</option>' + manzanas.filter(m => m.estado === 'activa').map(m => '<option value="' + escapeHTML(m.manzana_vigiared_id) + '">' + escapeHTML(m.nombre) + '</option>').join('');
+    if (manzanas.some(m => m.manzana_vigiared_id === selectedBlock && m.estado === 'activa')) domicilioSelector.value = selectedBlock;
+
     if (!manzanas.length) {
       tbody.innerHTML = '<tr><td colspan="4" style="color:#9ca3af;">Todavía no hay manzanas registradas.</td></tr>';
     } else {
@@ -468,6 +496,68 @@
     document.getElementById('nuevaManzanaNombre').value = '';
     mostrarEstadoManzanas('Manzana creada: ' + (data.nombre || nombre) + '. Identificador QR: ' + (data.qr_public_id || 'generado'));
     await cargarManzanas();
+  }
+
+
+  async function crearDomicilioPendiente() {
+    const organizacionId = document.getElementById('organizacionManzanas').value;
+    const manzanaId = document.getElementById('domicilioManzana').value;
+    const nombre = document.getElementById('domicilioNombre').value.trim();
+    if (!organizacionId || !manzanaId || !nombre) return mostrarResultadoDomicilio('Completá organización, manzana e identificación.', true);
+    const boton = document.getElementById('crearDomicilioBtn');
+    boton.disabled = true; boton.textContent = 'Registrando…';
+    const { data, error } = await supabaseClient.functions.invoke('vigiared-pin', { body: {
+      action: 'crear_domicilio_pendiente', organizacion_id: organizacionId,
+      manzana_vigiared_id: manzanaId, nombre,
+      tipo: document.getElementById('domicilioTipo').value,
+      direccion: document.getElementById('domicilioDireccion').value.trim() || null,
+      localidad: document.getElementById('domicilioLocalidad').value.trim() || null
+    }});
+    boton.disabled = false; boton.textContent = 'Registrar domicilio';
+    if (error || !data || data.ok !== true || !data.unidad_id) return mostrarResultadoDomicilio('No se pudo registrar. La migración y la Edge Function deben estar desplegadas. ' + (error?.message || data?.error || ''), true);
+    domicilioPendienteActual = data.unidad_id;
+    document.getElementById('crearInvitacionBtn').disabled = false;
+    mostrarResultadoDomicilio('Domicilio creado sin responsable y sin PIN. Ya podés generar la invitación.');
+    document.getElementById('domicilioNombre').value = '';
+    await cargarManzanas();
+  }
+
+  function mostrarResultadoDomicilio(mensaje, error = false) {
+    const box = document.getElementById('resultadoDomicilio');
+    box.innerHTML = '<span>Registro de domicilio</span><p style="color:' + (error ? '#fca5a5' : '#cbd5e1') + ';margin-top:8px;">' + escapeHTML(mensaje) + '</p>';
+  }
+
+  async function crearInvitacionResponsable() {
+    if (!domicilioPendienteActual) return mostrarResultadoInvitacion('Primero registrá un domicilio.', true);
+    const email = document.getElementById('emailResponsable').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return mostrarResultadoInvitacion('Ingresá un correo válido.', true);
+    const boton = document.getElementById('crearInvitacionBtn');
+    boton.disabled = true; boton.textContent = 'Generando…';
+    const { data, error } = await supabaseClient.functions.invoke('vigiared-pin', { body: {
+      action: 'crear_invitacion_responsable', unidad_id: domicilioPendienteActual, email_destino: email
+    }});
+    boton.disabled = false; boton.textContent = 'Generar invitación';
+    if (error || !data || data.ok !== true || !data.token_entrega_unica) return mostrarResultadoInvitacion('No se pudo generar. Verificá el despliegue de la Edge Function y sus secretos. ' + (error?.message || data?.error || ''), true);
+    tokenInvitacionEnMemoria = data.token_entrega_unica;
+    const box = document.getElementById('resultadoInvitacion');
+    box.innerHTML = '<span>Invitación generada · un solo uso</span><p style="color:#cbd5e1;margin-top:8px;">Entregá este código únicamente a ' + escapeHTML(email) + '. Copialo ahora; no se podrá recuperar desde el sistema.</p><input id="tokenInvitacionVisible" readonly aria-label="Código de invitación" style="width:100%;margin-top:10px;" value="' + escapeHTML(tokenInvitacionEnMemoria) + '"><button class="btn-success" type="button" style="margin-top:10px;" onclick="copiarTokenInvitacion()">Copiar código</button>';
+    document.getElementById('emailResponsable').value = '';
+  }
+
+  function mostrarResultadoInvitacion(mensaje, error = false) {
+    const box = document.getElementById('resultadoInvitacion');
+    box.innerHTML = '<span>Invitación</span><p style="color:' + (error ? '#fca5a5' : '#cbd5e1') + ';margin-top:8px;">' + escapeHTML(mensaje) + '</p>';
+  }
+
+  async function copiarTokenInvitacion() {
+    if (!tokenInvitacionEnMemoria) return;
+    try {
+      await navigator.clipboard.writeText(tokenInvitacionEnMemoria);
+      tokenInvitacionEnMemoria = null;
+      mostrarResultadoInvitacion('Código copiado. Compartilo únicamente con el destinatario.');
+    } catch (_error) {
+      mostrarResultadoInvitacion('No se pudo copiar automáticamente. Seleccioná el código visible y copialo manualmente.', true);
+    }
   }
 
   function cambiarPestana(idPestana, btn) {
