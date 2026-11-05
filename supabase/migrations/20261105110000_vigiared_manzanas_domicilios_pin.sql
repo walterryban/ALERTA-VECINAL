@@ -316,7 +316,7 @@ $$;
 
 
 create or replace function public.listar_solicitudes_ingreso_pendientes(p_unidad_id uuid)
-returns jsonb language plpgsql security definer set search_path = '' as $
+returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_org uuid; v_solicitudes jsonb;
 begin
  if auth.uid() is null then raise exception 'Autenticación requerida'; end if;
@@ -328,7 +328,7 @@ begin
  where s.unidad_id=p_unidad_id and s.estado='pendiente';
  return jsonb_build_object('ok',true,'solicitudes',v_solicitudes);
 end;
-$;
+$$;
 
 
 create or replace function public.resolver_solicitud_ingreso(p_solicitud_id uuid,p_aprobar boolean)
