@@ -31,6 +31,11 @@
     input:focus, select:focus { border-color: var(--accent); }
     .btn-primary { background: var(--accent); color: #000; font-weight: bold; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; transition: 0.2s; }
     .btn-primary:hover { opacity: 0.8; }
+    .btn-link { background: transparent; border: 0; color: var(--accent); cursor: pointer; margin-top: 14px; text-decoration: underline; font-size: .9rem; }
+    #recovery-overlay { position:fixed; inset:0; z-index:1100; display:none; align-items:center; justify-content:center; background:rgba(9,13,22,.97); padding:20px; }
+    .recovery-card { width:100%; max-width:400px; background:var(--card); padding:32px; border:1px solid #1f2937; border-radius:12px; text-align:center; }
+    .recovery-card h2 { color:var(--accent); margin-bottom:10px; }
+    .recovery-card p { color:#9ca3af; font-size:.9rem; line-height:1.5; margin-bottom:18px; }
     
     /* DASHBOARD */
     header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #1f2937; margin-bottom: 24px; }
@@ -103,9 +108,27 @@
       <input type="password" id="loginPassword" placeholder="••••••••" />
     </div>
     <button class="btn-primary" onclick="iniciarSesion()">Ingresar a la Consola</button>
+    <button class="btn-link" type="button" onclick="solicitarRecuperacion()">Olvidé mi contraseña</button>
   </div>
 </div>
 
+<!-- RECUPERACIÓN DE CONTRASEÑA -->
+<div id="recovery-overlay">
+  <div class="recovery-card">
+    <h2>Restablecer contraseña</h2>
+    <p>El enlace fue validado. Elegí una contraseña nueva para tu cuenta de VIGIARED.</p>
+    <div class="form-group">
+      <label for="newPassword">Nueva contraseña</label>
+      <input id="newPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres">
+    </div>
+    <div class="form-group">
+      <label for="confirmPassword">Repetir contraseña</label>
+      <input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Repetí la contraseña">
+    </div>
+    <button class="btn-primary" id="guardarPasswordBtn" type="button" onclick="guardarNuevaPassword()">Guardar contraseña nueva</button>
+    <p id="recoveryMessage" role="status" style="margin-top:14px;"></p>
+  </div>
+</div>
 
 <!-- DASHBOARD -->
 <div class="container" id="app-dashboard" style="display:none;">
@@ -169,6 +192,17 @@
 
   let contextoUsuario = null;
   let esPropietarioPlataforma = false;
+  let recuperacionActiva = false;
+
+  // Supabase emite PASSWORD_RECOVERY al volver desde el enlace enviado por email.
+  supabaseClient.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      recuperacionActiva = true;
+      document.getElementById('recovery-overlay').style.display = 'flex';
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('app-dashboard').style.display = 'none';
+    }
+  });
 
   window.addEventListener('DOMContentLoaded', async () => {
     const { data: { session }, error } = await supabaseClient.auth.getSession();
@@ -217,6 +251,64 @@
       return false;
     }
     return true;
+  }
+
+  async function solicitarRecuperacion() {
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) {
+      mostrarErrorLogin('Ingresá tu correo para enviarte el enlace de recuperación.');
+      return;
+    }
+    const boton = document.querySelector('.btn-link');
+    boton.disabled = true;
+    boton.textContent = 'Enviando…';
+    const redirectTo = window.location.origin + '/admin.html';
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
+    boton.disabled = false;
+    boton.textContent = 'Olvidé mi contraseña';
+    if (error) {
+      mostrarErrorLogin('No se pudo enviar el correo: ' + error.message);
+      return;
+    }
+    mostrarErrorLogin('Si el correo está registrado, recibirás un enlace. Abrilo desde este mismo dispositivo para continuar.');
+  }
+
+  async function guardarNuevaPassword() {
+    if (!recuperacionActiva) {
+      document.getElementById('recoveryMessage').textContent = 'La sesión de recuperación no está activa. Solicitá un enlace nuevo desde el acceso.';
+      return;
+    }
+    const password = document.getElementById('newPassword').value;
+    const confirmation = document.getElementById('confirmPassword').value;
+    const message = document.getElementById('recoveryMessage');
+    if (password.length < 8) {
+      message.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+      return;
+    }
+    if (password !== confirmation) {
+      message.textContent = 'Las contraseñas no coinciden.';
+      return;
+    }
+    const button = document.getElementById('guardarPasswordBtn');
+    button.disabled = true;
+    button.textContent = 'Guardando…';
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    button.disabled = false;
+    button.textContent = 'Guardar contraseña nueva';
+    if (error) {
+      message.textContent = 'No se pudo actualizar la contraseña: ' + error.message;
+      return;
+    }
+    recuperacionActiva = false;
+    message.textContent = 'Contraseña actualizada. Verificando acceso de propietario…';
+    const autorizado = await verificarAcceso();
+    if (autorizado) {
+      document.getElementById('recovery-overlay').style.display = 'none';
+      mostrarDashboard();
+    } else {
+      document.getElementById('recovery-overlay').style.display = 'none';
+      document.getElementById('login-overlay').style.display = 'flex';
+    }
   }
 
   async function iniciarSesion() {
