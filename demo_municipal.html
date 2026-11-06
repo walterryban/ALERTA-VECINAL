@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VIGIARED | Centro de Operaciones Municipal — Demostración</title>
+<style>
+:root{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#172033;background:#f2f5f9}*{box-sizing:border-box}body{margin:0}.top{background:#102b46;color:#fff;padding:20px max(18px,calc((100% - 1180px)/2));display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.top h1{margin:0;font-size:23px;letter-spacing:.4px}.top p{margin:4px 0 0;color:#c7d8e8;font-size:13px}.demo{background:#fff1cc;color:#805500;border-radius:30px;padding:7px 12px;font-size:12px;font-weight:800}.wrap{max-width:1180px;margin:22px auto;padding:0 16px}.notice{background:#fff8e8;border:1px solid #f0d99c;color:#684b12;border-radius:12px;padding:12px 15px;font-size:13px;margin-bottom:16px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.nav button{border:1px solid #d5deea;background:#fff;color:#29425e;border-radius:9px;padding:10px 13px;font-weight:700;cursor:pointer}.nav button.active{background:#1769aa;color:#fff;border-color:#1769aa}.panel{background:#fff;border:1px solid #e0e7ef;border-radius:14px;padding:18px;margin-bottom:15px;box-shadow:0 3px 14px #102b4608}.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.stat{background:#f7f9fc;border:1px solid #e5ebf2;border-radius:12px;padding:14px}.stat strong{display:block;font-size:27px;margin-top:5px}.muted{color:#64748b;font-size:13px}.title{margin:0 0 12px;font-size:18px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1}button.primary{background:#1769aa;color:white;border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}button.secondary{background:#eaf0f6;color:#173a59;border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}button.warn{background:#fff0df;color:#914b0b;border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:#fff}textarea{min-height:75px;resize:vertical}.tag{display:inline-block;border-radius:30px;padding:4px 8px;background:#edf3f8;color:#37516d;font-size:11px;font-weight:800}.tag.red{background:#ffeded;color:#a32323}.tag.green{background:#e9f8ef;color:#176b35}.tag.amber{background:#fff4dc;color:#805500}.item{border:1px solid #e5ebf2;border-radius:10px;padding:13px;margin:9px 0}.item h4{margin:0 0 5px}.item p{margin:4px 0}.split{display:grid;grid-template-columns:1.3fr .7fr;gap:14px}@media(max-width:760px){.split{grid-template-columns:1fr}}.empty{padding:22px;text-align:center;color:#64748b;background:#f8fafc;border-radius:10px}.footer{text-align:center;color:#64748b;font-size:12px;padding:18px}
+</style>
+</head>
+<body>
+<header class="top"><div><h1>VIGIARED · Centro de Operaciones Municipal</h1><p>TECNOLOGÍA QUE CONECTA Y PROTEGE · Plataforma independiente</p></div><span class="demo">ENTORNO DE DEMOSTRACIÓN</span></header>
+<main class="wrap">
+<div class="notice"><b>Datos ficticios para demostración.</b> Las alertas, agentes, inspecciones y recorridas de esta pantalla no se envían a organismos ni se guardan en Supabase. No utilizar para emergencias reales.</div>
+<nav class="nav" aria-label="Módulos">
+<button class="active" data-tab="inicio">Resumen</button><button data-tab="alertas">Centro de Monitoreo</button><button data-tab="territorio">Seguridad y recorridas</button><button data-tab="inspectores">Inspectores</button><button data-tab="policia">Policía Municipal</button><button data-tab="personal">Personal y equipos</button>
+</nav>
+<section id="inicio" class="tab">
+<div class="grid">
+<div class="stat"><span class="muted">Alertas de demostración</span><strong id="kpiAlerts">3</strong><span class="tag red">1 requiere atención</span></div>
+<div class="stat"><span class="muted">Equipos en territorio</span><strong>4</strong><span class="tag green">2 disponibles</span></div>
+<div class="stat"><span class="muted">Inspecciones abiertas</span><strong id="kpiInspections">2</strong><span class="tag amber">Seguimiento</span></div>
+<div class="stat"><span class="muted">Recorridas activas</span><strong id="kpiPatrols">2</strong><span class="tag green">En curso</span></div>
+</div>
+<div class="panel" style="margin-top:15px"><h2 class="title">Áreas municipales</h2><div class="grid">
+<div class="item"><h4>Centro de Monitoreo</h4><p class="muted">Recepción, clasificación, derivación y seguimiento de alertas.</p><span class="tag">PC · Operadores</span></div>
+<div class="item"><h4>Seguridad y recorridas</h4><p class="muted">Presencia preventiva en plazas, parques y espacios públicos.</p><span class="tag">Equipos territoriales</span></div>
+<div class="item"><h4>Inspectores municipales</h4><p class="muted">Órdenes de inspección, evidencias, actas y seguimiento.</p><span class="tag">Inspecciones</span></div>
+<div class="item"><h4>Policía Municipal</h4><p class="muted">Asignación y registro de intervenciones dentro de sus atribuciones.</p><span class="tag">Intervenciones</span></div>
+</div></div>
+<div class="panel"><h2 class="title">Criterio de funcionamiento</h2><p class="muted">El Centro de Monitoreo trabaja desde PC. Los equipos de calle utilizan una vista móvil limitada a sus tareas, recorridas e intervenciones asignadas. Cada área ve únicamente la información necesaria para su función.</p></div>
+</section>
+<section id="alertas" class="tab hidden">
+<div class="split"><div class="panel"><h2 class="title">Bandeja de alertas</h2><div id="alertList"></div></div><div class="panel"><h2 class="title">Detalle y derivación</h2><div id="alertDetail" class="empty">Seleccioná una alerta para ver sus datos y asignar un equipo.</div></div></div>
+</section>
+<section id="territorio" class="tab hidden">
+<div class="split"><div class="panel"><h2 class="title">Recorridas preventivas</h2><div id="patrolList"></div></div><div class="panel"><h2 class="title">Nueva recorrida</h2><label>Zona o espacio público</label><input id="patrolZone" placeholder="Ej. Plaza San Martín"><label>Equipo asignado</label><select id="patrolTeam"><option>Equipo Territorial 1</option><option>Equipo Territorial 2</option><option>Seguridad de Espacios Públicos</option></select><label>Objetivo de la recorrida</label><textarea id="patrolGoal" placeholder="Ej. Control preventivo de plaza y juegos"></textarea><button class="primary" id="addPatrol">Crear recorrida de prueba</button><p class="muted">En la versión conectada, el agente podrá marcar inicio, puntos de control, novedades y cierre desde el móvil.</p></div></div>
+</section>
+<section id="inspectores" class="tab hidden">
+<div class="split"><div class="panel"><h2 class="title">Órdenes de inspección</h2><div id="inspectionList"></div></div><div class="panel"><h2 class="title">Registrar inspección de prueba</h2><label>Tipo de inspección</label><select id="inspectionType"><option>Comercio y habilitaciones</option><option>Tránsito y estacionamiento</option><option>Espacio público</option><option>Higiene y salubridad</option><option>Ruidos y convivencia</option></select><label>Dirección o lugar</label><input id="inspectionPlace" placeholder="Ej. Av. Central 245"><label>Inspector asignado</label><select id="inspectorName"><option>Inspector/a 01</option><option>Inspector/a 02</option><option>Equipo de Inspección</option></select><label>Observaciones</label><textarea id="inspectionNotes" placeholder="Motivo y alcance de la inspección"></textarea><label>Fotografías de evidencia (vista previa local)</label><input id="inspectionPhotos" type="file" accept="image/*" multiple><div id="photoPreview" class="muted"></div><button class="primary" id="addInspection">Registrar inspección de prueba</button><p class="muted">El acta oficial debe respetar el procedimiento, la numeración y la firma que establezca cada municipio. Esta demo no emite actas legales.</p></div></div>
+</section>
+<section id="policia" class="tab hidden">
+<div class="split"><div class="panel"><h2 class="title">Intervenciones asignadas</h2><div id="policeList"></div></div><div class="panel"><h2 class="title">Registrar novedad de intervención</h2><label>Tipo</label><select id="policeType"><option>Apoyo preventivo</option><option>Ordenamiento de espacio público</option><option>Asistencia y derivación</option><option>Incidente municipal</option></select><label>Lugar</label><input id="policePlace" placeholder="Lugar de intervención"><label>Equipo</label><select id="policeTeam"><option>Policía Municipal · Equipo 1</option><option>Policía Municipal · Equipo 2</option></select><label>Descripción</label><textarea id="policeNotes" placeholder="Descripción objetiva de la novedad"></textarea><button class="primary" id="addPolice">Registrar intervención de prueba</button><p class="muted">La actuación se limita a las competencias y protocolos locales. Situaciones que correspondan a fuerzas provinciales o servicios de emergencia deben derivarse a esos organismos.</p></div></div>
+</section>
+<section id="personal" class="tab hidden">
+<div class="panel"><h2 class="title">Personal y equipos de demostración</h2><div class="grid">
+<div class="item"><h4>Centro de Monitoreo</h4><p class="muted">Operador/a 01 · PC · Recepción y derivación</p><span class="tag green">Activo en demo</span></div>
+<div class="item"><h4>Seguridad de Espacios Públicos</h4><p class="muted">Equipo Territorial 1 · Plazas y parques</p><span class="tag green">Disponible en demo</span></div>
+<div class="item"><h4>Inspectores</h4><p class="muted">Inspector/a 01 · Comercio y espacio público</p><span class="tag">Equipo de inspección</span></div>
+<div class="item"><h4>Policía Municipal</h4><p class="muted">Equipo 1 · Intervenciones asignadas</p><span class="tag">Equipo municipal</span></div>
+</div><p class="muted">En producción, el administrador municipal invitará a cada agente con una cuenta individual, asignará área, rol, zona y permisos. Las acciones quedarán auditadas.</p></div>
+</section>
+<div class="footer">VIGIARED · Demostración funcional con datos ficticios · No es un canal de emergencias</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const alerts=[
+{id:1,type:'Alerta vecinal',place:'Barrio Los Aromos · San Martín 142',desc:'Aviso de demostración: situación que requiere verificación.',priority:'Alta',status:'Pendiente',team:''},
+{id:2,type:'Espacio público',place:'Plaza Central',desc:'Novedad de demostración informada por personal territorial.',priority:'Media',status:'En atención',team:'Seguridad de Espacios Públicos'},
+{id:3,type:'Asistencia',place:'Parque del Norte',desc:'Solicitud de asistencia ficticia para mostrar derivación.',priority:'Media',status:'Pendiente',team:''}
+];
+let patrols=[{zone:'Plaza Central',team:'Equipo Territorial 1',goal:'Recorrida preventiva y control de luminarias',status:'En curso'},{zone:'Parque del Norte',team:'Seguridad de Espacios Públicos',goal:'Control de espacios recreativos',status:'En curso'}];
+let inspections=[{type:'Comercio y habilitaciones',place:'Av. Central 245',who:'Inspector/a 01',notes:'Verificación de habilitación (dato ficticio)',status:'Asignada'},{type:'Espacio público',place:'Plaza Central',who:'Inspector/a 02',notes:'Revisión de ocupación de vereda (dato ficticio)',status:'En curso'}];
+let police=[{type:'Apoyo preventivo',place:'Parque del Norte',team:'Policía Municipal · Equipo 1',notes:'Presencia preventiva solicitada (demo)',status:'Asignada'}];
+let selectedAlert=null;
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderAlerts(){$('alertList').innerHTML=alerts.map(a=>'<div class="item"><div class="row"><div><h4>'+escapeHtml(a.type)+'</h4><p>'+escapeHtml(a.place)+'</p></div><span class="tag '+(a.priority==='Alta'?'red':'amber')+'">'+a.priority+'</span></div><p class="muted">'+escapeHtml(a.status)+'</p><button class="secondary" onclick="selectAlert('+a.id+')">Abrir detalle</button></div>').join('');$('kpiAlerts').textContent=alerts.length}
+window.selectAlert=id=>{selectedAlert=alerts.find(a=>a.id===id);$('alertDetail').className='';$('alertDetail').innerHTML='<h3>'+escapeHtml(selectedAlert.type)+'</h3><p><b>Lugar:</b> '+escapeHtml(selectedAlert.place)+'</p><p>'+escapeHtml(selectedAlert.desc)+'</p><p><b>Estado:</b> '+escapeHtml(selectedAlert.status)+'</p><label>Derivar a</label><select id="assignAlert"><option>Seguridad de Espacios Públicos</option><option>Policía Municipal · Equipo 1</option><option>Centro de Monitoreo · Seguimiento</option></select><button class="primary" onclick="assignAlert()">Asignar equipo</button><button class="secondary" onclick="closeAlert()">Marcar resuelta</button>'};
+window.assignAlert=()=>{if(!selectedAlert)return;selectedAlert.team=$('assignAlert').value;selectedAlert.status='En atención';renderAlerts();selectAlert(selectedAlert.id)};
+window.closeAlert=()=>{if(!selectedAlert)return;selectedAlert.status='Resuelta';renderAlerts();selectAlert(selectedAlert.id)};
+function renderPatrols(){$('patrolList').innerHTML=patrols.map(p=>'<div class="item"><h4>'+escapeHtml(p.zone)+'</h4><p class="muted">'+escapeHtml(p.team)+'</p><p>'+escapeHtml(p.goal)+'</p><span class="tag green">'+escapeHtml(p.status)+'</span></div>').join('');$('kpiPatrols').textContent=patrols.filter(p=>p.status==='En curso').length}
+function renderInspections(){$('inspectionList').innerHTML=inspections.map((x,i)=>'<div class="item"><h4>'+escapeHtml(x.type)+'</h4><p>'+escapeHtml(x.place)+'</p><p class="muted">'+escapeHtml(x.who)+' · '+escapeHtml(x.status)+'</p><p>'+escapeHtml(x.notes)+'</p><button class="secondary" onclick="finishInspection('+i+')">Cerrar en demo</button></div>').join('');$('kpiInspections').textContent=inspections.filter(x=>x.status!=='Cerrada').length}
+window.finishInspection=i=>{inspections[i].status='Cerrada';renderInspections()};
+function renderPolice(){$('policeList').innerHTML=police.map(x=>'<div class="item"><h4>'+escapeHtml(x.type)+'</h4><p>'+escapeHtml(x.place)+'</p><p class="muted">'+escapeHtml(x.team)+' · '+escapeHtml(x.status)+'</p><p>'+escapeHtml(x.notes)+'</p></div>').join('')}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('hidden',x.id!==b.dataset.tab))}));
+$('addPatrol').onclick=()=>{const zone=$('patrolZone').value.trim();if(!zone){alert('Ingresá una zona o espacio público.');return}patrols.unshift({zone,team:$('patrolTeam').value,goal:$('patrolGoal').value.trim()||'Recorrida preventiva',status:'Programada'});$('patrolZone').value='';$('patrolGoal').value='';renderPatrols()};
+$('addInspection').onclick=()=>{const place=$('inspectionPlace').value.trim();if(!place){alert('Ingresá el lugar de la inspección.');return}inspections.unshift({type:$('inspectionType').value,place,who:$('inspectorName').value,notes:$('inspectionNotes').value.trim()||'Sin observaciones',status:'Asignada'});$('inspectionPlace').value='';$('inspectionNotes').value='';$('inspectionPhotos').value='';$('photoPreview').textContent='';renderInspections()};
+$('inspectionPhotos').onchange=()=>{$('photoPreview').textContent=$('inspectionPhotos').files.length+' archivo(s) seleccionado(s). Vista previa local únicamente; no se suben ni almacenan.'};
+$('addPolice').onclick=()=>{const place=$('policePlace').value.trim();if(!place){alert('Ingresá el lugar de intervención.');return}police.unshift({type:$('policeType').value,place,team:$('policeTeam').value,notes:$('policeNotes').value.trim()||'Sin descripción',status:'Registrada en demo'});$('policePlace').value='';$('policeNotes').value='';renderPolice()};
+renderAlerts();renderPatrols();renderInspections();renderPolice();
+</script>
+</body></html>
