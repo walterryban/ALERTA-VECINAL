@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VIGIARED | Administración</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#172033;background:#f3f6fa}
+*{box-sizing:border-box}body{margin:0}.top{background:#102b46;color:white;padding:22px max(20px,calc((100% - 1100px)/2))}.top h1{margin:0;font-size:25px}.top p{margin:5px 0 0;color:#c9d8e8}.wrap{max-width:1100px;margin:24px auto;padding:0 16px}.panel{background:white;border:1px solid #e0e7ef;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 3px 14px #102b4609}.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}label{display:block;font-size:13px;font-weight:650;margin:10px 0 6px}input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:white}button{border:0;border-radius:9px;padding:12px 16px;background:#1769aa;color:white;font-weight:700;cursor:pointer;margin-top:12px}button.secondary{background:#e8eff6;color:#173a59}button:disabled{opacity:.5;cursor:not-allowed}.muted{color:#64748b;font-size:13px}.status{padding:12px;border-radius:9px;background:#eef5fb;margin:12px 0;white-space:pre-wrap}.error{background:#fff0f0;color:#9b1c1c}.success{background:#edfaf1;color:#176b35}.section-title{margin:0 0 8px;font-size:18px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.pill{font-size:12px;background:#e8eff6;padding:5px 9px;border-radius:30px}.footer{text-align:center;color:#64748b;font-size:12px;padding:16px}
+</style>
+</head>
+<body>
+<header class="top"><h1>VIGIARED</h1><p>TECNOLOGÍA QUE CONECTA Y PROTEGE · Panel de administración independiente</p></header>
+<main class="wrap">
+<section id="login" class="panel">
+<h2 class="section-title">Ingresar</h2>
+<p class="muted">Acceso mediante código de un solo uso. La cuenta debe existir previamente en VIGIARED.</p>
+<div class="row"><button id="emailMode" class="secondary" type="button">Correo electrónico</button><button id="phoneMode" class="secondary" type="button">Teléfono</button></div>
+<div id="emailBox"><label for="email">Correo electrónico</label><input id="email" type="email" autocomplete="email" placeholder="tu@correo.com"><button id="sendEmail">Enviar enlace de acceso</button></div>
+<div id="phoneBox" class="hidden"><label for="phone">Teléfono con código de país</label><input id="phone" type="tel" autocomplete="tel" placeholder="+549..."><button id="sendPhone">Enviar código SMS</button><label for="smsCode">Código recibido</label><input id="smsCode" inputmode="numeric" autocomplete="one-time-code" placeholder="Código SMS"><button id="verifyPhone">Verificar e ingresar</button><p class="muted">El acceso por SMS requiere que el proveedor telefónico esté habilitado y configurado en Supabase.</p></div>
+<div id="loginStatus" class="status hidden" role="status"></div>
+</section>
+<section id="app" class="hidden">
+<div class="panel row"><div><h2 class="section-title">Administración territorial</h2><div id="who" class="muted"></div></div><button id="logout" class="secondary">Cerrar sesión</button></div>
+<div id="globalOrg" class="panel hidden"><h3 class="section-title">Crear organización</h3><div class="grid"><div><label for="orgName">Nombre de la organización</label><input id="orgName" placeholder="Ej. Comunidad Barrio Centro"></div><div><label for="orgType">Tipo</label><select id="orgType"><option value="comunidad">Comunidad</option><option value="municipio">Municipio</option><option value="consorcio">Consorcio</option><option value="empresa">Empresa</option><option value="otra">Otra</option></select></div></div><button id="createOrg">Crear organización</button></div>
+<div class="panel"><h3 class="section-title">Seleccionar organización</h3><label for="orgSelect">Organización</label><select id="orgSelect"><option value="">Cargando organizaciones...</option></select><div id="orgStatus" class="muted"></div></div>
+<div id="territory" class="hidden">
+<div class="panel"><h3 class="section-title">1. Barrios</h3><div class="grid"><div><label for="barrioName">Nombre del barrio</label><input id="barrioName" placeholder="Ej. Barrio CGT"></div><div><label for="barrioDesc">Descripción (opcional)</label><input id="barrioDesc" placeholder="Referencia o descripción"></div></div><button id="createBarrio">Crear barrio</button><label for="barrioSelect">Barrio seleccionado</label><select id="barrioSelect"><option value="">Seleccione un barrio</option></select></div>
+<div id="subterritory" class="hidden">
+<div class="panel"><h3 class="section-title">2. Manzanas</h3><div class="grid"><div><label for="manzanaName">Identificación de manzana</label><input id="manzanaName" placeholder="Ej. 148"></div><div><label for="manzanaDesc">Descripción (opcional)</label><input id="manzanaDesc" placeholder="Referencia"></div></div><button id="createManzana">Crear manzana</button><label for="manzanaSelect">Manzana (opcional para domicilios con dirección directa)</label><select id="manzanaSelect"><option value="">Sin manzana / dirección directa</option></select></div>
+<div class="panel"><h3 class="section-title">3. Viviendas y unidades</h3><div class="grid"><div><label for="unitType">Tipo de unidad</label><select id="unitType"><option value="vivienda">Vivienda</option><option value="departamento">Departamento</option><option value="habitacion">Habitación</option><option value="comercio">Comercio</option><option value="otra">Otra</option></select></div><div><label for="unitName">Identificador</label><input id="unitName" placeholder="Ej. Casa 5 / Depto A"></div><div><label for="address">Dirección (opcional)</label><input id="address" placeholder="Ej. San Martín 142"></div><div><label for="locality">Localidad</label><input id="locality" placeholder="Localidad"></div><div><label for="province">Provincia</label><input id="province" value="San Luis"></div><div><label for="postal">Código postal</label><input id="postal" placeholder="Código postal"></div><div><label for="lat">Latitud (opcional)</label><input id="lat" type="number" step="any" placeholder="-33.30"></div><div><label for="lng">Longitud (opcional)</label><input id="lng" type="number" step="any" placeholder="-66.34"></div></div><button id="createUnit">Crear unidad</button></div>
+<div class="panel"><h3 class="section-title">Unidades registradas</h3><div id="unitsList" class="muted">Seleccione un barrio para consultar sus unidades.</div></div>
+</div></div>
+<div id="appStatus" class="status hidden" role="status"></div>
+</section>
+<div class="footer">VIGIARED · Plataforma independiente de prevención y respuesta</div>
+</main>
+<script>
+const SUPABASE_URL = 'https://efypppkjuwpzfssgpbkq.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_5nYG3oHIfbMFW_ddEUT9EA_PnQLVdIm';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const $ = id => document.getElementById(id);
+let context = null, organizations = [], selectedOrg = null, barrios = [], manzanas = [];
+function show(id,on=true){$(id).classList.toggle('hidden',!on)}
+function message(id,msg,type=''){const el=$(id);el.textContent=msg;el.className='status'+(type?' '+type:'');show(id,true)}
+function clearMessage(id){show(id,false)}
+function rpcError(e){return e?.message || e?.error_description || String(e)}
+function rowsOf(data){if(Array.isArray(data))return data;if(data&&Array.isArray(data.data))return data.data;if(data&&Array.isArray(data.items))return data.items;return []}
+function orgId(o){return o.id || o.organizacion_id}
+async function refreshContext(){
+ const {data,error}=await db.rpc('obtener_contexto_usuario');if(error)throw error;
+ context=typeof data==='string'?JSON.parse(data):data;
+ organizations=Array.isArray(context?.organizaciones)?context.organizaciones:[];
+ const isOwner=!!context?.es_propietario_plataforma;
+ show('globalOrg',isOwner);
+ $('who').textContent=(context?.perfil?.nombre_completo || context?.email || 'Cuenta autenticada')+(isOwner?' · Propietario de plataforma':'');
+ $('orgSelect').innerHTML='';
+ if(!organizations.length){$('orgSelect').innerHTML='<option value="">No hay organizaciones disponibles para esta cuenta</option>';show('territory',false);$('orgStatus').textContent='El propietario global puede crear una organización desde el panel superior.';return;}
+ organizations.forEach(o=>{const op=document.createElement('option');op.value=orgId(o);op.textContent=o.nombre || 'Organización';$('orgSelect').appendChild(op)});
+ selectedOrg=organizations[0];$('orgSelect').value=orgId(selectedOrg);$('orgStatus').textContent=organizations.length+' organización(es) disponible(s).';await loadBarrios();
+}
+async function loadBarrios(){
+ const id=$('orgSelect').value;if(!id)return;
+ selectedOrg=organizations.find(o=>String(orgId(o))===String(id));show('territory',true);show('subterritory',false);
+ const {data,error}=await db.rpc('listar_barrios',{p_organizacion_id:id});if(error)throw error;
+ barrios=rowsOf(data);$('barrioSelect').innerHTML='<option value="">Seleccione un barrio</option>';
+ barrios.forEach(b=>{const op=document.createElement('option');op.value=b.id;op.textContent=b.nombre;$('barrioSelect').appendChild(op)});
+ $('orgStatus').textContent=(selectedOrg?.nombre||'Organización')+' · '+barrios.length+' barrio(s)';
+}
+async function loadBarrioDetails(){
+ const org=$('orgSelect').value,barrio=$('barrioSelect').value;if(!barrio){show('subterritory',false);return}
+ show('subterritory',true);
+ const [m,u]=await Promise.all([
+  db.rpc('listar_manzanas_por_barrio',{p_organizacion_id:org,p_barrio_id:barrio}),
+  db.rpc('listar_unidades_por_barrio',{p_organizacion_id:org,p_barrio_id:barrio})
+ ]);
+ if(m.error)throw m.error;if(u.error)throw u.error;
+ manzanas=rowsOf(m.data);$('manzanaSelect').innerHTML='<option value="">Sin manzana / dirección directa</option>';
+ manzanas.forEach(x=>{const op=document.createElement('option');op.value=x.id;op.textContent=x.nombre;$('manzanaSelect').appendChild(op)});
+ const units=rowsOf(u.data);$('unitsList').innerHTML='';
+ if(!units.length){$('unitsList').textContent='Todavía no hay unidades registradas en este barrio.';return}
+ units.forEach(x=>{const div=document.createElement('div');div.style.padding='10px 0';div.style.borderBottom='1px solid #e5eaf0';div.textContent=(x.nombre||'Unidad')+' · '+(x.tipo||'')+(x.direccion?' · '+x.direccion:'')+(x.manzana_id?' · Manzana asignada':'');$('unitsList').appendChild(div)});
+}
+async function runAction(fn,args,success){
+ clearMessage('appStatus');const {data,error}=await db.rpc(fn,args);if(error)throw error;
+ if(data&&typeof data==='object'&&data.success===false)throw new Error(data.message||'La operación no pudo completarse.');
+ message('appStatus',success,'success');return data;
+}
+$('emailMode').onclick=()=>{show('emailBox',true);show('phoneBox',false)};
+$('phoneMode').onclick=()=>{show('emailBox',false);show('phoneBox',true)};
+$('sendEmail').onclick=async()=>{try{const email=$('email').value.trim();if(!email)throw new Error('Ingresá tu correo electrónico.');const {error}=await db.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.href}});if(error)throw error;message('loginStatus','Te enviamos un enlace de acceso. Abrilo desde este mismo dispositivo o navegador.','success')}catch(e){message('loginStatus',rpcError(e),'error')}};
+$('sendPhone').onclick=async()=>{try{const phone=$('phone').value.trim();if(!phone)throw new Error('Ingresá el teléfono con código de país.');const {error}=await db.auth.signInWithOtp({phone,options:{shouldCreateUser:false}});if(error)throw error;message('loginStatus','Código SMS enviado. Ingresalo para continuar.','success')}catch(e){message('loginStatus',rpcError(e),'error')}};
+$('verifyPhone').onclick=async()=>{try{const phone=$('phone').value.trim(),token=$('smsCode').value.trim();const {error}=await db.auth.verifyOtp({phone,token,type:'sms'});if(error)throw error;await startApp()}catch(e){message('loginStatus',rpcError(e),'error')}};
+async function startApp(){clearMessage('loginStatus');try{await refreshContext();show('login',false);show('app',true)}catch(e){show('app',false);show('login',true);message('loginStatus','No se pudo cargar el perfil: '+rpcError(e),'error')}}
+$('createOrg').onclick=async()=>{try{const name=$('orgName').value.trim();if(!name)throw new Error('Ingresá el nombre de la organización.');await runAction('crear_organizacion',{p_nombre:name,p_tipo:$('orgType').value},'Organización creada correctamente.');await refreshContext()}catch(e){message('appStatus',rpcError(e),'error')}};
+$('orgSelect').onchange=async()=>{try{await loadBarrios()}catch(e){message('appStatus',rpcError(e),'error')}};
+$('barrioSelect').onchange=async()=>{try{await loadBarrioDetails()}catch(e){message('appStatus',rpcError(e),'error')}};
+$('createBarrio').onclick=async()=>{try{const name=$('barrioName').value.trim();if(!name)throw new Error('Ingresá el nombre del barrio.');await runAction('crear_barrio',{p_organizacion_id:$('orgSelect').value,p_nombre:name,p_descripcion:$('barrioDesc').value.trim()||null},'Barrio creado correctamente.');$('barrioName').value='';await loadBarrios()}catch(e){message('appStatus',rpcError(e),'error')}};
+$('createManzana').onclick=async()=>{try{const name=$('manzanaName').value.trim();if(!name)throw new Error('Ingresá la identificación de la manzana.');await runAction('crear_manzana_en_barrio',{p_organizacion_id:$('orgSelect').value,p_barrio_id:$('barrioSelect').value,p_nombre:name,p_descripcion:$('manzanaDesc').value.trim()||null},'Manzana creada correctamente.');$('manzanaName').value='';await loadBarrioDetails()}catch(e){message('appStatus',rpcError(e),'error')}};
+$('createUnit').onclick=async()=>{try{const name=$('unitName').value.trim();if(!name)throw new Error('Ingresá el identificador de la unidad.');const num=id=>$(id).value.trim()===''?null:Number($(id).value);await runAction('crear_unidad_en_barrio',{p_organizacion_id:$('orgSelect').value,p_barrio_id:$('barrioSelect').value,p_manzana_id:$('manzanaSelect').value||null,p_tipo:$('unitType').value,p_nombre:name,p_direccion:$('address').value.trim()||null,p_localidad:$('locality').value.trim()||null,p_provincia:$('province').value.trim()||null,p_codigo_postal:$('postal').value.trim()||null,p_latitud:num('lat'),p_longitud:num('lng')},'Unidad creada correctamente.');$('unitName').value='';await loadBarrioDetails()}catch(e){message('appStatus',rpcError(e),'error')}};
+$('logout').onclick=async()=>{await db.auth.signOut();context=null;show('app',false);show('login',true)};
+db.auth.onAuthStateChange((event,session)=>{if(session&&$('app').classList.contains('hidden'))setTimeout(()=>startApp(),0)});
+(async()=>{const {data:{session}}=await db.auth.getSession();if(session)await startApp()})();
+</script>
+</body>
+</html>
