@@ -366,8 +366,28 @@ function rowsOf(data) {
   return [];
 }
 
+function firstId(row, keys) {
+  for (const key of keys) {
+    const value = row?.[key];
+    if (typeof value === 'string' && value.trim() && value !== 'undefined' && value !== 'null') return value.trim();
+  }
+  return '';
+}
 function orgId(o) {
-  return o.id || o.organizacion_id;
+  return firstId(o, ['id','organizacion_id','organization_id','org_id']);
+}
+function barrioId(b) {
+  return firstId(b, ['id','barrio_id','id_barrio','barrio_uuid']);
+}
+function manzanaId(m) {
+  return firstId(m, ['id','manzana_id','id_manzana','manzana_uuid']);
+}
+function requireUuid(value, label) {
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidPattern.test(String(value || ''))) {
+    throw new Error('No se pudo identificar correctamente ' + label + '. Actualizá la página y volvé a seleccionar la organización y el barrio.');
+  }
+  return value;
 }
 
 // --------------------------------------------------
@@ -410,8 +430,10 @@ async function refreshContext() {
   }
 
   organizations.forEach(o => {
+    const id = orgId(o);
+    if (!id) return;
     const op = document.createElement('option');
-    op.value = orgId(o);
+    op.value = id;
     op.textContent = o.nombre || 'Organización';
     $('orgSelect').appendChild(op);
   });
@@ -430,8 +452,7 @@ async function refreshContext() {
 // --------------------------------------------------
 
 async function loadBarrios() {
-  const id = $('orgSelect').value;
-  if (!id) return;
+  const id = requireUuid($('orgSelect').value, 'la organización seleccionada');
 
   selectedOrg = organizations.find(
     o => String(orgId(o)) === String(id)
@@ -453,9 +474,11 @@ async function loadBarrios() {
     '<option value="">Seleccione un barrio</option>';
 
   barrios.forEach(b => {
+    const idBarrio = barrioId(b);
+    if (!idBarrio) return;
     const op = document.createElement('option');
-    op.value = b.id;
-    op.textContent = b.nombre;
+    op.value = idBarrio;
+    op.textContent = b.nombre || b.nombre_barrio || 'Barrio';
     $('barrioSelect').appendChild(op);
   });
 
@@ -469,8 +492,8 @@ async function loadBarrios() {
 // --------------------------------------------------
 
 async function loadBarrioDetails() {
-  const org = $('orgSelect').value;
-  const barrio = $('barrioSelect').value;
+  const org = requireUuid($('orgSelect').value, 'la organización seleccionada');
+  const barrio = requireUuid($('barrioSelect').value, 'el barrio seleccionado');
 
   if (!barrio) {
     show('subterritory',false);
@@ -501,8 +524,8 @@ async function loadBarrioDetails() {
 
   manzanas.forEach(x => {
     const op = document.createElement('option');
-    op.value = x.id;
-    op.textContent = x.nombre;
+    op.value = manzanaId(x);
+    op.textContent = x.nombre || x.nombre_manzana || 'Manzana';
     $('manzanaSelect').appendChild(op);
   });
 
@@ -701,12 +724,12 @@ $('createBarrio').onclick = async () => {
     await loadBarrios();
 
     // Seleccionar el barrio recién creado.
-    const nuevoBarrioId = resultado?.barrio_id;
-
-    if (nuevoBarrioId) {
-      $('barrioSelect').value = nuevoBarrioId;
-
-      // Mostrar inmediatamente manzanas y viviendas.
+    const nuevoBarrioId = firstId(resultado, ['barrio_id','id','id_barrio']);
+    const barrioCreado = barrios.find(b => barrioId(b) === nuevoBarrioId) ||
+      barrios.find(b => String(b.nombre || b.nombre_barrio || '').trim().toLowerCase() === name.toLowerCase());
+    const idParaSeleccionar = nuevoBarrioId || (barrioCreado ? barrioId(barrioCreado) : '');
+    if (idParaSeleccionar) {
+      $('barrioSelect').value = idParaSeleccionar;
       await loadBarrioDetails();
     }
 
@@ -721,6 +744,8 @@ $('createBarrio').onclick = async () => {
 
 $('createManzana').onclick = async () => {
   try {
+    const org = requireUuid($('orgSelect').value, 'la organización seleccionada');
+    const barrio = requireUuid($('barrioSelect').value, 'el barrio seleccionado');
     const name = $('manzanaName').value.trim();
 
     if (!name) {
@@ -730,8 +755,8 @@ $('createManzana').onclick = async () => {
     await runAction(
       'crear_manzana_en_barrio',
       {
-        p_organizacion_id:$('orgSelect').value,
-        p_barrio_id:$('barrioSelect').value,
+        p_organizacion_id:org,
+        p_barrio_id:barrio,
         p_nombre:name,
         p_descripcion:$('manzanaDesc').value.trim() || null
       },
@@ -753,6 +778,8 @@ $('createManzana').onclick = async () => {
 
 $('createUnit').onclick = async () => {
   try {
+    const org = requireUuid($('orgSelect').value, 'la organización seleccionada');
+    const barrio = requireUuid($('barrioSelect').value, 'el barrio seleccionado');
     const name = $('unitName').value.trim();
 
     if (!name) {
@@ -767,9 +794,9 @@ $('createUnit').onclick = async () => {
     await runAction(
       'crear_unidad_en_barrio',
       {
-        p_organizacion_id:$('orgSelect').value,
-        p_barrio_id:$('barrioSelect').value,
-        p_manzana_id:$('manzanaSelect').value || null,
+        p_organizacion_id:org,
+        p_barrio_id:barrio,
+        p_manzana_id:$('manzanaSelect').value ? requireUuid($('manzanaSelect').value, 'la manzana seleccionada') : null,
         p_tipo:$('unitType').value,
         p_nombre:name,
         p_direccion:$('address').value.trim() || null,
