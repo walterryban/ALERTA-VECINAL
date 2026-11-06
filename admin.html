@@ -193,6 +193,71 @@
     </div>
   </section>
   <section id="tab-unidades" class="tab-content">
+    <div class="section-heading"><h2>Gestión de manzanas y domicilios</h2></div>
+    <p class="muted-note">Seleccioná una organización para administrar sus manzanas y registrar viviendas, departamentos, habitaciones o comercios.</p>
+    <div class="card-form">
+      <div class="form-group">
+        <label for="organizacionSeleccionada">Organización</label>
+        <select id="organizacionSeleccionada" onchange="cargarManzanas()"><option value="">Seleccioná una organización</option></select>
+      </div>
+      <div class="form-group">
+        <label for="nuevaManzanaNombre">Nombre de la manzana</label>
+        <input id="nuevaManzanaNombre" maxlength="100" placeholder="Ej.: Manzana 12">
+      </div>
+      <div class="form-group">
+        <label for="nuevaManzanaDescripcion">Descripción (opcional)</label>
+        <input id="nuevaManzanaDescripcion" maxlength="500" placeholder="Ubicación o referencia">
+      </div>
+      <button class="btn-success" id="crearManzanaBtn" type="button" onclick="crearManzana()">➕ Crear manzana</button>
+    </div>
+    <p id="estadoManzanas" class="muted-note" role="status" aria-live="polite">Seleccioná una organización para ver sus manzanas.</p>
+    <div class="card-form">
+      <div class="form-group">
+        <label for="manzanaSeleccionada">Manzana</label>
+        <select id="manzanaSeleccionada"><option value="">Primero seleccioná una organización</option></select>
+      </div>
+      <div class="form-group">
+        <label for="nuevaUnidadTipo">Tipo de unidad</label>
+        <select id="nuevaUnidadTipo">
+          <option value="vivienda">Vivienda</option>
+          <option value="departamento">Departamento</option>
+          <option value="habitacion">Habitación</option>
+          <option value="comercio">Comercio</option>
+          <option value="establecimiento">Establecimiento</option>
+          <option value="otra">Otra</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="nuevaUnidadNombre">Nombre / identificación</label>
+        <input id="nuevaUnidadNombre" maxlength="150" placeholder="Ej.: San Martín 142 - Depto A">
+      </div>
+      <div class="form-group">
+        <label for="nuevaUnidadDireccion">Dirección (opcional)</label>
+        <input id="nuevaUnidadDireccion" maxlength="250" placeholder="Calle y número">
+      </div>
+      <div class="form-group">
+        <label for="nuevaUnidadLocalidad">Localidad</label>
+        <input id="nuevaUnidadLocalidad" maxlength="120" placeholder="Localidad">
+      </div>
+      <div class="form-group">
+        <label for="nuevaUnidadProvincia">Provincia</label>
+        <input id="nuevaUnidadProvincia" maxlength="120" placeholder="Provincia">
+      </div>
+      <div class="form-group">
+        <label for="nuevaUnidadCP">Código postal</label>
+        <input id="nuevaUnidadCP" maxlength="20" placeholder="Código postal">
+      </div>
+      <div class="form-group">
+        <label for="nuevaUnidadLatitud">Latitud (opcional)</label>
+        <input id="nuevaUnidadLatitud" type="number" step="any" min="-90" max="90" placeholder="-33.">
+      </div>
+      <div class="form-group">
+        <label for="nuevaUnidadLongitud">Longitud (opcional)</label>
+        <input id="nuevaUnidadLongitud" type="number" step="any" min="-180" max="180" placeholder="-65.">
+      </div>
+      <button class="btn-success" id="crearUnidadBtn" type="button" onclick="crearUnidad()">➕ Registrar unidad</button>
+    </div>
+    <div id="resultadoUnidades" class="muted-note" role="status" aria-live="polite"></div>
     <div class="section-heading"><h2>Unidades activas</h2><span id="cantidadUnidades" class="badge badge-success">0</span></div>
     <p class="muted-note">Vista global del propietario sobre las unidades activas de todas las organizaciones.</p>
     <div id="listaUnidades" class="entity-grid" aria-live="polite"></div>
@@ -366,6 +431,7 @@
     document.getElementById('sesionRol').textContent = 'Propietario global';
     renderizarOrganizaciones();
     renderizarUnidades();
+    cargarSelectorOrganizaciones();
   }
 
   function renderizarOrganizaciones() {
@@ -397,6 +463,7 @@
     if (!esPropietarioPlataforma) throw new Error('La sesión ya no tiene permisos de propietario global.');
     renderizarOrganizaciones();
     renderizarUnidades();
+    cargarSelectorOrganizaciones();
   }
 
   function renderizarUnidades() {
@@ -466,6 +533,107 @@
     } catch (e) {
       resultado.innerHTML += '<p style="color:#fbbf24;margin-top:8px;">La organización se creó, pero no se pudo actualizar la lista: ' + escapeHTML(e.message) + '</p>';
     }
+  }
+
+
+  function cargarSelectorOrganizaciones() {
+    const select = document.getElementById('organizacionSeleccionada');
+    if (!select) return;
+    const anterior = select.value;
+    const organizaciones = Array.isArray(contextoUsuario?.organizaciones) ? contextoUsuario.organizaciones : [];
+    select.innerHTML = '<option value="">Seleccioná una organización</option>' + organizaciones.map(org =>
+      '<option value="' + escapeHTML(org.organizacion_id || '') + '">' + escapeHTML(org.nombre || 'Organización') + '</option>'
+    ).join('');
+    if (organizaciones.some(org => String(org.organizacion_id) === anterior)) select.value = anterior;
+    if (select.value) cargarManzanas();
+    else {
+      document.getElementById('manzanaSeleccionada').innerHTML = '<option value="">Primero seleccioná una organización</option>';
+      document.getElementById('estadoManzanas').textContent = 'Seleccioná una organización para ver sus manzanas.';
+    }
+  }
+
+  async function cargarManzanas() {
+    const organizacionId = document.getElementById('organizacionSeleccionada').value;
+    const selector = document.getElementById('manzanaSeleccionada');
+    const estado = document.getElementById('estadoManzanas');
+    selector.innerHTML = '<option value="">Cargando manzanas…</option>';
+    if (!organizacionId) {
+      selector.innerHTML = '<option value="">Primero seleccioná una organización</option>';
+      estado.textContent = 'Seleccioná una organización para ver sus manzanas.';
+      return;
+    }
+    estado.textContent = 'Consultando manzanas…';
+    const { data, error } = await supabaseClient.rpc('listar_manzanas', { p_organizacion_id: organizacionId });
+    if (error) {
+      selector.innerHTML = '<option value="">No se pudieron cargar</option>';
+      estado.textContent = 'Error al consultar manzanas: ' + error.message;
+      return;
+    }
+    const manzanas = Array.isArray(data) ? data : [];
+    selector.innerHTML = '<option value="">Seleccioná una manzana</option>' + manzanas.map(m =>
+      '<option value="' + escapeHTML(m.manzana_id || '') + '">' + escapeHTML(m.nombre || 'Manzana') + '</option>'
+    ).join('');
+    estado.textContent = manzanas.length ? 'Manzanas activas: ' + manzanas.length : 'Esta organización todavía no tiene manzanas. Creá la primera arriba.';
+  }
+
+  async function crearManzana() {
+    if (!esPropietarioPlataforma) return alert('Acción no autorizada.');
+    const organizacionId = document.getElementById('organizacionSeleccionada').value;
+    const nombre = document.getElementById('nuevaManzanaNombre').value.trim();
+    const descripcion = document.getElementById('nuevaManzanaDescripcion').value.trim();
+    const estado = document.getElementById('estadoManzanas');
+    if (!organizacionId) return alert('Seleccioná una organización.');
+    if (nombre.length < 2 || nombre.length > 100) return alert('El nombre de la manzana debe tener entre 2 y 100 caracteres.');
+    const boton = document.getElementById('crearManzanaBtn');
+    boton.disabled = true; boton.textContent = 'Creando…';
+    const { data, error } = await supabaseClient.rpc('crear_manzana', {
+      p_organizacion_id: organizacionId, p_nombre: nombre, p_descripcion: descripcion || null
+    });
+    boton.disabled = false; boton.textContent = '➕ Crear manzana';
+    if (error) { estado.textContent = 'No se pudo crear la manzana: ' + error.message; return; }
+    if (!data || data.ok !== true) { estado.textContent = 'El servidor no confirmó la creación de la manzana.'; return; }
+    document.getElementById('nuevaManzanaNombre').value = '';
+    document.getElementById('nuevaManzanaDescripcion').value = '';
+    estado.textContent = 'Manzana creada correctamente: ' + (data.nombre || nombre);
+    await cargarManzanas();
+  }
+
+  async function crearUnidad() {
+    if (!esPropietarioPlataforma) return alert('Acción no autorizada.');
+    const organizacionId = document.getElementById('organizacionSeleccionada').value;
+    const manzanaId = document.getElementById('manzanaSeleccionada').value;
+    const nombre = document.getElementById('nuevaUnidadNombre').value.trim();
+    if (!organizacionId) return alert('Seleccioná una organización.');
+    if (!manzanaId) return alert('Seleccioná una manzana.');
+    if (!nombre || nombre.length > 150) return alert('Ingresá un nombre o identificación de hasta 150 caracteres.');
+    const numberOrNull = id => document.getElementById(id).value.trim() === '' ? null : Number(document.getElementById(id).value);
+    const latitud = numberOrNull('nuevaUnidadLatitud');
+    const longitud = numberOrNull('nuevaUnidadLongitud');
+    if ((latitud === null) !== (longitud === null)) return alert('Ingresá latitud y longitud juntas, o dejá ambas vacías.');
+    if (latitud !== null && (!Number.isFinite(latitud) || latitud < -90 || latitud > 90 || !Number.isFinite(longitud) || longitud < -180 || longitud > 180)) return alert('Las coordenadas están fuera de rango.');
+    const boton = document.getElementById('crearUnidadBtn');
+    const resultado = document.getElementById('resultadoUnidades');
+    boton.disabled = true; boton.textContent = 'Registrando…';
+    const { data, error } = await supabaseClient.rpc('crear_unidad', {
+      p_organizacion_id: organizacionId,
+      p_manzana_id: manzanaId,
+      p_tipo: document.getElementById('nuevaUnidadTipo').value,
+      p_nombre: nombre,
+      p_direccion: document.getElementById('nuevaUnidadDireccion').value.trim() || null,
+      p_localidad: document.getElementById('nuevaUnidadLocalidad').value.trim() || null,
+      p_provincia: document.getElementById('nuevaUnidadProvincia').value.trim() || null,
+      p_codigo_postal: document.getElementById('nuevaUnidadCP').value.trim() || null,
+      p_latitud: latitud,
+      p_longitud: longitud
+    });
+    boton.disabled = false; boton.textContent = '➕ Registrar unidad';
+    if (error) { resultado.textContent = 'No se pudo registrar la unidad: ' + error.message; resultado.style.color = '#fca5a5'; return; }
+    if (!data || data.ok !== true) { resultado.textContent = 'El servidor no confirmó el registro.'; resultado.style.color = '#fca5a5'; return; }
+    ['nuevaUnidadNombre','nuevaUnidadDireccion','nuevaUnidadLocalidad','nuevaUnidadProvincia','nuevaUnidadCP','nuevaUnidadLatitud','nuevaUnidadLongitud'].forEach(id => document.getElementById(id).value = '');
+    resultado.textContent = 'Unidad registrada correctamente: ' + (data.nombre || nombre);
+    resultado.style.color = '#86efac';
+    try { await actualizarContextoUsuario(); }
+    catch (e) { resultado.textContent += ' El registro se realizó, pero no se pudo refrescar el panel: ' + e.message; }
   }
 
   function escapeHTML(value) {
