@@ -91,11 +91,13 @@ async function sendCode(kind){
     }else{
       destination=$('email').value.trim();
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)) throw new Error('Ingresá un correo electrónico válido.');
-      const {error}=await db.auth.signInWithOtp({email:destination,options:{shouldCreateUser:true}});
+      const {error}=await db.auth.signInWithOtp({email:destination,options:{shouldCreateUser:true,emailRedirectTo:window.location.href}});
       if(error) throw error;
     }
-    show('verify',true);
-    status('result','Te enviamos un código de verificación. Revisá tu teléfono o correo.','success');
+    show('verify',kind==='sms');
+    status('result',kind==='sms'
+      ? 'Te enviamos un código por SMS. Ingresalo para continuar.'
+      : 'Te enviamos un enlace al correo. Abrilo desde este mismo dispositivo para continuar.','success');
   }catch(e){status('result',e.message||String(e),'error')}
 }
 $('sendOtp').onclick=()=>sendCode('sms');
@@ -136,7 +138,17 @@ $('activateButton').onclick=async()=>{
     $('activateButton').disabled=false;
   }
 };
+async function restoreVerifiedSession(){
+  const {data:{session}}=await db.auth.getSession();
+  if(session){
+    show('identity',false);
+    show('verify',false);
+    show('activate',true);
+    status('result','Identidad verificada. Ingresá el domicilio y el PIN que te entregó el Centro Operativo.','success');
+  }
+}
 validateQr();
+restoreVerifiedSession();
 </script>
 </body>
 </html>
