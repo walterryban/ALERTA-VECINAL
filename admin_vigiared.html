@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VIGIARED | Administración</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 :root {
@@ -90,6 +91,13 @@ button:disabled { opacity:.5;cursor:not-allowed; }
   font-size:12px;
   padding:16px;
 }
+
+.secret-box{border:2px solid #b8d4ea;background:#f4f9fd;border-radius:12px;padding:18px;margin-top:14px}
+.secret-box h3{margin:0 0 8px}
+.secret-value{font-size:22px;font-weight:800;letter-spacing:2px;overflow-wrap:anywhere;color:#102b46}
+#qrCanvas{background:white;padding:10px;display:inline-block;border:1px solid #dbe4ee;border-radius:10px;margin:10px 0}
+.secret-note{font-size:13px;color:#475569;line-height:1.5}
+
 </style>
 </head>
 
@@ -311,6 +319,17 @@ button:disabled { opacity:.5;cursor:not-allowed; }
   </div>
 
   <div id="appStatus" class="status hidden" role="status"></div>
+  <section id="secretResult" class="panel secret-box hidden" aria-live="polite">
+    <h3 id="secretTitle">Código generado</h3>
+    <p id="secretDescription" class="secret-note"></p>
+    <div id="qrCanvas"></div>
+    <div id="secretValue" class="secret-value"></div>
+    <p id="secretInstructions" class="secret-note"></p>
+    <div class="row">
+      <button id="copySecret" type="button">Copiar código</button>
+      <button id="copyQrLink" class="secondary" type="button">Copiar enlace del QR</button>
+    </div>
+  </section>
 
 </section>
 
@@ -339,6 +358,8 @@ let organizations = [];
 let selectedOrg = null;
 let barrios = [];
 let manzanas = [];
+let lastSecretValue = '';
+let lastQrUrl = '';
 
 function show(id,on=true) {
   $(id).classList.toggle('hidden',!on);
@@ -349,6 +370,31 @@ function message(id,msg,type='') {
   el.textContent = msg;
   el.className = 'status' + (type ? ' '+type : '');
   show(id,true);
+}
+
+function showSecret({title,description,value,instructions,qrUrl=''}) {
+  lastSecretValue = value || '';
+  lastQrUrl = qrUrl || '';
+  $('secretTitle').textContent = title;
+  $('secretDescription').textContent = description;
+  $('secretValue').textContent = value || '';
+  $('secretInstructions').textContent = instructions;
+  $('qrCanvas').innerHTML = '';
+  if (qrUrl && window.QRCode) {
+    new QRCode($('qrCanvas'), {text:qrUrl,width:190,height:190,correctLevel:QRCode.CorrectLevel.M});
+    show('copyQrLink',true);
+  } else {
+    show('copyQrLink',false);
+  }
+  show('secretResult',true);
+  $('secretResult').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function clearSecret() {
+  show('secretResult',false);
+  $('qrCanvas').innerHTML = '';
+  lastSecretValue = '';
+  lastQrUrl = '';
 }
 
 function clearMessage(id) {
@@ -784,6 +830,11 @@ $('createUnit').onclick = async () => {
 
     if (!name) {
       throw new Error('Ingresá el identificador de la unidad.');
+    }
+
+    const manzanaSeleccionada = $('manzanaSelect').value;
+    if (!manzanaSeleccionada) {
+      throw new Error('Seleccioná la manzana del domicilio. Cada domicilio debe pertenecer a una manzana para poder activarse con su QR.');
     }
 
     const num = id =>
