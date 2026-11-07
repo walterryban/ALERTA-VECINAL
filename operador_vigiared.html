@@ -9,6 +9,18 @@
 <style>
 :root{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#172033;background:#f3f6fa}
 *{box-sizing:border-box}body{margin:0}.top{background:#102b46;color:#fff;padding:20px max(18px,calc((100% - 1080px)/2))}.top h1{margin:0;font-size:25px}.top p{margin:5px 0 0;color:#c9d8e8}.wrap{max-width:1080px;margin:24px auto;padding:0 16px}.panel{background:#fff;border:1px solid #e0e7ef;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 3px 14px #102b4609}.hidden{display:none!important}.muted{color:#64748b;font-size:14px}label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px}input,select{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:white}button{border:0;border-radius:9px;padding:13px 16px;background:#1769aa;color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#e8eff6;color:#173a59}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.actions button{flex:1;min-width:150px}.tile{border:1px solid #dce5ee;border-radius:12px;padding:18px;background:#fbfdff}.tile h3{margin:0 0 7px;font-size:17px}.tile p{margin:0 0 14px;color:#64748b;font-size:14px}.status{padding:12px;border-radius:9px;background:#eef5fb;margin:12px 0;white-space:pre-wrap}.error{background:#fff0f0;color:#9b1c1c}.success{background:#edfaf1;color:#176b35}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.bar h2{margin:0;font-size:20px}.footer{text-align:center;color:#64748b;font-size:12px;padding:16px}
+
+/* Aviso emergente de nuevas alertas */
+.alert-overlay{position:fixed;inset:0;z-index:9999;background:rgba(8,20,34,.78);display:flex;align-items:center;justify-content:center;padding:18px}
+.alert-dialog{width:min(620px,100%);background:#fff;border-radius:18px;padding:24px;box-shadow:0 20px 70px #0007;border-top:8px solid #c62828}
+.alert-dialog h2{margin:0 0 10px;color:#a71919;font-size:26px}
+.alert-dialog .alert-meta{background:#fff4f2;border-radius:10px;padding:14px;margin:14px 0;line-height:1.7}
+.alert-dialog .alert-actions{display:flex;gap:10px;flex-wrap:wrap}
+.alert-dialog .alert-actions button{flex:1;min-width:190px}
+.alert-pulse{animation:alertPulse 1.1s ease-in-out infinite}
+@keyframes alertPulse{50%{box-shadow:0 0 0 8px #c6282822,0 20px 70px #0007}}
+@media(max-width:520px){.alert-dialog{padding:18px}.alert-dialog h2{font-size:22px}}
+
 </style>
 </head>
 <body>
@@ -38,6 +50,19 @@
 <div id="detail" class="panel hidden" aria-live="polite"></div>
 <div id="appStatus" class="status hidden" role="status"></div>
 </section>
+
+<div id="incomingAlert" class="alert-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="incomingAlertTitle">
+  <section class="alert-dialog alert-pulse">
+    <h2 id="incomingAlertTitle">🚨 NUEVA ALERTA RECIBIDA</h2>
+    <p>El Centro Operativo recibió una solicitud de asistencia.</p>
+    <div id="incomingAlertDetails" class="alert-meta"></div>
+    <div class="alert-actions">
+      <button id="openIncomingAlert">Abrir centro de alertas</button>
+    </div>
+    <p class="muted">Este aviso permanecerá visible hasta que el operador lo abra.</p>
+  </section>
+</div>
+
 <div class="footer">VIGIARED · Plataforma independiente de prevención y respuesta</div>
 </main>
 <script>
@@ -46,6 +71,13 @@ const SUPABASE_PUBLISHABLE_KEY='sb_publishable_5nYG3oHIfbMFW_ddEUT9EA_PnQLVdIm';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const $=id=>document.getElementById(id);
 let ctx=null, orgs=[];
+let alertPollTimer=null;
+let alertSeenIds=new Set();
+let alertQueue=[];
+let activeIncomingAlert=null;
+let alertAudioContext=null;
+let alertMonitorOrg=null;
+
 function show(id,on=true){$(id).classList.toggle('hidden',!on)}
 function say(id,msg,type=''){const e=$(id);e.textContent=msg;e.className='status'+(type?' '+type:'');show(id,true)}
 function parse(x){return typeof x==='string'?JSON.parse(x):x}
@@ -63,15 +95,90 @@ async function start(){
   $('identity').textContent=(ctx.perfil?.nombre_completo||ctx.email||'Personal autenticado')+(ctx.es_propietario_plataforma?' · Propietario de plataforma':'');
   $('scope').textContent=orgs.length?orgs.length+' espacio(s) autorizado(s) para esta cuenta.':'Acceso global de propietario.';
   show('login',false);show('app',true);show('detail',false);show('appStatus',false);
+  startAlertMonitor();
  }catch(e){show('app',false);show('login',true);say('loginStatus',e.message||String(e),'error')}
 }
-$('loginBtn').onclick=async()=>{try{const email=$('email').value.trim(),password=$('password').value;if(!email||!password)throw new Error('Ingresá correo y contraseña.');const {error}=await db.auth.signInWithPassword({email,password});if(error)throw error;await start()}catch(e){say('loginStatus',e.message||String(e),'error')}};
-$('logout').onclick=async()=>{await db.auth.signOut();ctx=null;show('app',false);show('login',true)};
+$('loginBtn').onclick=async()=>{unlockAlertSound();try{const email=$('email').value.trim(),password=$('password').value;if(!email||!password)throw new Error('Ingresá correo y contraseña.');const {error}=await db.auth.signInWithPassword({email,password});if(error)throw error;await start()}catch(e){say('loginStatus',e.message||String(e),'error')}};
+$('logout').onclick=async()=>{stopAlertMonitor();await db.auth.signOut();ctx=null;show('app',false);show('login',true)};
 $('accessBtn').onclick=()=>{const p=ctx?.perfil||{};const roles=orgs.map(o=>(o.nombre||'Organización')+' — '+(o.rol||o.rol_usuario||'miembro'));$('detail').innerHTML='<h2>Mis permisos</h2><p class="muted">Accesos asociados a tu cuenta.</p><p><b>Nombre:</b> '+esc(p.nombre_completo||'No informado')+'</p><p><b>Correo:</b> '+esc(ctx?.email||'Cuenta autenticada')+'</p><ul>'+roles.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul><p class="muted">Los permisos efectivos siempre se validan en Supabase.</p>';show('detail',true)};
 async function rpc(name,args){const {data,error}=await db.rpc(name,args);if(error)throw error;return parse(data)}
 function orgSelected(){const id=$('orgSelect').value;if(!id)throw new Error('Seleccioná un espacio de trabajo.');return id}
 function dateLabel(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString('es-AR')}
 function alertState(v){return ({pendiente:'Pendiente',en_atencion:'En atención',resuelta:'Resuelta',cancelada:'Cancelada'})[v]||v}
+function unlockAlertSound(){
+ try{
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx)return;
+  if(!alertAudioContext)alertAudioContext=new AudioCtx();
+  if(alertAudioContext.state==='suspended')alertAudioContext.resume();
+ }catch(e){console.warn('No se pudo activar el sonido de alertas',e)}
+}
+function playAlertSound(){
+ try{
+  if(!alertAudioContext||alertAudioContext.state!=='running')return;
+  const now=alertAudioContext.currentTime;
+  [0,0.28,0.56].forEach((offset,i)=>{
+   const osc=alertAudioContext.createOscillator();
+   const gain=alertAudioContext.createGain();
+   osc.type='sine';osc.frequency.value=i===1?1040:880;
+   gain.gain.setValueAtTime(0.0001,now+offset);
+   gain.gain.exponentialRampToValueAtTime(0.22,now+offset+0.025);
+   gain.gain.exponentialRampToValueAtTime(0.0001,now+offset+0.19);
+   osc.connect(gain);gain.connect(alertAudioContext.destination);
+   osc.start(now+offset);osc.stop(now+offset+0.2);
+  });
+ }catch(e){console.warn('No se pudo reproducir el sonido de alerta',e)}
+}
+function showIncomingAlert(a){
+ activeIncomingAlert=a;
+ $('incomingAlertDetails').innerHTML=
+  '<b>Tipo:</b> '+esc(a.tipo||'Emergencia')+'<br>'+
+  '<b>Domicilio:</b> '+esc(a.unidad_nombre||'No informado')+'<br>'+
+  '<b>Dirección:</b> '+esc(a.direccion||'Sin dirección')+'<br>'+
+  '<b>Barrio / manzana:</b> '+esc(a.barrio||'—')+' / '+esc(a.manzana||'—')+'<br>'+
+  '<b>Vecino:</b> '+esc(a.creador_nombre||'No informado')+'<br>'+
+  '<b>Hora:</b> '+esc(dateLabel(a.created_at));
+ show('incomingAlert',true);
+ playAlertSound();
+}
+function stopAlertMonitor(){
+ if(alertPollTimer){clearInterval(alertPollTimer);alertPollTimer=null}
+ alertMonitorOrg=null;alertSeenIds=new Set();alertQueue=[];activeIncomingAlert=null;
+ show('incomingAlert',false);
+}
+async function pollIncomingAlerts(initial=false){
+ const org=$('orgSelect').value;
+ if(!org)return;
+ const result=await rpc('listar_alertas_centro',{p_organizacion_id:org,p_estado:'pendiente',p_limite:100});
+ const items=Array.isArray(result?.alertas)?result.alertas:[];
+ if(initial){
+  items.forEach(a=>{if(a.id)alertSeenIds.add(String(a.id))});
+  return;
+ }
+ const fresh=items.filter(a=>a.id&&!alertSeenIds.has(String(a.id)));
+ fresh.forEach(a=>alertSeenIds.add(String(a.id)));
+ if(fresh.length){
+  alertQueue.push(...fresh);
+  if(!activeIncomingAlert){
+   const nextAlert=alertQueue.shift();
+   if(nextAlert)showIncomingAlert(nextAlert);
+  }
+ }
+}
+function startAlertMonitor(){
+ stopAlertMonitor();
+ const org=$('orgSelect').value;
+ if(!org)return;
+ alertMonitorOrg=org;
+ pollIncomingAlerts(true).then(()=>{
+  if(alertMonitorOrg!==org)return;
+  alertPollTimer=setInterval(()=>{
+   if(document.hidden)return;
+   pollIncomingAlerts(false).catch(e=>console.warn('No se pudieron consultar nuevas alertas',e));
+  },6000);
+ }).catch(e=>console.warn('No se pudo iniciar la recepción de alertas',e));
+}
+
 async function showAlerts(){
   show('appStatus',false);$('detail').innerHTML='<h2>Centro de alertas</h2><p class="muted">Consultando avisos autorizados…</p>';show('detail',true);
   const org=orgSelected();
@@ -110,8 +217,19 @@ async function showHomes(){
   }catch(e){$('detail').innerHTML='<h2>Domicilios y vecinos</h2><div class="status error">'+esc(e.message||String(e))+'</div><p class="muted">El servidor controla los permisos; no se habilita lectura directa.</p>'}
 }
 $('alertsBtn').onclick=()=>showAlerts().catch(e=>say('appStatus',e.message||String(e),'error'));
+$('openIncomingAlert').onclick=()=>{
+ const alertToOpen=activeIncomingAlert;
+ activeIncomingAlert=null;
+ show('incomingAlert',false);
+ showAlerts().catch(e=>say('appStatus',e.message||String(e),'error'));
+ if(alertQueue.length){
+  const nextAlert=alertQueue.shift();
+  setTimeout(()=>showIncomingAlert(nextAlert),500);
+ }
+};
+
 $('homesBtn').onclick=()=>showHomes();
-$('orgSelect').onchange=()=>{const o=orgs.find(x=>(x.id||x.organizacion_id||x.organization_id)===$('orgSelect').value);$('scope').textContent=o?(o.nombre||'Espacio autorizado')+' · '+(o.rol||o.rol_usuario||'Acceso asignado'):'Espacio seleccionado'};
+$('orgSelect').onchange=()=>{const o=orgs.find(x=>(x.id||x.organizacion_id||x.organization_id)===$('orgSelect').value);$('scope').textContent=o?(o.nombre||'Espacio autorizado')+' · '+(o.rol||o.rol_usuario||'Acceso asignado'):'Espacio seleccionado';startAlertMonitor()};
 db.auth.onAuthStateChange((event,session)=>{if(session&&$('app').classList.contains('hidden'))setTimeout(start,0)});
 (async()=>{const {data:{session}}=await db.auth.getSession();if(session)await start()})();
 </script>
