@@ -70,7 +70,7 @@ let method='';
 let destination='';
 function show(id,on=true){$(id).classList.toggle('hidden',!on)}
 function status(id,text,type=''){const e=$(id);e.textContent=text;e.className='status'+(type?' '+type:'')}
-function normalizePhone(v){return v.replace(/[\\s()-]/g,'')}
+function normalizePhone(v){return v.replace(/[\s()-]/g,'')}
 function validateQr(){
   if(!/^[a-fA-F0-9]{64}$/.test(qrToken)){
     status('qrStatus','No encontramos un QR válido. Escaneá nuevamente el código entregado por VIGIARED.','error');
@@ -85,12 +85,12 @@ async function sendCode(kind){
     method=kind;
     if(kind==='sms'){
       destination=normalizePhone($('phone').value.trim());
-      if(!/^\\+[1-9][0-9]{7,14}$/.test(destination)) throw new Error('Ingresá el teléfono en formato internacional, por ejemplo +54911…');
+      if(!/^\+[1-9][0-9]{7,14}$/.test(destination)) throw new Error('Ingresá el teléfono en formato internacional, por ejemplo +54911…');
       const {error}=await db.auth.signInWithOtp({phone:destination,options:{shouldCreateUser:true}});
       if(error) throw error;
     }else{
       destination=$('email').value.trim();
-      if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(destination)) throw new Error('Ingresá un correo electrónico válido.');
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)) throw new Error('Ingresá un correo electrónico válido.');
       const {error}=await db.auth.signInWithOtp({email:destination,options:{shouldCreateUser:true}});
       if(error) throw error;
     }
@@ -103,7 +103,7 @@ $('sendEmail').onclick=()=>sendCode('email');
 $('verifyOtp').onclick=async()=>{
   try{
     const token=$('otp').value.trim();
-    if(!/^\\d{6,8}$/.test(token)) throw new Error('Ingresá el código recibido.');
+    if(!/^\d{6,8}$/.test(token)) throw new Error('Ingresá el código recibido.');
     const payload=method==='sms'?{phone:destination,token,type:'sms'}:{email:destination,token,type:'email'};
     const {error}=await db.auth.verifyOtp(payload);
     if(error) throw error;
@@ -120,7 +120,7 @@ $('activateButton').onclick=async()=>{
     const address=$('address').value.trim();
     const pin=$('pin').value.trim();
     if(!address) throw new Error('Ingresá el nombre o dirección exacta del domicilio.');
-    if(!/^\\d{8}$/.test(pin)) throw new Error('El PIN debe tener ocho dígitos.');
+    if(!/^\d{8}$/.test(pin)) throw new Error('El PIN debe tener ocho dígitos.');
     $('activateButton').disabled=true;
     const {data,error}=await db.rpc('activar_domicilio_con_qr',{
       p_qr_token:qrToken,
