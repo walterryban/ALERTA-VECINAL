@@ -68,8 +68,49 @@ async function start(){
 $('loginBtn').onclick=async()=>{try{const email=$('email').value.trim(),password=$('password').value;if(!email||!password)throw new Error('Ingresá correo y contraseña.');const {error}=await db.auth.signInWithPassword({email,password});if(error)throw error;await start()}catch(e){say('loginStatus',e.message||String(e),'error')}};
 $('logout').onclick=async()=>{await db.auth.signOut();ctx=null;show('app',false);show('login',true)};
 $('accessBtn').onclick=()=>{const p=ctx?.perfil||{};const roles=orgs.map(o=>(o.nombre||'Organización')+' — '+(o.rol||o.rol_usuario||'miembro'));$('detail').innerHTML='<h2>Mis permisos</h2><p class="muted">Accesos asociados a tu cuenta.</p><p><b>Nombre:</b> '+esc(p.nombre_completo||'No informado')+'</p><p><b>Correo:</b> '+esc(ctx?.email||'Cuenta autenticada')+'</p><ul>'+roles.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul><p class="muted">Los permisos efectivos siempre se validan en Supabase.</p>';show('detail',true)};
-$('alertsBtn').onclick=()=>say('appStatus','La conexión del Centro de Alertas se habilitará al verificar los argumentos y permisos de la función segura listar_alertas_centro. No se consultan tablas directamente.','');
-$('homesBtn').onclick=()=>say('appStatus','La búsqueda de domicilios se conectará mediante funciones seguras. No se habilitará lectura directa de tablas protegidas.','');
+async function rpc(name,args){const {data,error}=await db.rpc(name,args);if(error)throw error;return parse(data)}
+function orgSelected(){const id=$('orgSelect').value;if(!id)throw new Error('Seleccioná un espacio de trabajo.');return id}
+function dateLabel(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString('es-AR')}
+function alertState(v){return ({pendiente:'Pendiente',en_atencion:'En atención',resuelta:'Resuelta',cancelada:'Cancelada'})[v]||v}
+async function showAlerts(){
+  show('appStatus',false);$('detail').innerHTML='<h2>Centro de alertas</h2><p class="muted">Consultando avisos autorizados…</p>';show('detail',true);
+  const org=orgSelected();
+  $('detail').innerHTML='<div class="bar"><div><h2>Centro de alertas</h2><p class="muted">Avisos recibidos y seguimiento de atención.</p></div><button id="refreshAlerts" class="secondary">Actualizar</button></div><label for="alertFilter">Filtrar por estado</label><select id="alertFilter"><option value="">Todos los estados</option><option value="pendiente">Pendientes</option><option value="en_atencion">En atención</option><option value="resuelta">Resueltas</option><option value="cancelada">Canceladas</option></select><div id="alertList" class="status">Cargando alertas…</div>';
+  async function load(){
+    const result=await rpc('listar_alertas_centro',{p_organizacion_id:org,p_estado:$('alertFilter').value||null,p_limite:100});
+    const items=Array.isArray(result?.alertas)?result.alertas:[];
+    $('alertList').innerHTML=items.length?items.map(a=>'<article class="tile" style="margin:10px 0"><div class="bar"><strong>'+esc(a.tipo||'Alerta')+' · '+esc(alertState(a.estado))+'</strong><span class="muted">'+esc(dateLabel(a.created_at))+'</span></div><p><b>Domicilio:</b> '+esc(a.unidad_nombre||'No informado')+' · '+esc(a.direccion||'Sin dirección')+'</p><p><b>Barrio / manzana:</b> '+esc(a.barrio||'—')+' / '+esc(a.manzana||'—')+'</p><p><b>Descripción:</b> '+esc(a.descripcion||'Sin descripción')+'</p><p><b>Vecino:</b> '+esc(a.creador_nombre||'No informado')+' · <b>Asignado:</b> '+esc(a.operador_nombre||'Sin asignar')+'</p><div class="actions">'+(a.estado==='pendiente'||a.estado==='en_atencion'?'<button data-alert="'+esc(a.id)+'" data-action="atender">Atender</button>':'')+(a.estado==='en_atencion'?'<button data-alert="'+esc(a.id)+'" data-action="resolver">Resolver</button>':'')+(a.estado==='pendiente'?'<button class="secondary" data-alert="'+esc(a.id)+'" data-action="cancelar">Cancelar</button>':'')+'</div></article>').join(''):'No hay alertas para este filtro.';
+    $('alertList').className='status';
+    $('alertList').querySelectorAll('button[data-alert]').forEach(b=>b.onclick=async()=>{
+      const action=b.dataset.action, id=b.dataset.alert;
+      if(action==='cancelar'&&!confirm('¿Querés cancelar esta alerta?'))return;
+      const note=prompt('Nota de seguimiento (opcional):')||null;
+      try{b.disabled=true;await rpc('gestionar_alerta',{p_alerta_id:id,p_accion:action,p_nota:note});say('appStatus','La alerta fue actualizada.','success');await load()}catch(e){b.disabled=false;say('appStatus',e.message||String(e),'error')}
+    });
+  }
+  $('refreshAlerts').onclick=()=>load().catch(e=>say('appStatus',e.message||String(e),'error'));
+  $('alertFilter').onchange=()=>load().catch(e=>say('appStatus',e.message||String(e),'error'));
+  try{await load()}catch(e){$('alertList').textContent=e.message||String(e);$('alertList').className='status error'}
+}
+async function showHomes(){
+  show('appStatus',false);$('detail').innerHTML='<h2>Domicilios y vecinos</h2><p class="muted">Consultando barrios habilitados…</p>';show('detail',true);
+  try{
+    const org=orgSelected(), barrios=await rpc('listar_barrios',{p_organizacion_id:org});
+    const list=Array.isArray(barrios)?barrios:[];
+    $('detail').innerHTML='<h2>Domicilios y vecinos</h2><p class="muted">Elegí un barrio para consultar sus manzanas y unidades registradas.</p><label for="homeBarrio">Barrio</label><select id="homeBarrio"><option value="">Seleccioná un barrio</option>'+list.map(b=>'<option value="'+esc(b.barrio_id)+'">'+esc(b.nombre)+'</option>').join('')+'</select><div id="homeResults" class="status">'+(list.length?'Seleccioná un barrio para continuar.':'No hay barrios activos en este espacio.')+'</div>';
+    $('homeBarrio').onchange=async()=>{
+      const bid=$('homeBarrio').value;if(!bid){$('homeResults').textContent='Seleccioná un barrio para continuar.';return}
+      $('homeResults').textContent='Cargando manzanas y domicilios…';
+      try{
+        const [mans,units]=await Promise.all([rpc('listar_manzanas_por_barrio',{p_organizacion_id:org,p_barrio_id:bid}),rpc('listar_unidades_por_barrio',{p_organizacion_id:org,p_barrio_id:bid})]);
+        const mm=Array.isArray(mans)?mans:[], uu=Array.isArray(units)?units:[];
+        $('homeResults').innerHTML='<h3>Manzanas ('+mm.length+')</h3>'+(mm.length?'<ul>'+mm.map(m=>'<li>'+esc(m.nombre)+'</li>').join('')+'</ul>':'<p>No hay manzanas registradas.</p>')+'<h3>Domicilios y unidades ('+uu.length+')</h3>'+(uu.length?uu.map(u=>'<article class="tile" style="margin:8px 0"><b>'+esc(u.nombre)+'</b><p>'+esc(u.tipo)+' · '+esc(u.direccion||'Sin dirección')+'</p><p class="muted">'+esc(u.localidad||'')+' '+esc(u.provincia||'')+'</p></article>').join(''):'<p>No hay domicilios registrados.</p>');
+      }catch(e){$('homeResults').textContent=e.message||String(e);$('homeResults').className='status error'}
+    };
+  }catch(e){$('detail').innerHTML='<h2>Domicilios y vecinos</h2><div class="status error">'+esc(e.message||String(e))+'</div><p class="muted">El servidor controla los permisos; no se habilita lectura directa.</p>'}
+}
+$('alertsBtn').onclick=()=>showAlerts().catch(e=>say('appStatus',e.message||String(e),'error'));
+$('homesBtn').onclick=()=>showHomes();
 $('orgSelect').onchange=()=>{const o=orgs.find(x=>(x.id||x.organizacion_id||x.organization_id)===$('orgSelect').value);$('scope').textContent=o?(o.nombre||'Espacio autorizado')+' · '+(o.rol||o.rol_usuario||'Acceso asignado'):'Espacio seleccionado'};
 db.auth.onAuthStateChange((event,session)=>{if(session&&$('app').classList.contains('hidden'))setTimeout(start,0)});
 (async()=>{const {data:{session}}=await db.auth.getSession();if(session)await start()})();
