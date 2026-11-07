@@ -612,14 +612,9 @@ async function runAction(fn,args,success) {
 
   if (error) throw error;
 
-  if (
-    data &&
-    typeof data === 'object' &&
-    data.success === false
-  ) {
-    throw new Error(
-      data.message || 'La operación no pudo completarse.'
-    );
+  if (data && typeof data === 'object' &&
+      (data.ok === false || data.success === false)) {
+    throw new Error(data.mensaje || data.message || 'La operación no pudo completarse.');
   }
 
   message('appStatus',success,'success');
@@ -798,7 +793,9 @@ $('createManzana').onclick = async () => {
       throw new Error('Ingresá la identificación de la manzana.');
     }
 
-    await runAction(
+    clearSecret();
+
+    const resultado = await runAction(
       'crear_manzana_en_barrio',
       {
         p_organizacion_id:org,
@@ -810,6 +807,21 @@ $('createManzana').onclick = async () => {
     );
 
     $('manzanaName').value = '';
+
+    if (!resultado?.qr_token) {
+      throw new Error('La manzana se creó, pero no recibimos el QR. No vuelvas a crearla: avisá al soporte para revisar el resultado.');
+    }
+
+    const qrUrl = new URL('/activar.html', window.location.origin);
+    qrUrl.searchParams.set('qr', resultado.qr_token);
+
+    showSecret({
+      title:'QR único de la manzana ' + name,
+      description:'Este QR identifica esta manzana. Imprimilo y entregalo personalmente a los vecinos de esta manzana.',
+      value:resultado.qr_token,
+      qrUrl:qrUrl.toString(),
+      instructions:'El QR abre el acceso de VIGIARED para esta manzana. Guardá una copia segura: por seguridad, el token no se puede volver a consultar. El PIN se entrega por separado para cada domicilio.'
+    });
 
     await loadBarrioDetails();
 
@@ -842,12 +854,14 @@ $('createUnit').onclick = async () => {
         ? null
         : Number($(id).value);
 
-    await runAction(
+    clearSecret();
+
+    const resultado = await runAction(
       'crear_unidad_en_barrio',
       {
         p_organizacion_id:org,
         p_barrio_id:barrio,
-        p_manzana_id:$('manzanaSelect').value ? requireUuid($('manzanaSelect').value, 'la manzana seleccionada') : null,
+        p_manzana_id:requireUuid(manzanaSeleccionada, 'la manzana seleccionada'),
         p_tipo:$('unitType').value,
         p_nombre:name,
         p_direccion:$('address').value.trim() || null,
@@ -862,10 +876,35 @@ $('createUnit').onclick = async () => {
 
     $('unitName').value = '';
 
+    if (!resultado?.pin_entrega) {
+      throw new Error('El domicilio se creó, pero no recibimos el PIN. No vuelvas a crearlo: avisá al soporte para revisar el resultado.');
+    }
+
+    showSecret({
+      title:'PIN personal del domicilio',
+      description:'Domicilio: ' + name + ($('address').value.trim() ? ' · ' + $('address').value.trim() : ''),
+      value:resultado.pin_entrega,
+      instructions:'Entregá este PIN personalmente al responsable del domicilio. Es de un solo uso y vence según la fecha informada por el sistema. No lo compartas con otros domicilios. El QR de la manzana se entrega por separado.'
+    });
+
     await loadBarrioDetails();
 
   } catch(e) {
     message('appStatus',rpcError(e),'error');
+  }
+};
+
+$('copySecret').onclick = async () => {
+  if (lastSecretValue) {
+    await navigator.clipboard.writeText(lastSecretValue);
+    message('appStatus','Código copiado. Entregalo únicamente a quien corresponda.','success');
+  }
+};
+
+$('copyQrLink').onclick = async () => {
+  if (lastQrUrl) {
+    await navigator.clipboard.writeText(lastQrUrl);
+    message('appStatus','Enlace del QR copiado.','success');
   }
 };
 
