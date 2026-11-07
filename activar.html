@@ -136,8 +136,13 @@ $('activateButton').onclick=async()=>{
     });
     if(error) throw error;
     if(data?.ok!==true) throw new Error(data?.mensaje||'No se pudo activar el domicilio.');
-    status('result','¡Domicilio activado! Tu cuenta quedó registrada como responsable. Ya podés ingresar a VIGIARED.','success');
+    status('result','¡Domicilio activado! Tu cuenta quedó registrada como responsable.','success');
     show('activate',false);
+    const go=document.createElement('a');
+    go.href='/terminal.html';
+    go.textContent='Ingresar a mi terminal vecinal';
+    go.style.cssText='display:block;text-align:center;padding:14px;margin-top:12px;background:#1769aa;color:white;border-radius:10px;text-decoration:none;font-weight:750';
+    $('result').appendChild(go);
   }catch(e){
     status('result',e.message||String(e),'error');
     $('activateButton').disabled=false;
