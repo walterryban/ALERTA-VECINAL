@@ -33,7 +33,7 @@
 <div class="actions"><button id="loginBtn">Ingresar</button></div><div id="loginStatus" class="status hidden" role="status"></div>
 </section>
 <section id="app" class="hidden">
-<div class="panel bar"><div><h2>Panel operativo</h2><div id="identity" class="muted">Cuenta autenticada</div></div><button id="logout" class="secondary">Cerrar sesión</button></div>
+<div class="panel bar"><div><h2>Panel operativo</h2><div id="identity" class="muted">Cuenta autenticada</div></div><div class="actions"><button id="enableSound" class="secondary" type="button">Activar sonido</button><button id="logout" class="secondary">Cerrar sesión</button></div></div>
 <div class="panel">
 <label for="orgSelect">Espacio de trabajo</label><select id="orgSelect"></select>
 <div id="scope" class="muted"></div>
@@ -99,6 +99,7 @@ async function start(){
  }catch(e){show('app',false);show('login',true);say('loginStatus',e.message||String(e),'error')}
 }
 $('loginBtn').onclick=async()=>{unlockAlertSound();try{const email=$('email').value.trim(),password=$('password').value;if(!email||!password)throw new Error('Ingresá correo y contraseña.');const {error}=await db.auth.signInWithPassword({email,password});if(error)throw error;await start()}catch(e){say('loginStatus',e.message||String(e),'error')}};
+$('enableSound').onclick=()=>{unlockAlertSound();if(activeIncomingAlert)playAlertSound();$('enableSound').textContent='Sonido activado'};
 $('logout').onclick=async()=>{stopAlertMonitor();await db.auth.signOut();ctx=null;show('app',false);show('login',true)};
 $('accessBtn').onclick=()=>{const p=ctx?.perfil||{};const roles=orgs.map(o=>(o.nombre||'Organización')+' — '+(o.rol||o.rol_usuario||'miembro'));$('detail').innerHTML='<h2>Mis permisos</h2><p class="muted">Accesos asociados a tu cuenta.</p><p><b>Nombre:</b> '+esc(p.nombre_completo||'No informado')+'</p><p><b>Correo:</b> '+esc(ctx?.email||'Cuenta autenticada')+'</p><ul>'+roles.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul><p class="muted">Los permisos efectivos siempre se validan en Supabase.</p>';show('detail',true)};
 async function rpc(name,args){const {data,error}=await db.rpc(name,args);if(error)throw error;return parse(data)}
@@ -153,6 +154,11 @@ async function pollIncomingAlerts(initial=false){
  const items=Array.isArray(result?.alertas)?result.alertas:[];
  if(initial){
   items.forEach(a=>{if(a.id)alertSeenIds.add(String(a.id))});
+  if(items.length){
+   alertQueue.push(...items);
+   const first=alertQueue.shift();
+   if(first)showIncomingAlert(first);
+  }
   return;
  }
  const fresh=items.filter(a=>a.id&&!alertSeenIds.has(String(a.id)));
