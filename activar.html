@@ -54,6 +54,11 @@ button:disabled{opacity:.55}.status{padding:13px;border-radius:10px;background:#
 <label for="pin">PIN personal de ocho dígitos</label>
 <input id="pin" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="00000000">
 <button id="activateButton">Activar mi domicilio</button>
+<div id="candidateBox" class="hidden" aria-live="polite">
+<label for="candidateSelect">Seleccioná tu domicilio</label>
+<select id="candidateSelect"></select>
+<p class="muted">Encontramos más de un domicilio coincidente. Elegí exactamente tu vivienda, departamento, habitación u oficina.</p>
+</div>
 <p class="muted">El PIN se usa una sola vez para registrar al primer responsable de este domicilio. No lo compartas.</p>
 </section>
 <div id="result" class="status hidden" role="status" aria-live="polite"></div>
@@ -120,6 +125,7 @@ $('verifyOtp').onclick=async()=>{
     status('result','Identidad verificada. Ahora ingresá el domicilio y el PIN que te entregó el Centro Operativo.','success');
   }catch(e){status('result',e.message||String(e),'error')}
 };
+let candidateSelectionRequired=false;
 $('activateButton').onclick=async()=>{
   try{
     const {data:{session}}=await db.auth.getSession();
@@ -127,14 +133,50 @@ $('activateButton').onclick=async()=>{
     const address=$('address').value.trim();
     const pin=$('pin').value.trim();
     if(!address) throw new Error('Ingresá el nombre o dirección exacta del domicilio.');
-    if(!/^\d{8}$/.test(pin)) throw new Error('El PIN debe tener ocho dígitos.');
+    if(!/^\\d{8}$/.test(pin)) throw new Error('El PIN debe tener ocho dígitos.');
     $('activateButton').disabled=true;
-    const {data,error}=await db.rpc('activar_domicilio_con_qr',{
-      p_qr_token:qrToken,
-      p_domicilio:address,
-      p_pin:pin
-    });
+    let data,error;
+    if(candidateSelectionRequired){
+      const unidadId=$('candidateSelect').value;
+      if(!unidadId) throw new Error('Seleccioná el domicilio que corresponde a tu vivienda.');
+      ({data,error}=await db.rpc('activar_domicilio_seleccionado_con_qr',{
+        p_qr_token:qrToken,
+        p_unidad_id:unidadId,
+        p_pin:pin
+      }));
+    }else{
+      ({data,error}=await db.rpc('activar_domicilio_con_qr',{
+        p_qr_token:qrToken,
+        p_domicilio:address,
+        p_pin:pin
+      }));
+    }
     if(error) throw error;
+    if(data?.seleccion_requerida===true){
+      const candidates=Array.isArray(data.candidatos)?data.candidatos:[];
+      if(!candidates.length) throw new Error('Hay varios domicilios coincidentes, pero no se recibió la lista para elegir. Contactá al Centro Operativo.');
+      if(candidates.some(c=>!c.unidad_id)) throw new Error('La lista de domicilios contiene una opción inválida. Contactá al Centro Operativo.');
+      const select=$('candidateSelect');
+      select.replaceChildren();
+      candidates.forEach((candidate,index)=>{
+        const option=document.createElement('option');
+        option.value=candidate.unidad_id;
+        const details=[
+          candidate.nombre,
+          candidate.direccion,
+          candidate.complemento,
+          candidate.orientacion
+        ].filter(Boolean);
+        option.textContent=details.join(' · ')||('Domicilio '+(index+1));
+        select.appendChild(option);
+      });
+      candidateSelectionRequired=true;
+      show('candidateBox',true);
+      $('activateButton').textContent='Confirmar domicilio y activar';
+      status('result',data.mensaje||'Encontramos varios domicilios. Seleccioná el tuyo y confirmá para continuar.','success');
+      $('activateButton').disabled=false;
+      return;
+    }
     if(data?.ok!==true) throw new Error(data?.mensaje||'No se pudo activar el domicilio.');
     status('result','¡Domicilio activado! Tu cuenta quedó registrada como responsable.','success');
     show('activate',false);
