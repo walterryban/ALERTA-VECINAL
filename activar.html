@@ -133,7 +133,7 @@ $('activateButton').onclick=async()=>{
     const address=$('address').value.trim();
     const pin=$('pin').value.trim();
     if(!address) throw new Error('Ingresá el nombre o dirección exacta del domicilio.');
-    if(!/^\\d{8}$/.test(pin)) throw new Error('El PIN debe tener ocho dígitos.');
+    if(!/^\d{8}$/.test(pin)) throw new Error('El PIN debe tener ocho dígitos.');
     $('activateButton').disabled=true;
     let data,error;
     if(candidateSelectionRequired){
