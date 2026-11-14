@@ -158,16 +158,19 @@ $('activateButton').onclick=async()=>{
       if(candidates.some(c=>!c.unidad_id)) throw new Error('La lista de domicilios contiene una opción inválida. Contactá al Centro Operativo.');
       const select=$('candidateSelect');
       select.replaceChildren();
+      const placeholder=document.createElement('option');
+      placeholder.value='';
+      placeholder.textContent='Elegí tu domicilio…';
+      placeholder.disabled=true;
+      placeholder.selected=true;
+      select.appendChild(placeholder);
       candidates.forEach((candidate,index)=>{
         const option=document.createElement('option');
         option.value=candidate.unidad_id;
-        const details=[
-          candidate.nombre,
-          candidate.direccion,
-          candidate.complemento,
-          candidate.orientacion
-        ].filter(Boolean);
-        option.textContent=details.join(' · ')||('Domicilio '+(index+1));
+        const calleAltura=[candidate.calle,candidate.altura].filter(Boolean).join(' ');
+        const details=[candidate.nombre,candidate.direccion||calleAltura,candidate.complemento,candidate.orientacion]
+          .filter(Boolean);
+        option.textContent=[...new Set(details)].join(' · ')||('Domicilio '+(index+1));
         select.appendChild(option);
       });
       candidateSelectionRequired=true;
